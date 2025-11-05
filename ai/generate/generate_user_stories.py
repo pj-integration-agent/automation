@@ -4,7 +4,7 @@ from groq import Groq
 def generate_user_stories_from_criterios():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
  
-    with open("requirements/criterios.md", "r", encoding="utf-8") as f:
+    with open("ai/requirements/criterios.md", "r", encoding="utf-8") as f:
         criterio_content = f.read()
  
     prompt = f"""
