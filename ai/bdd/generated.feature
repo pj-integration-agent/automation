@@ -1,164 +1,217 @@
 ```gherkin
 # Feature: Cadastro de Usuário
 Feature: Cadastro de Usuário
-  Para garantir que apenas dados válidos sejam aceitos, o sistema deve validar
-  todos os campos obrigatórios e apresentar mensagens de erro claras.
+  Como usuário novo
+  Quero preencher um formulário de cadastro completo
+  Para que eu possa criar minha conta no ParaBank
 
-  Scenario: Cadastro bem‑sucedido
-    Given o usuário abre a página de cadastro
-    When ele preenche todos os campos obrigatórios com valores válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “Cadastro concluído com sucesso”
-    And o usuário pode realizar login com as credenciais recém‑criado
+  @positive
+  Scenario: Usuário preenche cadastro completo com dados válidos
+    Given I open the “Cadastro” page
+    When I enter
+      | campo        | valor                 |
+      | Nome         | João da Silva         |
+      | CPF          | 12345678901           |
+      | Endereço     | Rua das Flores, 123   |
+      | Telefone     | (11)98765-4321        |
+      | CEP          | 12345678              |
+      | E‑mail       | joao.silva@email.com |
+      | Senha        | MinhaSenha!123        |
+      | Confirmação  | MinhaSenha!123        |
+    And I click “Cadastrar”
+    Then I should see a banner “Cadastro concluído com sucesso! Faça login.”
 
-  Scenario Outline: Cadastro com campo obrigatório em branco
-    Given o usuário abre a página de cadastro
-    When ele deixa o campo "<campo>" em branco e preenche os demais com dados válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “Campo <campo> é obrigatório”
+  @negative
+  Scenario: Usuário deixa um campo obrigatório vazio
+    Given I open the “Cadastro” page
+    When I leave “CPF” empty
+    And I fill all other fields with valid data
+    And I click “Cadastrar”
+    Then I should see an error message “O campo CPF é obrigatório”
+
+  @negative
+  Scenario Outline: Validação de formatos de campos inválidos
+    Given I open the “Cadastro” page
+    When I enter
+      | campo        | valor                 |
+      | Nome         | Maria Oliveira        |
+      | CPF          | <cpf>                 |
+      | Endereço     | Av. Central, 456      |
+      | Telefone     | <telefone>            |
+      | CEP          | <cep>                 |
+      | E‑mail       | <email>               |
+      | Senha        | Segura123!            |
+      | Confirmação  | Segura123!            |
+    And I click “Cadastrar”
+    Then I should see the error message "<mensagem>"
 
     Examples:
-      | campo          |
-      | Nome           |
-      | Email          |
-      | Senha          |
-      | CEP            |
-      | Telefone       |
+      | cpf        | telefone          | cep     | email                       | mensagem                                   |
+      | 123          | 11-987654321     | 1234    | joao.silva                 | O campo CPF deve conter 11 dígitos          |
+      | 12345678901 | (11)987654321     | 1234567 | joao.silva@email           | O campo Telefone deve ter o formato (xx)xxxxx‑xxxx |
+      | 12345678901 | (11)987654321     | 1234567 | joao.silva@email.com       | O campo CEP deve conter 8 dígitos            |
+      | 12345678901 | (11)987654321     | 12345678 | joao.silva                  | O campo E‑mail deve ter um endereço válido   |
 
-  Scenario Outline: Cadastro com dados inválidos
-    Given o usuário abre a página de cadastro
-    When ele preenche o campo "<campo>" com valor "<valor_invalido>" e os demais com dados válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “<mensagem_erro>”
-
-    Examples:
-      | campo   | valor_invalido      | mensagem_erro                                  |
-      | Email   | usuario@          | Email inválido                                 |
-      | CEP     | 123                 | CEP inválido                                   |
-      | Telefone| 12abc               | Telefone inválido                              |
+  @positive
+  Scenario: Usuário recebe e‑mail de confirmação após cadastro
+    Given I have completed the registration successfully
+    Then an e‑mail should be sent to “joao.silva@email.com” containing a “link de validação”
 
 # Feature: Login
 Feature: Login
-  O sistema deve permitir o acesso apenas com credenciais válidas.
+  Como usuário cadastrado
+  Quero entrar no sistema usando credenciais válidas
+  Para que eu possa acessar minha conta
 
-  Scenario: Login com credenciais válidas
-    Given o usuário está na página de login
-    When ele insere email e senha válidos
-    And clica em “Entrar”
-    Then o sistema redireciona para a página inicial da conta
+  @positive
+  Scenario: Usuário entra com CPF e senha corretos
+    Given I open the “Login” page
+    When I enter “12345678901” as CPF
+    And I enter “MinhaSenha!123” as senha
+    And I click “Entrar”
+    Then I should be redirected to the “Dashboard” page
 
-  Scenario: Login com credenciais inválidas
-    Given o usuário está na página de login
-    When ele insere email ou senha inválidos
-    And clica em “Entrar”
-    Then o sistema exibe a mensagem “Credenciais inválidas”
+  @negative
+  Scenario: Usuário entra com senha inválida
+    Given I open the “Login” page
+    When I enter “12345678901” as CPF
+    And I enter “SenhaErrada” as senha
+    And I click “Entrar”
+    Then I should see the message “CPF ou senha inválidos.”
 
-# Feature: Acesso à Conta (Saldo e Extrato)
-Feature: Acesso à Conta
-  O usuário deve visualizar saldo atualizado e extrato ordenado cronologicamente.
+  @negative
+  Scenario: Usuário entra com CPF inválido
+    Given I open the “Login” page
+    When I enter “11111111111” as CPF
+    And I enter “MinhaSenha!123” as senha
+    And I click “Entrar”
+    Then I should see the message “CPF ou senha inválidos.”
 
-  Scenario: Exibição de saldo atualizado
-    Given o usuário está na página inicial da conta
-    When ele acessa a seção “Saldo”
-    Then o sistema exibe o saldo correto e atualizado
+  @negative
+  Scenario: Usuário excede tentativas de login
+    Given I open the “Login” page
+    When I fail to login 5 times with incorrect credentials
+    Then I should see the message “Tentativas excedidas. Aguarde 5 min.”
 
-  Scenario: Lista de extrato em ordem cronológica
-    Given o usuário está na página “Extrato”
-    When ele visualiza as transações
-    Then as transações são listadas em ordem decrescente de data (mais recente primeiro)
+# Feature: Acesso à Conta – Saldo e Extrato
+Feature: Acesso à Conta – Saldo e Extrato
+  Como cliente logado
+  Quero visualizar meu saldo atual e extrato em ordem cronológica
+  Para que eu saiba exatamente meus recursos disponíveis
+
+  @positive
+  Scenario: Usuário visualiza saldo após operação de depósito
+    Given I am logged in
+    And I have deposited R$ 1.000,00 into my account
+    When I go to the “Saldo” tab
+    Then I should see the balance “R$ 1.000,00”
+
+  @positive
+  Scenario: Usuário visualiza extrato em ordem cronológica
+    Given I am logged in
+    And I have performed 12 transactions in the last month
+    When I go to the “Extrato” tab
+    Then the first 10 entries should be displayed in descending date order
+    And each entry should contain date, description, type, value, and post‑transaction balance
 
 # Feature: Transferência de Fundos
 Feature: Transferência de Fundos
-  O sistema deve gerenciar transferências entre contas, evitando saldo insuficiente.
+  Como cliente logado
+  Quero transferir dinheiro para outra conta
+  Para que eu possa movimentar recursos entre minhas contas
 
-  Scenario: Transferência bem‑sucedida
-    Given o usuário está na página de transferências
-    When ele seleciona “Conta A” como origem
-    And seleciona “Conta B” como destino
-    And insere valor “100.00” (≤ saldo disponível)
-    And confirma a transferência
-    Then o valor “100.00” é debitado da Conta A
-    And o valor “100.00” é creditado na Conta B
-    And a transação é registrada nos históricos de ambas as contas
+  @positive
+  Scenario: Usuário transfere dinheiro com saldo suficiente
+    Given I am logged in
+    And I have a balance of R$ 5.000,00
+    When I navigate to the “Transferir” page
+    And I enter destination account “987654321” and amount “R$ 1.500,00”
+    And I click “Confirmar”
+    Then I should see the message “Transferência concluída com sucesso”
+    And my balance should be updated to “R$ 3.500,00”
 
-  Scenario: Transferência com saldo insuficiente
-    Given o usuário está na página de transferências
-    When ele tenta transferir “2000.00” (excede o saldo)
-    And confirma a transferência
-    Then o sistema exibe a mensagem “Saldo insuficiente”
+  @negative
+  Scenario: Usuário tenta transferir valor maior que o saldo
+    Given I am logged in
+    And I have a balance of R$ 2.000,00
+    When I navigate to the “Transferir” page
+    And I enter destination account “987654321” and amount “R$ 3.000,00”
+    And I click “Confirmar”
+    Then I should see the message “Saldo insuficiente”
 
-  Scenario Outline: Transferência com valor inválido
-    Given o usuário na página de transferências
-    When ele insere valor "<valor>"
-    And confirma
-    Then o sistema exibe a mensagem “<mensagem>”
+  @positive
+  Scenario Outline: Registro de transferência no histórico de ambas as contas
+    Given I am logged in as <cpfOrigem> with balance R$ 5.000,00
+    When I transfer R$ 500,00 to account <cpfDestino>
+    Then the origin account history should contain a “Transferência de <cpfDestino>” entry
+    And the destination account history should contain a “Transferência de <cpfOrigem>” entry
 
     Examples:
-      | valor          | mensagem                   |
-      | 0              | Valor mínimo é 0,01        |
-      | -50.00         | Valor negativo não permitido|
+      | cpfOrigem     | cpfDestino   |
+      | 12345678901   | 10987654321  |
 
 # Feature: Solicitação de Empréstimo
 Feature: Solicitação de Empréstimo
-  O usuário pode solicitar empréstimo e receber feedback de aprovação ou negação.
+  Como cliente logado
+  Quero solicitar empréstimo indicando valor e renda anual
+  Para que eu possa obter recursos adicionais se necessário
 
-  Scenario: Empréstimo aprovado
-    Given o usuário está na página de empréstimo
-    When ele insere valor “5000” e renda anual “60000”
-    And envia a solicitação
-    Then o sistema exibe “Aprovado”
+  @positive
+  Scenario: Usuário solicita empréstimo aprovado
+    Given I am logged in
+    When I request a loan of R$ 20.000,00 with annual income R$ 120.000,00
+    Then I should see the status “Aprovado” within 2 seconds
+    And I should see available terms and interest rates
 
-  Scenario: Empréstimo negado
-    Given o usuário está na página de empréstimo
-    When ele insere valor “20000” e renda anual “30000”
-    And envia a solicitação
-    Then o sistema exibe “Negado”
+  @negative
+  Scenario: Usuário solicita empréstimo negado por renda insuficiente
+    Given I am logged in
+    When I request a loan of R$ 50.000,00 with annual income R$ 30.000,00
+    Then I should see the status “Negado” within 2 seconds
+    And I should see the reason “Renda insuficiente”
 
 # Feature: Pagamento de Contas
 Feature: Pagamento de Contas
-  O usuário deve registrar pagamentos com dados completos e respeitar a data agendada.
+  Como cliente logado
+  Quero registrar pagamento de conta a futuro
+  Para que eu garanta que a transação ocorrerá na data certa
 
-  Scenario: Pagamento futuro agendado
-    Given o usuário está na página de pagamento de contas
-    When ele preenche beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor “150.00” e data “2025-12-31”
-    And confirma
-    Then o sistema registra o pagamento
-    And o pagamento aparece no histórico de transações com data “2025-12-31”
+  @positive
+  Scenario: Usuário agenda pagamento futuro
+    Given I am logged in
+    When I schedule a payment to “Conta X” for R$ 200,00 on the 25th of the next month
+    Then the payment should appear in the scheduled payments list
+    And the transaction should be recorded on the 25th
 
-  Scenario Outline: Pagamento com campo obrigatório em branco
-    Given o usuário na página de pagamento
-    When ele deixa o campo "<campo>" em branco e preenche os demais
-    And confirma
-    Then o sistema exibe “Campo <campo> é obrigatório”
+  @negative
+  Scenario: Usuário tenta agendar pagamento em dia passado
+    Given I am logged in
+    When I try to schedule a payment for yesterday’s date
+    Then I should see an error message “A data de pagamento deve ser futura”
 
-    Examples:
-      | campo           |
-      | Beneficiário    |
-      | Endereço        |
-      | Cidade          |
-      | Estado          |
-      | CEP             |
-      | Telefone        |
-      | Conta de destino|
-      | Valor           |
-      | Data            |
-
-# Feature: Requisitos Gerais de Navegação e Usabilidade
+# Feature: Navegação e Usabilidade
 Feature: Navegação e Usabilidade
-  Garantir que todas as páginas carreguem sem erros e que mensagens de erro sejam claras.
+  Como usuário em qualquer página
+  Quero navegar sem erros
+  Para que minha experiência seja fluida
 
-  Scenario: Todas as páginas carregam corretamente
-    Given o usuário navega por todas as páginas do sistema
-    When ele acessa cada uma
-    Then nenhuma página apresenta erro de carregamento
+  @negative
+  Scenario: Usuário acessa rota inexistente e recebe página 404
+    Given I am logged in
+    When I navigate to “/caminho/invalido”
+    Then I should see the “Erro 404 – Página não encontrada” page
 
-  Scenario: Mensagens de erro claras e objetivas
-    Given o usuário tenta uma operação inválida (ex.: transferir com saldo insuficiente)
-    When a ação falha
-    Then a mensagem exibida é clara, objetiva e localizada próximo ao campo afetado
+  @positive
+  Scenario: Mensagens de erro aparecem localizadas e claras
+    Given I am on the “Cadastro” page
+    When I submit the form with an invalid e‑mail
+    Then the error message should appear next to the e‑mail field
+    And the message should read “O campo E‑mail deve ter um endereço válido”
 
-  Scenario: Consistência de menus e links
-    Given o usuário está em qualquer página
-    When ele verifica a barra de navegação
-    Then todos os links (Home, Conta, Transferência, Empréstimo, Pagamento) estão presentes e levam à página correta
+  @positive
+  Scenario: Menus e links são consistentes em todas as páginas
+    Given I am logged in
+    When I navigate to each of the main pages: “Dashboard”, “Transferir”, “Empréstimo”, “Pagamentos”, “Logout”
+    Then each page should contain the same top menu structure with these items
+    And the layout should adapt responsively to mobile viewports
 ```

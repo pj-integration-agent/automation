@@ -4,9 +4,9 @@ run-name: Running - Execução de testes
 on:
   push:
     branches: 
-      - main
+      - user-story
     paths:
-      - 'ai/requirements/criterios.md'
+      - 'ai/requirements/*'
   workflow_dispatch:
 
 permissions:

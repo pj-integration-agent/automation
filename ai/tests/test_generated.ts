@@ -1,849 +1,681 @@
-**Playwright + TypeScript – Full Test Suite (BDD → Code)**  
-*Every file below can be copied directly into a Playwright project created with `npx playwright install`.*
+## 1️⃣ Estrutura do Projeto
+
+```
+.
+├── package.json
+├── playwright.config.ts          ← config do Playwright Test Runner
+├── tsconfig.json
+├── tests
+│   ├── cadastro.spec.ts
+│   ├── login.spec.ts
+│   ├── account-access.spec.ts
+│   ├── transfer.spec.ts
+│   ├── loan.spec.ts
+│   ├── payment.spec.ts
+│   └── navigation.spec.ts
+├── pages
+│   ├── CadastroPage.ts
+│   ├── LoginPage.ts
+│   ├── DashboardPage.ts
+│   ├── TransferPage.ts
+│   ├── LoanPage.ts
+│   ├── PaymentPage.ts
+│   └── NavigationPage.ts
+└── utils
+    ├── testData.ts
+    └── helpers.ts
+```
+
+> ⚙️ **Obs.:**  
+> • O projeto está em **TypeScript** – é necessário `ts-node` ou compilar antes de rodar.  
+> • Os *selectors* são baseados em `data-testid` – adapte‑os se a aplicação usar outro padrão.  
+> • Para email de confirmação, o teste usa um mock de API (`/api/mail/verify`) – substitua pelo endpoint real ou por um serviço de mock (e.g. MailHog).
 
 ---
 
-## 1️⃣  Project skeleton
-
-```
-project-root/
-├─ .env                     ← environment variables (BASE_URL, TEST_USER, ...)
-├─ playwright.config.ts
-├─ tsconfig.json
-├─ package.json
-├─ tests/
-│  ├─ registration.spec.ts
-│  ├─ login.spec.ts
-│  ├─ account.spec.ts
-│  ├─ transfer.spec.ts
-│  ├─ loan.spec.ts
-│  ├─ payment.spec.ts
-│  └─ navigation.spec.ts
-└─ pages/
-   ├─ RegistrationPage.ts
-   ├─ LoginPage.ts
-   ├─ AccountPage.ts
-   ├─ TransferPage.ts
-   ├─ LoanPage.ts
-   ├─ PaymentPage.ts
-   └─ NavigationPage.ts
-```
-
-> **Tip:** keep every feature in its own test file – this keeps the suite fast, readable and easy to debug.
-
----
-
-## 2️⃣  Configuration
-
-> `npm install -D @playwright/test ts-node dotenv`
+## 2️⃣ `playwright.config.ts`
 
 ```ts
-// playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
-
-dotenv.config();                     // <-- loads .env
 
 export default defineConfig({
-  testDir: './tests',
-  timeout: 60000,
-  retries: 2,
+  testDir: 'tests',
+  timeout: 60 * 1000,
+  retries: 0,
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
-    browserName: 'chromium',
+    // Browser padrão
+    baseURL: 'https://localhost:3000',
     headless: true,
     viewport: { width: 1280, height: 720 },
-    actionTimeout: 0,
-    navigationTimeout: 0,
-    ignoreHTTPSErrors: true,
-    video: 'on-first-retry',
+    // Espera padrão
+    waitUntil: 'networkidle',
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
 });
 ```
 
-```ts
-// tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "CommonJS",
-    "lib": ["ESNext"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "outDir": "dist",
-    "rootDir": ".",
-    "typeRoots": ["node_modules/@types"]
-  },
-  "include": ["**/*.ts"]
-}
-```
-
-> **.env** (example)
-
-```
-BASE_URL=http://localhost:3000
-TEST_USER_EMAIL=demo@example.com
-TEST_USER_PASSWORD=Passw0rd!
-```
-
 ---
 
-## 3️⃣  Page Objects
-
-All page objects use *the Page Object Model (POM)* – they expose only actions that a user can perform.  
-Selectors are kept **stable** (data‑testids) and are wrapped in helper methods that include appropriate waits.
-
-> *If your app uses other selectors, replace them accordingly.*
+## 3️⃣ Page Objects (exemplo: `CadastroPage.ts`)
 
 ```ts
-// pages/RegistrationPage.ts
-import { Page, expect } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
-export class RegistrationPage {
-  constructor(private readonly page: Page) {}
+/**
+ * Page Object responsável pelo fluxo de cadastro
+ */
+export class CadastroPage {
+  readonly page: Page;
+  readonly inputNome: Locator;
+  readonly inputCPF: Locator;
+  readonly inputEndereco: Locator;
+  readonly inputTelefone: Locator;
+  readonly inputCEP: Locator;
+  readonly inputEmail: Locator;
+  readonly inputSenha: Locator;
+  readonly inputConfirmacao: Locator;
+  readonly btnCadastrar: Locator;
+  readonly bannerSucesso: Locator;
+  readonly msgErroCPF: Locator;
+  readonly msgErroEmail: Locator;
 
-  // ---------- Locators ----------
-  private form = this.page.locator('#registration-form');
-  private name = this.form.locator('input[name="name"]');
-  private email = this.form.locator('input[name="email"]');
-  private password = this.form.locator('input[name="password"]');
-  private cep = this.form.locator('input[name="cep"]');
-  private phone = this.form.locator('input[name="phone"]');
-  private submitBtn = this.form.locator('button[type="submit"]');
-  private successMsg = this.page.locator('text=Cadastro concluído com sucesso');
-
-  // ---------- Actions ----------
-  async goto() {
-    await this.page.goto('/register');
-    await this.form.waitFor({ state: 'visible' });
+  constructor(page: Page) {
+    this.page = page;
+    this.inputNome        = page.locator('[data-testid="input-nome"]');
+    this.inputCPF         = page.locator('[data-testid="input-cpf"]');
+    this.inputEndereco    = page.locator('[data-testid="input-endereco"]');
+    this.inputTelefone    = page.locator('[data-testid="input-telefone"]');
+    this.inputCEP         = page.locator('[data-testid="input-cep"]');
+    this.inputEmail       = page.locator('[data-testid="input-email"]');
+    this.inputSenha       = page.locator('[data-testid="input-senha"]');
+    this.inputConfirmacao = page.locator('[data-testid="input-confirmacao"]');
+    this.btnCadastrar     = page.locator('[data-testid="btn-cadastrar"]');
+    this.bannerSucesso    = page.locator('[data-testid="banner-sucesso"]');
+    this.msgErroCPF       = page.locator('[data-testid="erro-cpf"]');
+    this.msgErroEmail     = page.locator('[data-testid="erro-email"]');
   }
 
-  async fillMandatoryFields(data: Partial<{
-    name: string,
-    email: string,
-    password: string,
-    cep: string,
-    phone: string,
-  }> = {}) {
-    if (data.name !== undefined) await this.name.fill(data.name);
-    if (data.email !== undefined) await this.email.fill(data.email);
-    if (data.password !== undefined) await this.password.fill(data.password);
-    if (data.cep !== undefined) await this.cep.fill(data.cep);
-    if (data.phone !== undefined) await this.phone.fill(data.phone);
+  /** Navega até a página de cadastro */
+  async open() {
+    await this.page.goto('/cadastro');
+    await this.page.waitForLoadState('networkidle');
   }
 
+  /** Preenche os campos com os dados recebidos */
+  async fillForm(data: { [key: string]: string }) {
+    const mapping: { [key: string]: Locator } = {
+      'Nome': this.inputNome,
+      'CPF': this.inputCPF,
+      'Endereço': this.inputEndereco,
+      'Telefone': this.inputTelefone,
+      'CEP': this.inputCEP,
+      'E‑mail': this.inputEmail,
+      'Senha': this.inputSenha,
+      'Confirmação': this.inputConfirmacao,
+    };
+
+    for (const [field, value] of Object.entries(data)) {
+      const locator = mapping[field];
+      if (!locator) throw new Error(`Campo ${field} não mapeado`);
+      await locator.fill(value);
+    }
+  }
+
+  /** Clica no botão “Cadastrar” */
   async submit() {
-    await Promise.all([
-      this.page.waitForNavigation({ url: /login/ }), // adjust depending on redirect
-      this.submitBtn.click()
-    ]);
+    await this.btnCadastrar.click();
   }
 
-  async getErrorMessageFor(field: string) {
-    // Assumes error is rendered next to the field with a data-testid like `error-email`
-    return this.page.locator(`data-testid="error-${field.toLowerCase()}"`).innerText();
+  /** Valida a mensagem de sucesso */
+  async expectSuccess() {
+    await this.bannerSucesso.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(this.bannerSucesso).toHaveText(/Cadastro concluído com sucesso!/i);
   }
 
-  async hasSuccessMessage(): Promise<boolean> {
-    return await this.successMsg.isVisible();
-  }
-}
-```
-
-```ts
-// pages/LoginPage.ts
-import { Page } from '@playwright/test';
-
-export class LoginPage {
-  constructor(private readonly page: Page) {}
-
-  private form = this.page.locator('#login-form');
-  private email = this.form.locator('input[name="email"]');
-  private password = this.form.locator('input[name="password"]');
-  private submitBtn = this.form.locator('button[type="submit"]');
-  private errorMsg = this.page.locator('text=Credenciais inválidas');
-
-  async goto() {
-    await this.page.goto('/login');
-    await this.form.waitFor({ state: 'visible' });
+  /** Valida a mensagem de erro de CPF */
+  async expectErroCPF(message: string) {
+    await this.msgErroCPF.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(this.msgErroCPF).toHaveText(message);
   }
 
-  async login(email: string, password: string) {
-    await this.email.fill(email);
-    await this.password.fill(password);
-    await Promise.all([
-      this.page.waitForNavigation({ url: /account/ }), // adjust
-      this.submitBtn.click()
-    ]);
-  }
-
-  async getErrorMessage() {
-    return await this.errorMsg.textContent();
+  /** Valida a mensagem de erro de E‑mail */
+  async expectErroEmail(message: string) {
+    await this.msgErroEmail.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(this.msgErroEmail).toHaveText(message);
   }
 }
 ```
 
-```ts
-// pages/AccountPage.ts
-import { Page } from '@playwright/test';
-
-export class AccountPage {
-  constructor(private readonly page: Page) {}
-
-  private balance = this.page.locator('#account-balance');
-  private statementBtn = this.page.locator('button:has-text("Extrato")');
-
-  async goto() {
-    await this.page.goto('/account');
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async getBalance(): Promise<number> {
-    const txt = await this.balance.textContent();
-    return parseFloat(txt?.replace(/[^\d.,]/g, '').replace(',', '.') ?? '0');
-  }
-
-  async goToStatement() {
-    await this.statementBtn.click();
-    await this.page.waitForURL(/\/statement/);
-  }
-}
-```
-
-```ts
-// pages/TransferPage.ts
-import { Page } from '@playwright/test';
-
-export class TransferPage {
-  constructor(private readonly page: Page) {}
-
-  private origin = this.page.locator('select[name="origin"]');
-  private destination = this.page.locator('select[name="destination"]');
-  private amount = this.page.locator('input[name="amount"]');
-  private confirmBtn = this.page.locator('button:has-text("Confirmar")');
-  private errorMsg = this.page.locator('#error-message');
-  private history = this.page.locator('#transfer-history');
-
-  async goto() {
-    await this.page.goto('/transfer');
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async setOrigin(value: string) {
-    await this.origin.selectOption({ label: value });
-  }
-
-  async setDestination(value: string) {
-    await this.destination.selectOption({ label: value });
-  }
-
-  async setAmount(value: string) {
-    await this.amount.fill(value);
-  }
-
-  async confirm() {
-    await Promise.all([
-      this.page.waitForResponse(resp => resp.url().includes('/api/transfer') && resp.ok()),
-      this.confirmBtn.click()
-    ]);
-  }
-
-  async getError(): Promise<string | null> {
-    return await this.errorMsg.isVisible() ? await this.errorMsg.textContent() : null;
-  }
-
-  async getHistory(): Promise<string[]> {
-    return await this.history.locator('tbody tr').allTextContents();
-  }
-}
-```
-
-```ts
-// pages/LoanPage.ts
-import { Page } from '@playwright/test';
-
-export class LoanPage {
-  constructor(private readonly page: Page) {}
-
-  private amount = this.page.locator('input[name="amount"]');
-  private annualIncome = this.page.locator('input[name="income"]');
-  private submitBtn = this.page.locator('button:has-text("Enviar")');
-  private resultMsg = this.page.locator('#loan-result');
-
-  async goto() {
-    await this.page.goto('/loan');
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async apply(amount: string, income: string) {
-    await this.amount.fill(amount);
-    await this.annualIncome.fill(income);
-    await Promise.all([
-      this.page.waitForResponse(resp => resp.url().includes('/api/loan') && resp.ok()),
-      this.submitBtn.click()
-    ]);
-  }
-
-  async getResult(): Promise<string> {
-    return await this.resultMsg.textContent() ?? '';
-  }
-}
-```
-
-```ts
-// pages/PaymentPage.ts
-import { Page } from '@playwright/test';
-
-export class PaymentPage {
-  constructor(private readonly page: Page) {}
-
-  private beneficiary = this.page.locator('input[name="beneficiary"]');
-  private address = this.page.locator('input[name="address"]');
-  private city = this.page.locator('input[name="city"]');
-  private state = this.page.locator('input[name="state"]');
-  private cep = this.page.locator('input[name="cep"]');
-  private phone = this.page.locator('input[name="phone"]');
-  private destinationAccount = this.page.locator('input[name="account"]');
-  private amount = this.page.locator('input[name="amount"]');
-  private date = this.page.locator('input[name="date"]');
-  private confirmBtn = this.page.locator('button:has-text("Confirmar")');
-  private history = this.page.locator('#payment-history');
-
-  async goto() {
-    await this.page.goto('/payment');
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async fillAll(data: Partial<{
-    beneficiary: string,
-    address: string,
-    city: string,
-    state: string,
-    cep: string,
-    phone: string,
-    destinationAccount: string,
-    amount: string,
-    date: string,
-  }> = {}) {
-    if (data.beneficiary) await this.beneficiary.fill(data.beneficiary);
-    if (data.address) await this.address.fill(data.address);
-    if (data.city) await this.city.fill(data.city);
-    if (data.state) await this.state.fill(data.state);
-    if (data.cep) await this.cep.fill(data.cep);
-    if (data.phone) await this.phone.fill(data.phone);
-    if (data.destinationAccount) await this.destinationAccount.fill(data.destinationAccount);
-    if (data.amount) await this.amount.fill(data.amount);
-    if (data.date) await this.date.fill(data.date);
-  }
-
-  async confirm() {
-    await Promise.all([
-      this.page.waitForResponse(resp => resp.url().includes('/api/payment') && resp.ok()),
-      this.confirmBtn.click()
-    ]);
-  }
-
-  async getErrorMessageFor(field: string): Promise<string | null> {
-    return await this.page.locator(`data-testid="error-${field.toLowerCase()}"`).innerText();
-  }
-
-  async getLastHistoryEntry(): Promise<string[]> {
-    const rows = await this.history.locator('tbody tr').all();
-    if (rows.length === 0) return [];
-    return await rows[rows.length - 1].allTextContents();
-  }
-}
-```
-
-```ts
-// pages/NavigationPage.ts
-import { Page } from '@playwright/test';
-
-export class NavigationPage {
-  constructor(private readonly page: Page) {}
-
-  // ---------- Locators ----------
-  private navLinks = this.page.locator('nav a');
-
-  // ---------- Actions ----------
-  async gotoHome() {
-    await this.page.goto('/');
-  }
-
-  async navigateTo(page: string) {
-    await this.page.goto(page);
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async getNavLinks(): Promise<string[]> {
-    return await this.navLinks.allTextContents();
-  }
-
-  async clickLink(linkText: string) {
-    await this.navLinks.filter({ hasText: linkText }).click();
-    await this.page.waitForLoadState('networkidle');
-  }
-}
-```
+> 🔁 **Repetição**: Os demais *Page Objects* seguem a mesma lógica – mapeiam os *selectors* e encapsulam ações comuns (login, navegação, etc.).
 
 ---
 
-## 4️⃣  Tests – each feature in its own file
-
-> *All tests use **async/await** and **expect** from Playwright Test for assertions.*  
-> *Where the Gherkin had an “Outline”, we use `test.each` for data‑driven tests.*
-
----
-
-### 4.1  **tests/registration.spec.ts** – *Cadastro de Usuário*
+## 4️⃣ Fixtures – login já realizado (`utils/helpers.ts`)
 
 ```ts
-// tests/registration.spec.ts
-import { test, expect } from '@playwright/test';
-import { RegistrationPage } from '../pages/RegistrationPage';
+import { Page, test as base } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
+import { CadastroPage } from '../pages/CadastroPage';
+import { DashboardPage } from '../pages/DashboardPage';
 
-const validUser = {
-  name: 'Fulano de Tal',
-  email: 'fulano.tal@example.com',
-  password: 'P4ssw0rd!',
-  cep: '01001-000',
-  phone: '1199998888',
-};
+export const test = base.extend<{
+  loginPage: LoginPage;
+  cadastroPage: CadastroPage;
+  dashboardPage: DashboardPage;
+}>({
+  loginPage: async ({ page }, use) => {
+    const pageObj = new LoginPage(page);
+    await use(pageObj);
+  },
+  cadastroPage: async ({ page }, use) => {
+    await use(new CadastroPage(page));
+  },
+  dashboardPage: async ({ page }, use) => {
+    await use(new DashboardPage(page));
+  },
+});
+
+/**
+ * Função auxiliar que faz login automaticamente
+ * @param page
+ * @param cpf
+ * @param senha
+ */
+export async function login(page: Page, cpf: string, senha: string) {
+  const login = new LoginPage(page);
+  await login.open();
+  await login.enterCPF(cpf);
+  await login.enterSenha(senha);
+  await login.submit();
+  // Aguardamos a tela de dashboard para garantir que o login foi concluído
+  await page.waitForURL('/dashboard', { timeout: 5000 });
+}
+```
+
+---
+
+## 5️⃣ Testes – Gherkin convertido
+
+### 5.1 `cadastro.spec.ts`
+
+```ts
+import { test, expect } from '../utils/helpers';
+import { CadastroPage } from '../pages/CadastroPage';
+import { testData } from '../utils/testData';
 
 test.describe('Cadastro de Usuário', () => {
-
-  test('Cadastro bem-sucedido', async ({ page }) => {
-    const reg = new RegistrationPage(page);
-    await reg.goto();
-    await reg.fillMandatoryFields(validUser);
-    await reg.submit();
-
-    // ✅ Mensagem de sucesso
-    expect(await reg.hasSuccessMessage()).toBeTruthy();
-
-    // → Teste de login com as credenciais recém‑criado
-    const login = new LoginPage(page);
-    await login.goto();
-    await login.login(validUser.email, validUser.password);
-
-    // → Verifica que estamos na página inicial da conta
-    await expect(page).toHaveURL(/\/account/);
+  // =====  Positive: Cadastro completo =====
+  test('Usuário preenche cadastro completo com dados válidos', async ({ cadastroPage }) => {
+    await cadastroPage.open();
+    await cadastroPage.fillForm({
+      'Nome': 'João da Silva',
+      'CPF': '12345678901',
+      'Endereço': 'Rua das Flores, 123',
+      'Telefone': '(11)98765-4321',
+      'CEP': '12345678',
+      'E‑mail': 'joao.silva@email.com',
+      'Senha': 'MinhaSenha!123',
+      'Confirmação': 'MinhaSenha!123',
+    });
+    await cadastroPage.submit();
+    await cadastroPage.expectSuccess();
   });
 
-  // ---- Scenario Outline: campo obrigatório em branco
-  const mandatoryFields = ['Nome', 'Email', 'Senha', 'CEP', 'Telefone'];
-  test.each(mandatoryFields)('Cadastro com campo obrigatório em branco – %s', async (campo, { page }) => {
-    const reg = new RegistrationPage(page);
-    await reg.goto();
-
-    // preenche tudo, exceto o campo <campo>
-    const data = { ...validUser };
-    delete data[ campo.toLowerCase() as keyof typeof data ];   // remove a propriedade
-
-    await reg.fillMandatoryFields(data);
-    await reg.submit();
-
-    // Espera a mensagem de erro do campo
-    const msg = await reg.getErrorMessageFor(campo);
-    expect(msg).toContain(`Campo ${campo} é obrigatório`);
+  // =====  Negative: CPF vazio =====
+  test('Usuário deixa um campo obrigatório vazio – CPF', async ({ cadastroPage }) => {
+    await cadastroPage.open();
+    await cadastroPage.fillForm({
+      'Nome': 'Maria Oliveira',
+      'CPF': '', // vazio intencional
+      'Endereço': 'Av. Central, 456',
+      'Telefone': '(11)98765-4321',
+      'CEP': '12345678',
+      'E‑mail': 'maria.oliveira@email.com',
+      'Senha': 'Segura123!',
+      'Confirmação': 'Segura123!',
+    });
+    await cadastroPage.submit();
+    await cadastroPage.expectErroCPF('O campo CPF é obrigatório');
   });
 
-  // ---- Scenario Outline: dados inválidos
+  // =====  Negative: Formato inválido – Scenario Outline =====
   const invalidData = [
-    { campo: 'Email', valor: 'usuario@', mensagem: 'Email inválido' },
-    { campo: 'CEP', valor: '123', mensagem: 'CEP inválido' },
-    { campo: 'Telefone', valor: '12abc', mensagem: 'Telefone inválido' },
+    {
+      cpf: '123',
+      telefone: '11-987654321',
+      cep: '1234',
+      email: 'joao.silva',
+      mensagem: 'O campo CPF deve conter 11 dígitos',
+    },
+    {
+      cpf: '12345678901',
+      telefone: '(11)987654321',
+      cep: '1234567',
+      email: 'joao.silva@email',
+      mensagem: 'O campo Telefone deve ter o formato (xx)xxxxx‑xxxx',
+    },
+    {
+      cpf: '12345678901',
+      telefone: '(11)987654321',
+      cep: '1234567',
+      email: 'joao.silva@email.com',
+      mensagem: 'O campo CEP deve conter 8 dígitos',
+    },
+    {
+      cpf: '12345678901',
+      telefone: '(11)987654321',
+      cep: '12345678',
+      email: 'joao.silva',
+      mensagem: 'O campo E‑mail deve ter um endereço válido',
+    },
   ];
 
-  test.each(invalidData)('Cadastro com dados inválidos – $campo', async ({ campo, valor, mensagem }, { page }) => {
-    const reg = new RegistrationPage(page);
-    await reg.goto();
+  test.each(invalidData)(
+    'Validação de formatos de campos inválidos – $mensagem',
+    async ({ cadastroPage, cpf, telefone, cep, email, mensagem }) => {
+      await cadastroPage.open();
+      await cadastroPage.fillForm({
+        'Nome': 'Maria Oliveira',
+        'CPF': cpf,
+        'Endereço': 'Av. Central, 456',
+        'Telefone': telefone,
+        'CEP': cep,
+        'E‑mail': email,
+        'Senha': 'Segura123!',
+        'Confirmação': 'Segura123!',
+      });
+      await cadastroPage.submit();
 
-    const data = { ...validUser, [campo.toLowerCase()]: valor };
-    await reg.fillMandatoryFields(data);
-    await reg.submit();
+      // Dependendo do campo inválido, a mensagem aparece em um local específico
+      if (mensagem.includes('CPF')) await cadastroPage.expectErroCPF(mensagem);
+      else if (mensagem.includes('E‑mail')) await cadastroPage.expectErroEmail(mensagem);
+      else await expect(page.locator('[data-testid="erro-geral"]').innerText()).resolves.toContain(mensagem);
+    }
+  );
 
-    const msg = await reg.getErrorMessageFor(campo);
-    expect(msg).toContain(mensagem);
+  // =====  Positive: Email de confirmação =====
+  test('Usuário recebe e‑mail de confirmação após cadastro', async ({ page }) => {
+    await page.goto('/cadastro');
+    await page.fill('[data-testid="input-email"]', 'joao.silva@email.com');
+    // ...preencher demais campos com dados válidos
+    await page.click('[data-testid="btn-cadastrar"]');
+    // Mock de endpoint de email
+    await page.waitForResponse('**/api/mail/verify', { timeout: 7000 });
+    // Aguardamos a presença do link de validação no corpo do email
+    const mailBody = await page.textContent('[data-testid="mail-body"]');
+    expect(mailBody).toContain('link de validação');
   });
-
 });
 ```
 
+> ⚠️ **Observação:**  
+> • O teste de email de confirmação assume um mock de endpoint. Se a aplicação enviar um e‑mail real, use um serviço de mock (ex.: MailHog) e adapte o seletor do corpo do e‑mail.  
+> • A validação do banner de sucesso usa `expect(page.locator(...)).toHaveText()` – garante que a mensagem aparece e está visível.
+
 ---
 
-### 4.2  **tests/login.spec.ts** – *Login*
+### 5.2 `login.spec.ts`
 
 ```ts
-// tests/login.spec.ts
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/LoginPage';
-
-const testUser = {
-  email: process.env.TEST_USER_EMAIL ?? 'demo@example.com',
-  password: process.env.TEST_USER_PASSWORD ?? 'Passw0rd!'
-};
+import { test, expect, login } from '../utils/helpers';
 
 test.describe('Login', () => {
-
-  test('Login com credenciais válidas', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.goto();
-    await login.login(testUser.email, testUser.password);
-
-    await expect(page).toHaveURL(/\/account/); // redireciona para a página inicial da conta
+  test('Usuário entra com CPF e senha corretos', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await expect(page).toHaveURL('/dashboard');
   });
 
-  test('Login com credenciais inválidas', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.goto();
-    await login.login('invalid@example.com', 'wrongpass');
-
-    const errMsg = await login.getErrorMessage();
-    expect(errMsg).toContain('Credenciais inválidas');
+  test('Usuário entra com senha inválida', async ({ page }) => {
+    await login(page, '12345678901', 'SenhaErrada');
+    await expect(page.locator('[data-testid="msg-erro-login"]')).toHaveText('CPF ou senha inválidos.');
   });
 
-});
-```
-
----
-
-### 4.3  **tests/account.spec.ts** – *Acesso à Conta (Saldo e Extrato)*
-
-```ts
-// tests/account.spec.ts
-import { test, expect } from '@playwright/test';
-import { AccountPage } from '../pages/AccountPage';
-import { TransferPage } from '../pages/TransferPage';
-
-test.describe('Acesso à Conta', () => {
-
-  test('Exibição de saldo atualizado', async ({ page }) => {
-    const account = new AccountPage(page);
-    await account.goto();
-
-    const saldo = await account.getBalance();
-    expect(saldo).toBeGreaterThan(0); // saldo deve estar disponível e atualizado
+  test('Usuário entra com CPF inválido', async ({ page }) => {
+    await login(page, '11111111111', 'MinhaSenha!123');
+    await expect(page.locator('[data-testid="msg-erro-login"]')).toHaveText('CPF ou senha inválidos.');
   });
 
-  test('Lista de extrato em ordem cronológica (decrescente)', async ({ page }) => {
-    const account = new AccountPage(page);
-    await account.goto();
-    await account.goToStatement();
-
-    // Aqui supomos que cada linha tem a data no primeiro <td>
-    const rows = page.locator('#statement-table tbody tr');
-    const dates = await rows.locator('td:first-child').allTextContents();
-
-    const sortedDates = [...dates].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-    expect(dates).toEqual(sortedDates); // garante ordem decrescente
-  });
-
-});
-```
-
----
-
-### 4.4  **tests/transfer.spec.ts** – *Transferência de Fundos*
-
-```ts
-// tests/transfer.spec.ts
-import { test, expect } from '@playwright.test';
-import { TransferPage } from '../pages/TransferPage';
-import { AccountPage } from '../pages/AccountPage';
-
-test.describe('Transferência de Fundos', () => {
-  let transfer: TransferPage;
-  let account: AccountPage;
-
-  test.beforeEach(async ({ page }) => {
-    transfer = new TransferPage(page);
-    account = new AccountPage(page);
-    await transfer.goto();
-  });
-
-  test('Transferência bem-sucedida', async ({ page }) => {
-    // 1️⃣  Checa saldo atual da Conta A
-    await account.goto();
-    const saldoInicial = await account.getBalance();
-
-    // 2️⃣  Executa transferência
-    await transfer.setOrigin('Conta A');
-    await transfer.setDestination('Conta B');
-    const valor = '100.00';
-    await transfer.setAmount(valor);
-    await transfer.confirm();
-
-    // 3️⃣  Verifica que o saldo da Conta A foi debitado
-    await account.goto();
-    const saldoFinal = await account.getBalance();
-    expect(saldoFinal).toBeCloseTo(saldoInicial - parseFloat(valor), 2);
-
-    // 4️⃣  Verifica que o histórico da Conta B contém a entrada
-    await transfer.goto();
-    const history = await transfer.getHistory();
-    expect(history).toContain(valor); // simplificado – ajuste conforme formato real
-  });
-
-  test('Transferência com saldo insuficiente', async ({ page }) => {
-    await transfer.setOrigin('Conta A');
-    await transfer.setDestination('Conta B');
-    await transfer.setAmount('2000.00');
-    await transfer.confirm();
-
-    const err = await transfer.getError();
-    expect(err).toContain('Saldo insuficiente');
-  });
-
-  // ---- Scenario Outline: valor inválido
-  const invalidValues = [
-    { valor: '0', mensagem: 'Valor mínimo é 0,01' },
-    { valor: '-50.00', mensagem: 'Valor negativo não permitido' },
-  ];
-
-  test.each(invalidValues)('Transferência com valor inválido – $valor', async ({ valor, mensagem }) => {
-    await transfer.setOrigin('Conta A');
-    await transfer.setDestination('Conta B');
-    await transfer.setAmount(valor);
-    await transfer.confirm();
-
-    const err = await transfer.getError();
-    expect(err).toContain(mensagem);
-  });
-
-});
-```
-
----
-
-### 4.5  **tests/loan.spec.ts** – *Solicitação de Empréstimo*
-
-```ts
-// tests/loan.spec.ts
-import { test, expect } from '@playwright/test';
-import { LoanPage } from '../pages/LoanPage';
-
-test.describe('Solicitação de Empréstimo', () => {
-  test('Empréstimo aprovado', async ({ page }) => {
-    const loan = new LoanPage(page);
-    await loan.goto();
-    await loan.apply('5000', '60000');
-
-    const result = await loan.getResult();
-    expect(result).toContain('Aprovado');
-  });
-
-  test('Empréstimo negado', async ({ page }) => {
-    const loan = new LoanPage(page);
-    await loan.goto();
-    await loan.apply('20000', '30000');
-
-    const result = await loan.getResult();
-    expect(result).toContain('Negado');
+  test('Usuário excede tentativas de login', async ({ page }) => {
+    for (let i = 0; i < 5; i++) {
+      await login(page, '12345678901', 'SenhaErrada');
+    }
+    await expect(page.locator('[data-testid="msg-erro-login"]')).toHaveText('Tentativas excedidas. Aguarde 5 min.');
   });
 });
 ```
 
 ---
 
-### 4.6  **tests/payment.spec.ts** – *Pagamento de Contas*
+### 5.3 `account-access.spec.ts`
 
 ```ts
-// tests/payment.spec.ts
-import { test, expect } from '@playwright/test';
-import { PaymentPage } from '../pages/PaymentPage';
+import { test, expect, login } from '../utils/helpers';
+import { DashboardPage } from '../pages/DashboardPage';
+import { testData } from '../utils/testData';
 
-test.describe('Pagamento de Contas', () => {
+test.describe('Acesso à Conta – Saldo e Extrato', () => {
+  test('Usuário visualiza saldo após operação de depósito', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    const dashboard = new DashboardPage(page);
 
-  test('Pagamento futuro agendado', async ({ page }) => {
-    const payment = new PaymentPage(page);
-    await payment.goto();
-
-    await payment.fillAll({
-      beneficiary: 'Empresa XYZ',
-      address: 'Rua das Flores',
-      city: 'São Paulo',
-      state: 'SP',
-      cep: '01001-000',
-      phone: '1199998888',
-      destinationAccount: '987654321',
-      amount: '150.00',
-      date: '2025-12-31',
+    // Simular depósito via API (mock)
+    await page.request.post('/api/conta/depositar', {
+      data: { valor: 1000.0 },
     });
 
-    await payment.confirm();
-
-    const lastEntry = await payment.getLastHistoryEntry();
-    expect(lastEntry).toContain('150.00');
-    expect(lastEntry).toContain('2025-12-31');
+    await dashboard.navigateToSaldo();
+    await expect(dashboard.balanço).toHaveText('R$ 1.000,00');
   });
 
-  const mandatoryFields = [
-    'Beneficiário',
-    'Endereço',
-    'Cidade',
-    'Estado',
-    'CEP',
-    'Telefone',
-    'Conta de destino',
-    'Valor',
-    'Data',
-  ];
+  test('Usuário visualiza extrato em ordem cronológica', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    const dashboard = new DashboardPage(page);
 
-  test.each(mandatoryFields)('Pagamento com campo obrigatório em branco – %s', async (campo, { page }) => {
-    const payment = new PaymentPage(page);
-    await payment.goto();
+    // Inserir 12 transações via API (mock)
+    for (let i = 0; i < 12; i++) {
+      await page.request.post('/api/conta/transferir', {
+        data: {
+          destino: '987654321',
+          valor: 50.0,
+          data: new Date(Date.now() - i * 86400000).toISOString(),
+        },
+      });
+    }
 
-    // preenche todos, exceto <campo>
-    const data: Record<string, string> = {
-      Beneficiário: 'Empresa XYZ',
-      Endereço: 'Rua das Flores',
-      Cidade: 'São Paulo',
-      Estado: 'SP',
-      CEP: '01001-000',
-      Telefone: '1199998888',
-      'Conta de destino': '987654321',
-      Valor: '150.00',
-      Data: '2025-12-31',
-    };
-    delete data[campo]; // remove
+    await dashboard.navigateToExtrato();
+    const linhas = await dashboard.getExtratoRows();
+    expect(linhas.length).toBeGreaterThanOrEqual(10);
 
-    await payment.fillAll(data as any);
-    await payment.confirm();
+    // Verifica ordem descendente
+    for (let i = 0; i < linhas.length - 1; i++) {
+      const dataAtual = new Date(await linhas[i].data.innerText());
+      const dataProx = new Date(await linhas[i + 1].data.innerText());
+      expect(dataAtual.getTime()).toBeGreaterThanOrEqual(dataProx.getTime());
+    }
 
-    const errMsg = await payment.getErrorMessageFor(campo);
-    expect(errMsg).toContain(`Campo ${campo} é obrigatório`);
+    // Verifica que cada linha contém todos os campos
+    for (const row of linhas) {
+      await expect(row.data).toBeVisible();
+      await expect(row.descricao).toBeVisible();
+      await expect(row.tipo).toBeVisible();
+      await expect(row.valor).toBeVisible();
+      await expect(row.saldo).toBeVisible();
+    }
   });
-
 });
 ```
 
 ---
 
-### 4.7  **tests/navigation.spec.ts** – *Requisitos Gerais de Navegação e Usabilidade*
+### 5.4 `transfer.spec.ts`
 
 ```ts
-// tests/navigation.spec.ts
-import { test, expect } from '@playwright/test';
-import { NavigationPage } from '../pages/NavigationPage';
+import { test, expect, login } from '../utils/helpers';
 import { TransferPage } from '../pages/TransferPage';
 
-test.describe('Navegação e Usabilidade', () => {
-
-  test('Todas as páginas carregam corretamente', async ({ page }) => {
-    const nav = new NavigationPage(page);
-    const pages = [
-      '/register',
-      '/login',
-      '/account',
-      '/transfer',
-      '/loan',
-      '/payment',
-      '/statement',
-    ];
-
-    for (const path of pages) {
-      await nav.navigateTo(path);
-      // Garantimos que não há erro 500
-      await expect(page.locator('body')).not.toContainText('Erro inesperado');
-    }
-  });
-
-  test('Mensagens de erro claras e objetivas', async ({ page }) => {
+test.describe('Transferência de Fundos', () => {
+  test('Usuário transfere dinheiro com saldo suficiente', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
     const transfer = new TransferPage(page);
-    await transfer.goto();
 
-    // Simula uma transferência com saldo insuficiente
-    await transfer.setOrigin('Conta A');
-    await transfer.setDestination('Conta B');
-    await transfer.setAmount('2000.00');
-    await transfer.confirm();
+    // Define saldo via API (mock)
+    await page.request.post('/api/conta/definirSaldo', { data: { saldo: 5000.0 } });
 
-    const err = await transfer.getError();
-    expect(err).toBeTruthy();
-    // Exemplo de verificação de localização: o erro aparece abaixo do campo "amount"
-    expect(err).toMatch(/saldo insuficiente/i);
-    expect(await page.locator('input[name="amount"]').nextSibling()).toBeVisible();
+    await transfer.navigateToTransferir();
+    await transfer.enterTransferDetails('987654321', '1500.00');
+    await transfer.confirmar();
+    await expect(page.locator('[data-testid="msg-sucesso-transferencia"]')).toHaveText('Transferência concluída com sucesso');
+
+    // Verifica saldo atualizado
+    await expect(page.locator('[data-testid="saldo-atual"]')).toHaveText('R$ 3.500,00');
   });
 
-  test('Consistência de menus e links', async ({ page }) => {
-    const nav = new NavigationPage(page);
-    await nav.gotoHome();
+  test('Usuário tenta transferir valor maior que o saldo', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    const transfer = new TransferPage(page);
 
-    const links = await nav.getNavLinks();
-    const expected = ['Home', 'Conta', 'Transferência', 'Empréstimo', 'Pagamento'];
-    for (const text of expected) {
-      expect(links).toContain(text);
-    }
+    await page.request.post('/api/conta/definirSaldo', { data: { saldo: 2000.0 } });
 
-    // Verifica que cada link leva à página correta
-    for (const text of expected) {
-      await nav.clickLink(text);
-      if (text === 'Home') {
-        await expect(page).toHaveURL(/\/$/);
-      } else {
-        const slug = text.toLowerCase().replace(' ', '-');
-        await expect(page).toHaveURL(new RegExp(`/${slug}`));
-      }
-    }
+    await transfer.navigateToTransferir();
+    await transfer.enterTransferDetails('987654321', '3000.00');
+    await transfer.confirmar();
+    await expect(page.locator('[data-testid="msg-erro-saldo"]')).toHaveText('Saldo insuficiente');
   });
 
+  test('Registro de transferência no histórico de ambas as contas', async ({ page }) => {
+    const cpfOrigem = '12345678901';
+    const cpfDestino = '10987654321';
+
+    // Login como origem
+    await login(page, cpfOrigem, 'MinhaSenha!123');
+
+    // Definir saldo de origem (5.000,00)
+    await page.request.post('/api/conta/definirSaldo', { data: { saldo: 5000.0 } });
+
+    // Realizar transferência de 500,00
+    const transfer = new TransferPage(page);
+    await transfer.navigateToTransferir();
+    await transfer.enterTransferDetails(cpfDestino, '500.00');
+    await transfer.confirmar();
+    await expect(page.locator('[data-testid="msg-sucesso-transferencia"]')).toHaveText('Transferência concluída com sucesso');
+
+    // Logout e login na conta destino
+    await page.click('[data-testid="btn-logout"]');
+    await login(page, cpfDestino, 'MinhaSenha!123');
+
+    // Verificar histórico do destino
+    await page.click('[data-testid="link-historico"]');
+    const rows = await page.locator('[data-testid="linha-historico"]').all();
+    const mensagens = await Promise.all(rows.map(row => row.textContent()));
+    const temEntradaOrigem = mensagens.some(text => text.includes(`Transferência de ${cpfOrigem}`));
+    const temEntradaDestino = mensagens.some(text => text.includes(`Transferência de ${cpfDestino}`));
+    expect(temEntradaOrigem).toBeTruthy();
+    expect(temEntradaDestino).toBeTruthy();
+  });
 });
 ```
 
 ---
 
-## 5️⃣  Running the test suite
+### 5.5 `loan.spec.ts`
 
-```bash
-# 1️⃣  install deps
-npm install
+```ts
+import { test, expect, login } from '../utils/helpers';
 
-# 2️⃣  run all tests
-npx playwright test
+test.describe('Solicitação de Empréstimo', () => {
+  test('Usuário solicita empréstimo aprovado', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await page.click('[data-testid="link-emprestimo"]');
 
-# 3️⃣  see results in terminal and open the interactive reporter
-npx playwright test --reporter=html
-open reports/index.html
+    await page.fill('[data-testid="input-valor"]', '20000.00');
+    await page.fill('[data-testid="input-renda"]', '120000.00');
+    await page.click('[data-testid="btn-solicitar"]');
+
+    await expect(page.locator('[data-testid="status-emprestimo"]')).toHaveText('Aprovado', { timeout: 2000 });
+    await expect(page.locator('[data-testid="termos"]')).toBeVisible();
+  });
+
+  test('Usuário solicita empréstimo negado por renda insuficiente', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await page.click('[data-testid="link-emprestimo"]');
+
+    await page.fill('[data-testid="input-valor"]', '50000.00');
+    await page.fill('[data-testid="input-renda"]', '30000.00');
+    await page.click('[data-testid="btn-solicitar"]');
+
+    await expect(page.locator('[data-testid="status-emprestimo"]')).toHaveText('Negado', { timeout: 2000 });
+    await expect(page.locator('[data-testid="motivo-rejeicao"]')).toHaveText('Renda insuficiente');
+  });
+});
 ```
 
-> **Debugging** – to run a single test file in headed mode:
-> ```bash
-> npx playwright test tests/registration.spec.ts --headed
-> ```
+---
+
+### 5.6 `payment.spec.ts`
+
+```ts
+import { test, expect, login } from '../utils/helpers';
+
+test.describe('Pagamento de Contas', () => {
+  test('Usuário agenda pagamento futuro', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await page.click('[data-testid="link-pagamentos"]');
+
+    const dia = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).getDate(); // 25º dia do próximo mês
+    const mes = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).getMonth() + 1;
+
+    await page.fill('[data-testid="input-conta"]', 'Conta X');
+    await page.fill('[data-testid="input-valor"]', '200.00');
+    await page.fill('[data-testid="input-data"]', `${dia}/${mes}/${new Date().getFullYear() + 1}`);
+    await page.click('[data-testid="btn-agendar"]');
+
+    await expect(page.locator('[data-testid="list-pagamentos"]').locator(`text=Conta X 200,00 ${dia}/${mes}`)).toBeVisible();
+  });
+
+  test('Usuário tenta agendar pagamento em dia passado', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await page.click('[data-testid="link-pagamentos"]');
+
+    const diaPassado = new Date(Date.now() - 24 * 60 * 60 * 1000).getDate();
+    const mesPassado = new Date(Date.now() - 24 * 60 * 60 * 1000).getMonth() + 1;
+
+    await page.fill('[data-testid="input-conta"]', 'Conta Y');
+    await page.fill('[data-testid="input-valor"]', '150.00');
+    await page.fill('[data-testid="input-data"]', `${diaPassado}/${mesPassado}/${new Date().getFullYear()}`);
+    await page.click('[data-testid="btn-agendar"]');
+
+    await expect(page.locator('[data-testid="msg-erro-pagamento"]')).toHaveText('A data de pagamento deve ser futura');
+  });
+});
+```
 
 ---
 
-## 6️⃣  What you get
+### 5.7 `navigation.spec.ts`
 
-| Feature | Test Coverage | Notes |
-|---------|---------------|-------|
-| Cadastro de Usuário | ✅ ✔️ | Valida campos, mensagens de erro e login pós‑cadastro |
-| Login | ✅ | Testa credenciais válidas e inválidas |
-| Conta (Saldo/Extrato) | ✅ | Verifica saldo atual e ordem de transações |
-| Transferência | ✅ | Testa sucesso, saldo insuficiente e valores inválidos |
-| Empréstimo | ✅ | Aprovação e negação |
-| Pagamento | ✅ | Agendamento futuro e validação de campos obrigatórios |
-| Navegação & Usabilidade | ✅ | Carregamento, mensagens e consistência do menu |
+```ts
+import { test, expect, login } from '../utils/helpers';
+
+test.describe('Navegação e Usabilidade', () => {
+  test('Usuário acessa rota inexistente e recebe página 404', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+    await page.goto('/caminho/invalido');
+    await expect(page.locator('[data-testid="404-title"]')).toHaveText('Erro 404 – Página não encontrada');
+  });
+
+  test('Mensagens de erro aparecem localizadas e claras – Cadastro com e‑mail inválido', async ({ page }) => {
+    await page.goto('/cadastro');
+    await page.fill('[data-testid="input-email"]', 'email-sem-domínio');
+    await page.click('[data-testid="btn-cadastrar"]');
+    await expect(page.locator('[data-testid="erro-email"]').nth(0)).toHaveText('O campo E‑mail deve ter um endereço válido');
+  });
+
+  test('Menus e links são consistentes em todas as páginas', async ({ page }) => {
+    await login(page, '12345678901', 'MinhaSenha!123');
+
+    const pages = ['dashboard', 'transferir', 'emprestimo', 'pagamentos', 'logout'];
+    const menuItems = ['Dashboard', 'Transferir', 'Empréstimo', 'Pagamentos', 'Logout'];
+
+    for (const [index, p] of pages.entries()) {
+      await page.click(`[data-testid="nav-${p}"]`);
+      await expect(page.locator('[data-testid="top-menu"]').locator(`text=${menuItems[index]}`)).toBeVisible();
+    }
+
+    // Verificar responsividade – viewport mobile
+    await page.setViewportSize({ width: 375, height: 812 }); // iPhone X
+    await expect(page.locator('[data-testid="top-menu"]')).toHaveClass(/mobile/);
+  });
+});
+```
 
 ---
 
-### 🔧  Extensões recomendadas
+## 6️⃣ Dados de Teste – `utils/testData.ts`
 
-| Tool | Why |
-|------|-----|
-| **dotenv** | Mantém credenciais e URLs fora do código |
-| **jest‑matcher‑types** | IntelliSense para `expect` |
-| **cypress‑dashboard** | Relatórios avançados (opcional) |
+```ts
+export const userValid = {
+  nome: 'João da Silva',
+  cpf: '12345678901',
+  endereco: 'Rua das Flores, 123',
+  telefone: '(11)98765-4321',
+  cep: '12345678',
+  email: 'joao.silva@email.com',
+  senha: 'MinhaSenha!123',
+};
+
+export const userInvalidEmail = {
+  ...userValid,
+  email: 'invalid-email',
+};
+
+export const userMissingCPF = {
+  ...userValid,
+  cpf: '',
+};
+```
 
 ---
 
-**Happy testing!**
+## 7️⃣ Dependências (package.json)
+
+```json
+{
+  "name": "parabank-automation",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "typescript": "^5.4.5",
+    "ts-node": "^10.9.1"
+  }
+}
+```
+
+> 🚀 **Para rodar:**  
+> 1. Instale as dependências: `npm install`  
+> 2. Execute os testes: `npm test`  
+> 3. Para debug: `npm run test:debug` – abre o navegador com visualização.
+
+---
+
+## 8️⃣ Boas Práticas Evidenciadas
+
+| Prática | Por que é importante? | Onde foi aplicada |
+|---------|------------------------|-------------------|
+| **Page Objects** | Isolamento de locators → manutenção mais simples | Todos os testes |
+| **Selectors `data-testid`** | Evita que alterações visuais quebrem os testes | Todos os locators |
+| **`waitFor`** | Garantia de que elementos estão visíveis antes de interagir | `.waitFor({ state: 'visible', timeout: 5000 })` |
+| **`test.each`** (ou `it.each`) | Reduz repetição de código em cenários similares | Validações de formato inválido |
+| **Timeouts explícitos** | Evita flakiness quando o servidor demora | `.expect(..., { timeout: 2000 })` |
+| **Mocking de API** | Testes isolados de backend | `page.request.post('/api/...')` |
+| **Comentários detalhados** | Facilita leitura e manutenção | Comentários em cada passo |
+| **Config de viewport e dispositivos** | Garante responsividade | `devices` no Playwright config |
+
+---
+
+## 9️⃣ Próximos Passos
+
+1. **Mapear os `data-testid` reais** – substituir pelos atributos corretos.  
+2. **Implementar mocks** (ex.: MailHog) para e‑mail e endpoints de saldo/transferência.  
+3. **Adicionar testes de performance** (por exemplo, tempo de carregamento de dashboard).  
+4. **CI/CD** – integrar os testes na pipeline (GitHub Actions, GitLab CI, etc.).  
+
+Com essa base, você já tem uma suite de testes robusta, organizada e alinhada às práticas recomendadas do Playwright. Boa sorte na automação! 🚀
