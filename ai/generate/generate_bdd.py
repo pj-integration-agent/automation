@@ -1,18 +1,18 @@
 import os
 from groq import Groq
  
-def generate_bdd_from_criteria():
+def generate_bdd_from_user_stories():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
  
-    with open("ai/requirements/criterios.md", "r", encoding="utf-8") as f:
-        criterios = f.read()
+    with open("ai/generated_user_stories.feature", "r", encoding="utf-8") as f:
+        stories = f.read()
  
     prompt = f"""
     Você é um especialista em BDD.
-    Com base nos seguintes critérios de aceite, gere cenários no formato Gherkin (Given, When, Then).
+    Com base nos seguintes histórias de usuários, gere cenários no formato Gherkin (Given, When, Then).
  
     Critérios:
-    {criterios}
+    {stories}
     """
  
     response = client.chat.completions.create(
@@ -27,4 +27,4 @@ def generate_bdd_from_criteria():
         f.write(bdd)
  
 if __name__ == "__main__":
-    generate_bdd_from_criteria()
+    generate_bdd_from_user_stories()
