@@ -4,9 +4,9 @@ from groq import Groq
 def generate_user_stories_from_criterios():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
  
-    with open("ai/requirements/documentation.png", "r", encoding="utf-8") as f:
-        criterio_content = f.read()
- 
+    with open("ai/requirements/documentation.png", "rb") as f:
+    criterio_content = f.read()
+
     prompt = f"""
     Você é um especialista em criação de user stories.
     Com base nos seguintes critérios de aceite, gere histórias de usuários 
