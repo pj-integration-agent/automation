@@ -1,141 +1,66 @@
-## 1. Teste que falhou
+## 1. Quais testes falharam
 
-| ID/Descrição do Teste | Resultado |
-|------------------------|-----------|
-| **Usuário deve atualizar telefone com campo vazio** | **Falhou** |
+| # | Nome do teste | Status |
+|---|---------------|--------|
+| 1 | **Login inválido falhou** | **Falhou** |
+| 2 | **Usuário deve atualizar telefone com sucesso falhou** | **Falhou** |
+| 3 | **Usuário deve atualizar telefone com campo vazio falhou** | **Falhou** |
 
-Esse é o único teste listado no log, portanto é o único que falhou.
-
----
-
-## 2. Motivo da falha
-
-### Erro relatado
-
-```
-expect(locator).toContainText(expected) failed
-Locator: locator('//*[@id="phone-error"]')
-Expected substring: "Phone is required."
-Timeout: 5000ms
-Error: element(s) not found
-```
-
-### Interpretação
-
-1. **O Playwright tentou localizar o elemento** com a expressão XPath `//*[@id="phone-error"]`.
-2. **Não encontrou nenhum elemento** que correspondesse a essa expressão dentro do tempo limite de 5 s.
-3. Como o elemento não existe, a expectativa `toContainText` falhou (não havia texto para comparar).
-
-### Por que o elemento pode não ter sido encontrado?
-
-| Possível causa | Indicação | Como verificar |
-|----------------|-----------|----------------|
-| **Id incorreto ou mudou** | O atributo `id="phone-error"` pode não existir na página atual. | Inspecione o DOM no momento em que o teste roda (use DevTools, `page.screenshot()`, ou o trace do Playwright). |
-| **Elemento ainda não foi renderizado** | A mensagem de erro só aparece após uma ação (por ex.: enviar o formulário). | Verifique se a ação que dispara a validação foi realmente executada e se há alguma animação/espera pendente. |
-| **Elemento está dentro de um iframe ou Shadow DOM** | Playwright não procura por padrão dentro de iframes/shadow roots. | Se for esse o caso, use `page.frameLocator(...)` ou `page.locator('::shadow', ...)`. |
-| **Erro de tempo** | 5 s pode ser insuficiente para a página carregar ou para o script de validação executar. | Aumente o timeout ou adicione `await page.waitForLoadState('networkidle')` antes de interagir. |
-| **O teste não disparou a validação** | O campo pode ter sido limpo mas a submissão não ocorreu. | Confirme se o botão “Salvar/Atualizar” foi clicado e se há alguma validação assíncrona que precisa ser aguarda. |
+> **Resumo:** Todos os testes listados no log falharam.
 
 ---
 
-## 3. Sugestões para corrigir o erro
+## 2. Motivo de cada falha
 
-### 3.1. Confirme o seletor
+### 1. `Login inválido falhou`
 
-1. Abra a aplicação manualmente e localize a mensagem de erro que aparece quando o campo de telefone é deixado vazio.
-2. No DevTools, verifique o `id` real e a estrutura do elemento. Se o `id` for diferente, atualize o XPath/seleção no teste:
-   ```js
-   const errorLocator = page.locator('#phone-error'); // ou outro seletor
-   ```
+- **Erro:** `expect(locator('.error')).toContainText(expected) failed`
+- **Detalhe:** O test se baseava no erro interno `"An internal error has ocorrido e foi registrado."`.  
+- **Situação real:** O elemento `<p class="error">` continha o texto **"The username and password could not be verified."**  
+- **Conclusão:** O teste esperava uma mensagem de erro diferente (interno do sistema) do que o sistema retornou (erro de autenticação). Provavelmente o fluxo de login mudou ou o seletor mudou.
 
-### 3.2. Assegure que a validação é disparada
+### 2. `Usuário deve atualizar telefone com sucesso falhou`
 
-- **Simule a submissão**:  
-  ```js
-  await page.fill('#phone', ''); // deixa vazio
-  await page.click('button[type="submit"]'); // ou o botão “Atualizar”
-  ```
-- **Use `await page.waitForSelector`** para garantir que o elemento de erro aparece:
-  ```js
-  await page.waitForSelector('#phone-error', { state: 'visible', timeout: 8000 });
-  ```
+- **Erro:** `Test timeout of 10000ms exceeded.`
+- **Detalhe:** O teste esperava que a página concluísse a operação de atualização dentro de 10 s, mas a execução excedeu esse limite.  
+- **Causas possíveis:**
+  1. **Rede lenta / servidor lento** – a requisição de atualização pode demorar mais que 10 s.
+  2. **Lógica de espera insuficiente** – o teste pode estar aguardando um elemento que nunca aparece ou que aparece em outro tempo.
+  3. **Bug no fluxo de atualização** – pode estar travado em um loop ou em erro de validação que não foi tratado.
 
-### 3.3. Ajuste o tempo de espera (timeout)
+### 3. `Usuário deve atualizar telefone com campo vazio falhou`
 
-- Se a aplicação demora a exibir o erro, aumente o timeout do `waitForSelector` e da própria expectativa:
-  ```js
-  await expect(page.locator('#phone-error')).toContainText('Phone is required.', { timeout: 12000 });
-  ```
-
-### 3.4. Verifique possíveis iframes ou Shadow DOM
-
-- Se o elemento estiver dentro de um iframe:
-  ```js
-  const frame = page.frame({ name: 'frameName' }); // ou use regex no URL
-  const error = frame.locator('#phone-error');
-  await expect(error).toContainText('Phone is required.');
-  ```
-- Se estiver em Shadow DOM:
-  ```js
-  const error = page.locator('#parent >> #phone-error');
-  ```
-
-### 3.5. Use o **Trace** ou **Screenshots** para debug
-
-- Ative o trace no início do teste:
-  ```js
-  await playwright.tracing.start({ screenshots: true, snapshots: true });
-  ```
-- Depois do erro, visualize o trace (`npx playwright show-trace trace.zip`) para ver exatamente onde o elemento não apareceu.
-
-### 3.6. Garantir que a página esteja totalmente carregada
-
-```js
-await page.waitForLoadState('networkidle'); // aguarda fim de chamadas de rede
-```
-
-### 3.7. Atualize a mensagem esperada se o texto mudar
-
-Se a aplicação usa mensagens em português ou tem variações de acentuação:
-```js
-await expect(page.locator('#phone-error')).toContainText(/Telefone é obrigatório\./i);
-```
+- **Erro:** `expect(locator('//*[@id="phone-error"]')).toContainText(expected) failed`
+- **Detalhe:** O teste esperava que o elemento com `id="phone-error"` mostrasse o texto `"Phone is required."`, mas não encontrou nem o elemento nem o texto dentro de 5 s.  
+- **Causas possíveis:**
+  1. O campo vazio pode não disparar a mensagem de erro (falha de validação).
+  2. O seletor `//*[@id="phone-error"]` pode estar incorreto ou o erro pode aparecer em um outro local (por exemplo, um toast, modal ou mensagem inline diferente).
+  3. O teste pode estar executado antes que o campo seja realmente focado ou que a validação seja disparada.
 
 ---
 
-## 4. Código de exemplo corrigido
+## 3. Sugestões de correção
 
-```js
-test('Usuário deve atualizar telefone com campo vazio', async ({ page }) => {
-  // 1. Navega até a página de atualização
-  await page.goto('/user/profile');
-
-  // 2. Aguarda a página carregar
-  await page.waitForLoadState('networkidle');
-
-  // 3. Limpa o campo de telefone
-  await page.fill('#phone', '');
-
-  // 4. Tenta salvar (submissão)
-  await page.click('button#save-profile');
-
-  // 5. Espera que o erro apareça
-  const errorLocator = page.locator('#phone-error'); // ajuste o seletor se necessário
-  await expect(errorLocator).toBeVisible({ timeout: 8000 });
-
-  // 6. Verifica o conteúdo
-  await expect(errorLocator).toContainText('Phone is required.', { timeout: 8000 });
-});
-```
+| # | Recomendação | Como implementar |
+|---|--------------|------------------|
+| **1** | **Atualizar o texto esperado** | 1. Verifique a tela de login real (ou a documentação da API) para o texto exato de erro que deve aparecer quando o usuário fornece credenciais inválidas.  <br>2. Modifique a expectativa do teste para usar esse texto exato: `await expect(page.locator('.error')).toContainText('The username and password could not be verified.');`  <br>3. Se o texto pode mudar dinamicamente (ex.: incluir “try again in X seconds”), use uma regex ou `toContainText` com substring. |
+| **1** | **Usar o seletor correto** | Caso a classe `error` não seja mais usada, encontre o seletor atual (ex.: `div.alert.alert-danger`) e ajuste o `locator('.error')` para o novo seletor. |
+| **2** | **Aumentar ou tornar dinâmico o timeout** | 1. Se a atualização costuma demorar mais de 10 s, aumente o timeout no comando `await expect(page.locator(...)).toHaveText(..., { timeout: 20000 });`  <br>2. Use `page.waitForResponse` ou `page.waitForURL` para esperar o término da requisição em vez de apenas o aparecimento de um elemento. |
+| **2** | **Adicionar uma verificação de resposta da API** | Se a atualização envolve uma chamada REST, adicione: `await page.waitForResponse(response => response.url().includes('/api/phone') && response.status() === 200);` antes de verificar o UI. |
+| **2** | **Rever lógica de validação** | Se o fluxo de atualização não exibe nenhuma mudança de UI, verifique se o campo está realmente sendo enviado (use `page.$eval('#phone', el => el.value)` antes de clicar no botão). |
+| **3** | **Confirmar onde o erro aparece** | 1. Abra o aplicativo no navegador e digite um telefone vazio; observe se a mensagem aparece como `#phone-error`, como um toast, ou em outra parte.  <br>2. Se não aparecer como `#phone-error`, ajuste o seletor. |
+| **3** | **Forçar a validação antes do envio** | Use `await page.press('#phone', 'Tab');` ou `await page.focus('#phone');` e `await page.blur('#phone');` para disparar a validação antes de enviar o formulário. |
+| **3** | **Usar `expect(...).toHaveText` com `visible: true`** | Exemplo: `await expect(page.locator('#phone-error')).toHaveText('Phone is required.', { visible: true, timeout: 8000 });`  |
+| **3** | **Adicionar logs de debugging** | Inicie o Playwright com `DEBUG=pw:api` para ver se a requisição está sendo enviada corretamente, ou insira `console.log(await page.content());` no teste para inspecionar o HTML no momento do erro. |
 
 ---
 
-## 5. Checklist rápido para evitar falhas semelhantes
+## 4. Checklist de boas práticas
 
-1. **Verifique se o seletor está correto** antes de rodar o teste.
-2. **Garanta que a ação de disparo** (ex.: clique no botão) realmente ocorra.
-3. **Aguarde elementos visíveis** com `waitForSelector` ou `toBeVisible` antes de fazer asserções.
-4. **Use timeouts mais altos** quando a UI depende de animações ou chamadas assíncronas.
-5. **Habilite traces ou screenshots** nos testes que falham frequentemente para diagnosticar rapidamente.
+1. **Seletores robustos** – Use `data-testid` ou atributos estáveis em vez de classes que mudam com a UI.  
+2. **Timeouts escaláveis** – Evite hard‑code de 5 s/10 s; use o valor padrão (30 s) ou aumente apenas quando a aplicação realmente requer.  
+3. **Validação de API** – Sempre combine verificações de UI com a resposta da API quando a ação depende de backend.  
+4. **Regex em `toContainText`** – Quando o texto pode incluir variações, use expressões regulares: `await expect(locator).toContainText(/Phone is required/);`.  
+5. **Logs detalhados** – Quando o teste falhar, capture a página (`await page.screenshot()` ou `await page.content()`) para facilitar o diagnóstico.  
 
-Com essas correções e práticas, o teste “Usuário deve atualizar telefone com campo vazio” deve passar de forma confiável.
+Implementando essas correções, os testes deverão voltar a passar ou, no mínimo, falhar com mensagens mais claras e fáceis de depurar.
