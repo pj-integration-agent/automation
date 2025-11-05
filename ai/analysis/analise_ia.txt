@@ -1,0 +1,98 @@
+**1. Testes que falharam**
+
+| # | Nome do teste | Data/Hora | Status |
+|---|---------------|-----------|--------|
+| 1 | **Login inválido falhou** | 2025‑11‑05 16:23:31 | ❌ |
+| 2 | **Usuário deve atualizar telefone com campo vazio falhou** | 2025‑11‑05 16:23:32 | ❌ |
+
+---
+
+## 2. Motivo de cada falha
+
+| # | Teste | Falha | Causa provável |
+|---|-------|-------|----------------|
+| 1 | **Login inválido falhou** | `expect(locator('.error')).toContainText("An internal error has occurred and has been logged.")` falhou.<br>O Playwright conseguiu localizar o elemento `<p class="error">…</p>` mas o texto dentro dele era **"The username and password could not be verified."**. | **Mensagem de erro inesperada** – a aplicação mudou a mensagem de erro de login ou o teste foi escrito para uma versão antiga. |
+| 2 | **Usuário deve atualizar telefone com campo vazio falhou** | `expect(locator('//*[@id="phone-error"]')).toContainText("Phone is required.")` não encontrou o elemento dentro de 5 s. | **Erro não renderizado / seletor incorreto** – o campo de telefone pode não disparar a validação, o elemento pode ter outro `id`, ou a mensagem pode aparecer em outro local (por exemplo, sob um `<div>` ou com uma classe diferente). |
+
+---
+
+## 3. Sugestões de correção
+
+### Teste 1 – Login inválido
+
+| Problema | Como resolver | Exemplo de código |
+|----------|---------------|-------------------|
+| Mensagem de erro mudou | Atualize o `expected` para a mensagem real ou use um *substring* genérica que cubra ambos os cenários. | ```javascript\nawait expect(page.locator('.error')).toContainText('username and password could not be verified');\n``` |
+| Teste está em português, mas mensagem em inglês | Se a aplicação está em inglês, mantenha a mensagem em inglês; caso contrário, traduza. | ```javascript\nawait expect(page.locator('.error')).toContainText('Não foi possível verificar o usuário e a senha.');\n``` |
+| Falha por timeout | Se a mensagem demorar a aparecer, aumente o timeout ou espere explicitamente. | ```javascript\nawait expect(page.locator('.error')).toContainText('The username and password could not be verified.', { timeout: 8000 });\n``` |
+
+**Recomendação geral**
+
+- Verifique a aplicação (ou API) para confirmar qual é a mensagem atual de erro.
+- Use **`toHaveText`** ou **`toContainText`** com uma *substring* curta, por exemplo, `"verified"` ou `"could not be verified"`, para evitar que mudanças menores de texto quebrem o teste.
+
+---
+
+### Teste 2 – Atualizar telefone com campo vazio
+
+| Problema | Como resolver | Exemplo de código |
+|----------|---------------|-------------------|
+| Elemento não encontrado | Confirme o `id` real do elemento de erro. Use DevTools (Inspector) para inspeção. | ```javascript\n// Se o id for realmente 'phoneError' (sem hífen)\nawait expect(page.locator('#phoneError')).toContainText('Phone is required.');\n``` |
+| Validação não disparada | Certifique-se de que o formulário realmente valida em campo vazio – talvez seja necessário enviar o formulário (`click` no botão) antes de verificar a mensagem. | ```javascript\nawait page.fill('#phone', '');\nawait page.click('#saveButton');\nawait expect(page.locator('#phoneError')).toContainText('Phone is required.');\n``` |
+| Mensagem aparece em outro elemento | Se a mensagem aparece em um `<div>` ou `<span>` com classe `error` dentro do formulário, use um selector mais genérico. | ```javascript\nawait expect(page.locator('#phone ~ .error')).toContainText('Phone is required.');\n``` |
+| Timeout baixo | Se o componente tem animações (fade‑in, slide‑up), aumente o timeout. | ```javascript\nawait expect(page.locator('#phoneError')).toContainText('Phone is required.', { timeout: 10000 });\n``` |
+
+**Recomendação geral**
+
+- Use **`await page.waitForSelector('#phoneError', { state: 'visible' });`** antes de fazer o `expect`. Isso garante que o elemento exista e esteja visível.
+- Se houver múltiplos campos de erro na mesma página, use um seletor mais específico (por exemplo, `#phone-error` ou `form #phone-error`).
+
+---
+
+## 4. Checklist de correção
+
+1. **Verificar a aplicação**  
+   * Abra o site em um browser e inspecione o elemento que mostra a mensagem de erro.  
+   * Anote o texto exato e a estrutura DOM (id, classe, posição relativa).
+
+2. **Atualizar os testes**  
+   * Ajuste o texto esperado ou use uma substring.  
+   * Atualize o selector se o `id` ou a estrutura mudou.
+
+3. **Adicionar `waitForSelector`**  
+   * Antes de fazer a asserção, aguarde o elemento ficar visível.  
+
+4. **Aumentar timeout se necessário**  
+   * Se a aplicação demora a renderizar a mensagem, eleve o timeout para 8‑10 s.
+
+5. **Reexecutar os testes**  
+   * Se tudo estiver correto, ambos os testes devem passar.
+
+---
+
+## 5. Exemplo de código corrigido
+
+```javascript
+// 1️⃣ Login inválido – usando substring genérica
+await expect(page.locator('.error'))
+        .toContainText('could not be verified', { timeout: 8000 });
+
+// 2️⃣ Atualizar telefone – aguardar visibilidade e usar selector correto
+await page.fill('#phone', '');          // campo vazio
+await page.click('#saveButton');        // dispara validação
+
+await page.waitForSelector('#phoneError', { state: 'visible', timeout: 8000 });
+await expect(page.locator('#phoneError'))
+        .toContainText('Phone is required.');
+```
+
+---
+
+### Resumo rápido
+
+| Teste | Falha | Corrigir |
+|-------|-------|----------|
+| Login inválido | Texto esperado diferente | Atualize o `expected` ou use substring genérica |
+| Telefone vazio | Elemento não encontrado | Verifique o `id`, aguarde visibilidade, aumente timeout |
+
+Seguindo essas recomendações você deve conseguir reverter ambos os testes para *pass* e garantir que futuras mudanças de UI não quebrem o pipeline de testes.
