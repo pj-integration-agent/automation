@@ -1,119 +1,89 @@
-**User Stories – ParaBank**  
-*(todos os stories estão escritos em português, seguindo o formato “Como X, eu quero Y para que Z”).*  
-*(As acepções são explicitadas em formato *Given‑When‑Then*, para facilitar a validação.)*  
+## User Stories – Sistema ParaBank (Versão 1)
+
+> **Formato**:  
+> **Como** [papel do usuário]  
+> **Quero** [funcionalidade que desejo]  
+> **Para que** [benefício / valor que obtenho]  
+>  
+> **Critérios de Aceitação**  
+> - ...
+
+> **Notas de Design / Observações** (opcional)  
+
+> **Estimativa** (Story Points ou tempo) – opcional para priorização.
 
 ---
 
-### 1. Cadastro de Usuário  
-**Como** um novo cliente do ParaBank,  
-**Quero** registrar meus dados pessoais na aplicação,  
-**Para que** eu possa ter uma conta bancária ativa e acessar o sistema.  
+### 1️⃣ Cadastro de Usuário
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| A tela de cadastro está aberta | Eu preencho todos os campos obrigatórios (nome, CPF, telefone, CEP, email, senha) | O sistema valida cada campo; se algum estiver inválido, exibe mensagem de erro específica |
-| Os campos telefone, CEP e email contêm valores inválidos | Eu tento salvar | Mensagem de erro clara e objetiva é exibida (ex.: “Telefone inválido”, “CEP inválido”, “Email inválido”) |
-| Todos os campos obrigatórios são preenchidos corretamente | Eu salvo | O cadastro é criado, uma mensagem de confirmação é exibida e eu consigo fazer login com as credenciais fornecidas |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑001 | **Como** usuário novo<br>**Quero** preencher um formulário de cadastro completo | - Todos os campos obrigatórios (nome, CPF, endereço, telefone, CEP, e‑mail, senha, confirmação de senha) devem ser preenchidos.<br>- Campos com formato inválido (telefone, CEP, e‑mail) acionam validação instantânea e exibem mensagem de erro clara.<br>- Ao submeter dados válidos, o sistema cria a conta, envia e‑mail de confirmação e habilita o login. | - As mensagens de erro devem estar localizadas (ex.: “O campo CEP deve conter 8 dígitos”).<br>- O e‑mail de confirmação deve conter link de validação. |
+| US‑002 | **Como** usuário novo<br>**Quero** receber feedback de sucesso ao concluir o cadastro | - Após a criação bem‑sucedida, exibe banner “Cadastro concluído com sucesso! Faça login.”<br>- O usuário passa a poder usar as credenciais de login. | - Evitar redirecionamento automático para login; preferir mensagem clara na tela de cadastro. |
 
 ---
 
-### 2. Login  
-**Como** usuário já cadastrado,  
-**Quero** fazer login com minhas credenciais,  
-**Para que** eu seja redirecionado para a página inicial da minha conta.  
+### 2️⃣ Login
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| A página de login está aberta | Eu informo credenciais válidas (email e senha) | O sistema autentica e redireciona para a página inicial da conta |
-| Eu informo credenciais inválidas | Eu tento fazer login | O sistema exibe mensagem de erro adequada (ex.: “Credenciais inválidas” ou “Usuário não encontrado”) |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑003 | **Como** usuário cadastrado<br>**Quero** entrar no sistema usando credenciais válidas | - O sistema aceita CPF/username e senha.<br>- Se credenciais corretas: redireciona para a página inicial da conta (Dashboard).<br>- Se credenciais incorretas: exibe mensagem “CPF ou senha inválidos.” e mantém a tela de login. | - Adicionar opção “Esqueceu a senha?”. |
+| US‑004 | **Como** usuário tentando se autenticar<br>**Quero** saber quando a autenticação falhou | - Mensagem de erro não revela se CPF ou senha está incorreto (evita informação sensível). | - Limitar tentativas a 5, exibindo mensagem “Tentativas excedidas. Aguarde 5 min.” |
 
 ---
 
-### 3. Acesso à Conta – Saldo e Extrato  
-**Como** cliente autenticado,  
-**Quero** visualizar o saldo atualizado e o extrato das minhas transações,  
-**Para que** eu possa acompanhar minhas finanças em tempo real.  
+### 3️⃣ Acesso à Conta – Saldo e Extrato
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| Eu estou na página inicial da conta | O sistema carrega | O saldo exibido corresponde ao saldo real, atualizado após cada operação |
-| Eu acesso a seção de extrato | O sistema carrega | O extrato lista todas as transações recentes em ordem cronológica (mais recente acima) |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑005 | **Como** cliente logado<br>**Quero** visualizar meu saldo atual | - Exibe valor atualizado na aba “Saldo”.<br>- Saldo reflete imediatamente após qualquer operação financeira (transferência, pagamento, empréstimo). | - Formatação monetária e moeda ISO. |
+| US‑006 | **Como** cliente logado<br>**Quero** ver meu extrato em ordem cronológica | - Lista as últimas 10 transações na ordem mais recente primeiro.<br>- Cada entrada mostra data, descrição, tipo (depósito, transferência, pagamento), valor e saldo pós‑transação. | - Botão “Ver mais” para carregamento incremental. |
 
 ---
 
-### 4. Transferência de Fundos  
-**Como** cliente autenticado,  
-**Quero** transferir um valor de uma conta para outra,  
-**Para que** eu possa movimentar meus recursos entre contas.  
+### 4️⃣ Transferência de Fundos
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| Eu estou na página de transferência | Eu seleciono conta de origem, conta de destino e digito um valor | O sistema verifica se o valor é menor ou igual ao saldo da origem |
-| O valor excede o saldo disponível | Eu tento confirmar a transferência | O sistema exibe mensagem de erro: “Saldo insuficiente” e a transferência não é processada |
-| O valor é permitido | Eu confirmo a transferência | O valor é debitado da conta origem, creditado na conta destino e registrado no histórico de ambas as contas |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑007 | **Como** cliente logado<br>**Quero** transferir dinheiro para outra conta | - Tela exige: conta de origem (pre‑selecionada), conta de destino (dropdown ou campo de digitação), valor, e botão “Confirmar”.<br>- Sistema bloqueia entrada de valor maior que saldo disponível, exibindo mensagem “Saldo insuficiente”. | - Confirmar saldo em tempo real. |
+| US‑008 | **Como** cliente logado<br>**Quero** que a transferência seja registrada no histórico de ambas as contas | - Após confirmação, débito na conta de origem e crédito na conta de destino são processados.<br>- Ambas contas recebem registro na página de extrato (tipo “Transferência de [destino]”). | - Utilizar transação atômica para evitar inconsistências. |
+| US‑009 | **Como** cliente logado<br>**Quero** saber que minha transferência foi concluída | - Exibe toast/alert “Transferência concluída com sucesso” e atualiza saldo instantaneamente. | - Registrar data/hora da operação. |
 
 ---
 
-### 5. Solicitação de Empréstimo  
-**Como** cliente interessado em obter um crédito,  
-**Quero** solicitar um empréstimo informando valor e renda anual,  
-**Para que** o sistema avalie minha proposta e me informe se foi aprovada ou negada.  
+### 5️⃣ Solicitação de Empréstimo
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| Eu estou na página de solicitação de empréstimo | Eu informo valor do empréstimo e renda anual | O sistema processa e retorna status “Aprovado” ou “Negado” |
-| O status é retornado | O usuário visualiza o resultado | O resultado é exibido de forma clara e destacada (ex.: “Empréstimo aprovado” ou “Empréstimo negado”) |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑010 | **Como** cliente logado<br>**Quero** solicitar empréstimo indicando valor e renda anual | - Formulário requer: valor desejado, renda anual, e botão “Enviar Solicitação”.<br>- O sistema avalia automaticamente e retorna status: “Aprovado” ou “Negado” em menos de 2 segundos. | - Em caso de “Negado”, exibir motivo resumido (“Renda insuficiente”). |
+| US‑011 | **Como** cliente logado<br>**Quero** visualizar o resultado da solicitação | - Página de resultados exibe: valor solicitado, renda anual, status (Aprovado/Negado), e data de avaliação.<br>- Se aprovado, oferta de prazos e taxa de juros. | - Caso aprovado, permitir “Aceitar” e prosseguir para contrato. |
 
 ---
 
-### 6. Pagamento de Contas  
-**Como** cliente autenticado,  
-**Quero** registrar um pagamento de conta, informando beneficiário e demais dados,  
-**Para que** o pagamento seja incluído no histórico e, se agendado, seja processado na data correta.  
+### 6️⃣ Pagamento de Contas
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| Eu estou na página de pagamento de contas | Eu preencho: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data (se for agendamento) | O sistema valida os dados e exibe mensagens de erro se houver inconsistência |
-| Eu confirmo o pagamento | O sistema registra a transação | O pagamento aparece no histórico de transações, e pagamentos futuros respeitam a data agendada |
-| Eu deixo a data de pagamento em aberto | Eu confirmo | O pagamento é processado imediatamente e registrado no histórico |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑012 | **Como** cliente logado<br>**Quero** registrar pagamento de conta a futuro | - Formulário inclui: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento.<br>- Ao salvar, o pagamento entra na fila de pagamentos agendados e é exibido no histórico de transações no dia correto. | - Validação de data futura; impedir agendamentos em dias passados. |
+| US‑013 | **Como** cliente logado<br>**Quero** ter certeza de que meu pagamento será processado na data marcada | - Sistema automatiza débito no dia agendado, creditando a conta de destino.<br>- Confirmação via e‑mail 24 h antes do pagamento. | - Exibir status “Agendado”, “Em andamento”, “Concluído”. |
 
 ---
 
-### 7. Requisitos Gerais – Navegação e Usabilidade  
-**Como** qualquer usuário (autenticado ou não)  
-**Quero** que todas as páginas e funcionalidades estejam livres de erros de navegação e que a interface seja consistente,  
-**Para que** a experiência seja fluida, segura e compreensível.  
+### 7️⃣ Requisitos Gerais – Navegação & Usabilidade
 
-**Acceptance Criteria**
-
-| Given | When | Then |
-|-------|------|------|
-| Eu acesso qualquer página | O sistema carrega a página | Não há erros de carregamento nem redirecionamentos inesperados |
-| Eu interajo com links ou menus | Eu clico | O link ou menu leva à página correta e a navegação é consistente em todas as páginas |
-| Eu recebo mensagens de erro (por exemplo, campos inválidos) | O sistema exibe | As mensagens são claras, objetivas e localizadas perto do campo ou ação que causou o erro |
+| # | User Story | Critérios de Aceitação | Observações |
+|---|------------|------------------------|-------------|
+| US‑014 | **Como** usuário em qualquer página<br>**Quero** navegar sem erros | - Todas as rotas são responsivas (ex.: `/login`, `/dashboard`, `/transfer`, etc.).<br>- Erros 404 são redirecionados para página “Erro 404 – Página não encontrada”. | - Navegação deve ser consistente (header, footer, menu). |
+| US‑015 | **Como** usuário que vê mensagem de erro<br>**Quero** entender o problema | - Mensagens de erro são claras, localizadas junto ao campo (ex.: “Telefone inválido”).<br>- Mensagem global “Ocorreu um erro inesperado. Tente novamente.” não aparece sem causa clara. | - Usar cores acessíveis (verde para sucesso, vermelho para erro). |
+| US‑016 | **Como** usuário em qualquer página<br>**Quero** que menus e links sejam consistentes | - Todos os menus têm a mesma estrutura (Dashboard, Transferência, Empréstimo, Pagamentos, Logout).<br>- Links de ação (ex.: “Transferir”, “Solicitar Empréstimo”) mantêm localização padrão. | - Responsividade para dispositivos móveis. |
 
 ---
 
-#### Observações Adicionais
-- Todos os stories assumem que a aplicação está hospedada em um ambiente de teste controlado (ParaBank).
-- As validações de campo (telefone, CEP, e‑mail) devem seguir os padrões oficiais brasileiros.
-- A segurança de senhas e dados sensíveis deve obedecer às melhores práticas de criptografia e armazenamento.
+## Observações Finais
 
-**Próximos Passos**  
-- Transformar os *stories* em testes automatizados (ex.: Cucumber ou Gherkin) para validação contínua.  
-- Priorizar histórias com base em valor ao cliente e risco.  
-- Criar histórias de *bugfix* caso falhas sejam identificadas durante testes de aceitação.  
+1. **Testabilidade** – Cada usuário story contém critérios de aceitação que podem ser convertidos em testes automatizados (unitários, de integração, UI).  
+2. **Segurança** – O fluxo de dados sensíveis (senha, CPF, saldo) deve ser tratado com criptografia e HTTPS.  
+3. **Acessibilidade** – Todos os elementos interativos devem ter rótulos ARIA e navegação via teclado.  
+4. **Performance** – Operações críticas (login, transferência) devem responder em menos de 2 s.  
 
-Boa sorte no desenvolvimento e testes do ParaBank!
+Com esses *User Stories* você tem uma base sólida para planejar, implementar e validar cada funcionalidade do ParaBank, garantindo aderência aos critérios de aceite descritos.

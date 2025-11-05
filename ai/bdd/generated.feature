@@ -1,200 +1,217 @@
-## 📁 Estrutura de Features – ParaBank
-
-> Cada feature corresponde a uma *User Story* e contém **cenários** que refletem os *Acceptance Criteria* fornecidos.  
-> Os cenários estão escritos em **português** (keywords: `Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`) para que possam ser diretamente utilizados em frameworks como Cucumber, SpecFlow, Behave, etc.
-
----
-
-### 1️⃣ Cadastro de Usuário
-
 ```gherkin
-# arquivo: cadastro_usuario.feature
-# encoding: utf-8
-# language: pt
+# Feature: Cadastro de Usuário
+Feature: Cadastro de Usuário
+  Como usuário novo
+  Quero preencher um formulário de cadastro completo
+  Para que eu possa criar minha conta no ParaBank
 
-Funcionalidade: Cadastro de Usuário
+  @positive
+  Scenario: Usuário preenche cadastro completo com dados válidos
+    Given I open the “Cadastro” page
+    When I enter
+      | campo        | valor                 |
+      | Nome         | João da Silva         |
+      | CPF          | 12345678901           |
+      | Endereço     | Rua das Flores, 123   |
+      | Telefone     | (11)98765-4321        |
+      | CEP          | 12345678              |
+      | E‑mail       | joao.silva@email.com |
+      | Senha        | MinhaSenha!123        |
+      | Confirmação  | MinhaSenha!123        |
+    And I click “Cadastrar”
+    Then I should see a banner “Cadastro concluído com sucesso! Faça login.”
 
-  Cenario: Registro com dados inválidos
-    Dado que eu estou na tela de cadastro
-    Quando eu preencher os campos obrigatórios com valores inválidos (telefone, CEP, e‑mail)
-    E eu tentar salvar
-    Então o sistema exibe a mensagem “Telefone inválido”
-    E o sistema exibe a mensagem “CEP inválido”
-    E o sistema exibe a mensagem “E‑mail inválido”
+  @negative
+  Scenario: Usuário deixa um campo obrigatório vazio
+    Given I open the “Cadastro” page
+    When I leave “CPF” empty
+    And I fill all other fields with valid data
+    And I click “Cadastrar”
+    Then I should see an error message “O campo CPF é obrigatório”
 
-  Cenario: Registro com dados válidos
-    Dado que eu estou na tela de cadastro
-    Quando eu preencher todos os campos obrigatórios com valores válidos (nome, CPF, telefone, CEP, e‑mail, senha)
-    E eu tentar salvar
-    Então o cadastro é criado
-    E aparece a mensagem “Cadastro concluído com sucesso”
-    E eu consigo fazer login com as credenciais fornecidas
+  @negative
+  Scenario Outline: Validação de formatos de campos inválidos
+    Given I open the “Cadastro” page
+    When I enter
+      | campo        | valor                 |
+      | Nome         | Maria Oliveira        |
+      | CPF          | <cpf>                 |
+      | Endereço     | Av. Central, 456      |
+      | Telefone     | <telefone>            |
+      | CEP          | <cep>                 |
+      | E‑mail       | <email>               |
+      | Senha        | Segura123!            |
+      | Confirmação  | Segura123!            |
+    And I click “Cadastrar”
+    Then I should see the error message "<mensagem>"
+
+    Examples:
+      | cpf        | telefone          | cep     | email                       | mensagem                                   |
+      | 123          | 11-987654321     | 1234    | joao.silva                 | O campo CPF deve conter 11 dígitos          |
+      | 12345678901 | (11)987654321     | 1234567 | joao.silva@email           | O campo Telefone deve ter o formato (xx)xxxxx‑xxxx |
+      | 12345678901 | (11)987654321     | 1234567 | joao.silva@email.com       | O campo CEP deve conter 8 dígitos            |
+      | 12345678901 | (11)987654321     | 12345678 | joao.silva                  | O campo E‑mail deve ter um endereço válido   |
+
+  @positive
+  Scenario: Usuário recebe e‑mail de confirmação após cadastro
+    Given I have completed the registration successfully
+    Then an e‑mail should be sent to “joao.silva@email.com” containing a “link de validação”
+
+# Feature: Login
+Feature: Login
+  Como usuário cadastrado
+  Quero entrar no sistema usando credenciais válidas
+  Para que eu possa acessar minha conta
+
+  @positive
+  Scenario: Usuário entra com CPF e senha corretos
+    Given I open the “Login” page
+    When I enter “12345678901” as CPF
+    And I enter “MinhaSenha!123” as senha
+    And I click “Entrar”
+    Then I should be redirected to the “Dashboard” page
+
+  @negative
+  Scenario: Usuário entra com senha inválida
+    Given I open the “Login” page
+    When I enter “12345678901” as CPF
+    And I enter “SenhaErrada” as senha
+    And I click “Entrar”
+    Then I should see the message “CPF ou senha inválidos.”
+
+  @negative
+  Scenario: Usuário entra com CPF inválido
+    Given I open the “Login” page
+    When I enter “11111111111” as CPF
+    And I enter “MinhaSenha!123” as senha
+    And I click “Entrar”
+    Then I should see the message “CPF ou senha inválidos.”
+
+  @negative
+  Scenario: Usuário excede tentativas de login
+    Given I open the “Login” page
+    When I fail to login 5 times with incorrect credentials
+    Then I should see the message “Tentativas excedidas. Aguarde 5 min.”
+
+# Feature: Acesso à Conta – Saldo e Extrato
+Feature: Acesso à Conta – Saldo e Extrato
+  Como cliente logado
+  Quero visualizar meu saldo atual e extrato em ordem cronológica
+  Para que eu saiba exatamente meus recursos disponíveis
+
+  @positive
+  Scenario: Usuário visualiza saldo após operação de depósito
+    Given I am logged in
+    And I have deposited R$ 1.000,00 into my account
+    When I go to the “Saldo” tab
+    Then I should see the balance “R$ 1.000,00”
+
+  @positive
+  Scenario: Usuário visualiza extrato em ordem cronológica
+    Given I am logged in
+    And I have performed 12 transactions in the last month
+    When I go to the “Extrato” tab
+    Then the first 10 entries should be displayed in descending date order
+    And each entry should contain date, description, type, value, and post‑transaction balance
+
+# Feature: Transferência de Fundos
+Feature: Transferência de Fundos
+  Como cliente logado
+  Quero transferir dinheiro para outra conta
+  Para que eu possa movimentar recursos entre minhas contas
+
+  @positive
+  Scenario: Usuário transfere dinheiro com saldo suficiente
+    Given I am logged in
+    And I have a balance of R$ 5.000,00
+    When I navigate to the “Transferir” page
+    And I enter destination account “987654321” and amount “R$ 1.500,00”
+    And I click “Confirmar”
+    Then I should see the message “Transferência concluída com sucesso”
+    And my balance should be updated to “R$ 3.500,00”
+
+  @negative
+  Scenario: Usuário tenta transferir valor maior que o saldo
+    Given I am logged in
+    And I have a balance of R$ 2.000,00
+    When I navigate to the “Transferir” page
+    And I enter destination account “987654321” and amount “R$ 3.000,00”
+    And I click “Confirmar”
+    Then I should see the message “Saldo insuficiente”
+
+  @positive
+  Scenario Outline: Registro de transferência no histórico de ambas as contas
+    Given I am logged in as <cpfOrigem> with balance R$ 5.000,00
+    When I transfer R$ 500,00 to account <cpfDestino>
+    Then the origin account history should contain a “Transferência de <cpfDestino>” entry
+    And the destination account history should contain a “Transferência de <cpfOrigem>” entry
+
+    Examples:
+      | cpfOrigem     | cpfDestino   |
+      | 12345678901   | 10987654321  |
+
+# Feature: Solicitação de Empréstimo
+Feature: Solicitação de Empréstimo
+  Como cliente logado
+  Quero solicitar empréstimo indicando valor e renda anual
+  Para que eu possa obter recursos adicionais se necessário
+
+  @positive
+  Scenario: Usuário solicita empréstimo aprovado
+    Given I am logged in
+    When I request a loan of R$ 20.000,00 with annual income R$ 120.000,00
+    Then I should see the status “Aprovado” within 2 seconds
+    And I should see available terms and interest rates
+
+  @negative
+  Scenario: Usuário solicita empréstimo negado por renda insuficiente
+    Given I am logged in
+    When I request a loan of R$ 50.000,00 with annual income R$ 30.000,00
+    Then I should see the status “Negado” within 2 seconds
+    And I should see the reason “Renda insuficiente”
+
+# Feature: Pagamento de Contas
+Feature: Pagamento de Contas
+  Como cliente logado
+  Quero registrar pagamento de conta a futuro
+  Para que eu garanta que a transação ocorrerá na data certa
+
+  @positive
+  Scenario: Usuário agenda pagamento futuro
+    Given I am logged in
+    When I schedule a payment to “Conta X” for R$ 200,00 on the 25th of the next month
+    Then the payment should appear in the scheduled payments list
+    And the transaction should be recorded on the 25th
+
+  @negative
+  Scenario: Usuário tenta agendar pagamento em dia passado
+    Given I am logged in
+    When I try to schedule a payment for yesterday’s date
+    Then I should see an error message “A data de pagamento deve ser futura”
+
+# Feature: Navegação e Usabilidade
+Feature: Navegação e Usabilidade
+  Como usuário em qualquer página
+  Quero navegar sem erros
+  Para que minha experiência seja fluida
+
+  @negative
+  Scenario: Usuário acessa rota inexistente e recebe página 404
+    Given I am logged in
+    When I navigate to “/caminho/invalido”
+    Then I should see the “Erro 404 – Página não encontrada” page
+
+  @positive
+  Scenario: Mensagens de erro aparecem localizadas e claras
+    Given I am on the “Cadastro” page
+    When I submit the form with an invalid e‑mail
+    Then the error message should appear next to the e‑mail field
+    And the message should read “O campo E‑mail deve ter um endereço válido”
+
+  @positive
+  Scenario: Menus e links são consistentes em todas as páginas
+    Given I am logged in
+    When I navigate to each of the main pages: “Dashboard”, “Transferir”, “Empréstimo”, “Pagamentos”, “Logout”
+    Then each page should contain the same top menu structure with these items
+    And the layout should adapt responsively to mobile viewports
 ```
-
----
-
-### 2️⃣ Login
-
-```gherkin
-# arquivo: login.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Login
-
-  Cenario: Login com credenciais válidas
-    Dado que a página de login está aberta
-    Quando eu informar credenciais válidas (e‑mail e senha)
-    Então o sistema autentica e redireciona para a página inicial da conta
-
-  Cenario: Login com credenciais inválidas
-    Dado que a página de login está aberta
-    Quando eu informar credenciais inválidas
-    Então o sistema exibe a mensagem “Credenciais inválidas”
-```
-
----
-
-### 3️⃣ Acesso à Conta – Saldo e Extrato
-
-```gherkin
-# arquivo: acesso_conta.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Acesso à Conta – Saldo e Extrato
-
-  Background:  
-    Dado que eu já estou autenticado e na página inicial da minha conta
-
-  Cenario: Visualizar saldo atualizado
-    Quando o sistema carregar a página
-    Então o saldo exibido corresponde ao saldo real da conta
-
-  Cenario: Visualizar extrato em ordem cronológica
-    Quando eu acessar a seção de extrato
-    Então o extrato lista todas as transações recentes em ordem cronológica, com a mais recente no topo
-```
-
----
-
-### 4️⃣ Transferência de Fundos
-
-```gherkin
-# arquivo: transferencia.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Transferência de Fundos
-
-  Background:  
-    Dado que eu já estou autenticado e na página de transferência
-
-  Cenario: Tentativa de transferência com valor superior ao saldo
-    Quando eu selecionar a conta de origem, a conta de destino e digitar um valor maior que o saldo disponível
-    E eu tentar confirmar a transferência
-    Então o sistema exibe a mensagem “Saldo insuficiente”
-    E a transferência não é processada
-
-  Cenario: Transferência válida
-    Quando eu selecionar a conta de origem, a conta de destino e digitar um valor menor ou igual ao saldo
-    E eu confirmar a transferência
-    Então o valor é debitado da conta origem
-    E o valor é creditado na conta destino
-    E a transferência é registrada no histórico de ambas as contas
-```
-
----
-
-### 5️⃣ Solicitação de Empréstimo
-
-```gherkin
-# arquivo: solicitacao_emprestimo.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Solicitação de Empréstimo
-
-  Background:  
-    Dado que eu já estou autenticado e na página de solicitação de empréstimo
-
-  Cenario: Empréstimo aprovado
-    Quando eu informar o valor do empréstimo e minha renda anual
-    Então o sistema retorna o status “Aprovado”
-    E exibe a mensagem “Empréstimo aprovado”
-
-  Cenario: Empréstimo negado
-    Quando eu informar o valor do empréstimo e minha renda anual
-    Então o sistema retorna o status “Negado”
-    E exibe a mensagem “Empréstimo negado”
-```
-
----
-
-### 6️⃣ Pagamento de Contas
-
-```gherkin
-# arquivo: pagamento_contas.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Pagamento de Contas
-
-  Background:  
-    Dado que eu já estou autenticado e na página de pagamento de contas
-
-  Cenario: Registro de pagamento agendado
-    Quando eu preencher: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento
-    E eu confirmar o pagamento
-    Então o sistema valida os dados e exibe mensagens de erro se houver inconsistência
-    E o pagamento aparece no histórico de transações
-    E o pagamento será processado na data agendada
-
-  Cenario: Registro de pagamento imediato
-    Quando eu preencher: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino e valor
-    E eu deixo a data de pagamento em aberto
-    E eu confirmar o pagamento
-    Então o pagamento é processado imediatamente
-    E o pagamento aparece no histórico de transações
-```
-
----
-
-### 7️⃣ Navegação e Usabilidade
-
-```gherkin
-# arquivo: navegacao_usuabilidade.feature
-# encoding: utf-8
-# language: pt
-
-Funcionalidade: Navegação e Usabilidade
-
-  Cenario: Carregamento de página sem erros
-    Dado que eu acesso qualquer página do ParaBank
-    Quando o sistema carregar a página
-    Então a página é exibida sem erros de carregamento nem redirecionamentos inesperados
-
-  Cenario: Navegação por links ou menus
-    Quando eu interajo com um link ou item de menu
-    Então a página correta é exibida
-    E a navegação é consistente em todas as páginas
-
-  Cenario: Mensagens de erro claras
-    Quando eu soufor informado de um erro de validação (por ex.: “Telefone inválido”)
-    Então a mensagem de erro é exibida perto do campo responsável
-    E a mensagem é clara, objetiva e de fácil entendimento
-```
-
----
-
-## 🎯 Observações Finais
-
-| Item | Descrição |
-|------|-----------|
-| **Idiomas** | Gherkin em português (`Funcionalidade`, `Cenário`, `Dado`, `Quando`, `Então`). |
-| **Separação** | Cada story em um arquivo `.feature` próprio. |
-| **Background** | Utilizado quando há pré‑requisitos comuns (ex.: usuário autenticado). |
-| **Dados de teste** | Você pode usar *Examples* ou *Data Tables* se quiser parametrizar cenários, mas os exemplos acima já cobrem os casos de aceitação. |
-| **Integração** | Esses arquivos podem ser vinculados a passos de implementação em C#, Java, Python, etc., usando os frameworks BDD de sua escolha. |
-
-Pronto! Agora você tem um conjunto completo de cenários Gherkin que representam as User Stories do ParaBank. Basta importá‑los no seu pipeline de testes e começar a validar a aplicação continuamente. 🚀
