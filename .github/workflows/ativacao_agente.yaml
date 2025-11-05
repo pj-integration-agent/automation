@@ -5,6 +5,9 @@ on:
   push:
     branches: 
       - user-story
+    paths:
+      - 'ai/requirements/*'
+  workflow_dispatch:
 
 permissions:
   contents: write
