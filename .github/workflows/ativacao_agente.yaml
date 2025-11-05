@@ -4,7 +4,7 @@ run-name: Running - Workflow BDD Test Generation
 on:
   push:
     branches: 
-      - user-story
+      - main
     paths:
       - 'ai/requirements/*'
   workflow_dispatch:

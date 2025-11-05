@@ -5,21 +5,21 @@ from groq import Groq
 def generate_user_stories_from_criterios():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-    requirements_dir = "ai/requirements"
-    all_contents = ""
+    with open("ai/requirements/*", "r", encoding="utf-8") as f:
+        all_contents = f.read()
 
-    for filename in os.listdir(requirements_dir):
-        filepath = os.path.join(requirements_dir, filename)
+    # for filename in os.listdir(requirements_dir):
+    #     filepath = os.path.join(requirements_dir, filename)
         
-        if os.path.isfile(filepath):
-            try:
-                with open(filepath, "r", encoding="utf-8") as f:
-                    content = f.read()
-                    all_contents += f"\n---\nArquivo: {filename}\n{content}\n"
-            except UnicodeDecodeError:
-                with open(filepath, "rb") as f:
-                    content = base64.b64encode(f.read()).decode("utf-8")
-                    all_contents += f"\n---\nArquivo binário: {filename}\n(Base64 codificado)\n{content}\n"
+    #     if os.path.isfile(filepath):
+    #         try:
+    #             with open(filepath, "r", encoding="utf-8") as f:
+    #                 content = f.read()
+    #                 all_contents += f"\n---\nArquivo: {filename}\n{content}\n"
+    #         except UnicodeDecodeError:
+    #             with open(filepath, "rb") as f:
+    #                 content = base64.b64encode(f.read()).decode("utf-8")
+    #                 all_contents += f"\n---\nArquivo binário: {filename}\n(Base64 codificado)\n{content}\n"
 
     prompt = f"""
     Você é um especialista em criação de user stories.

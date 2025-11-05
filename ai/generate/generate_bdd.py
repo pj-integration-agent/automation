@@ -9,7 +9,8 @@ def generate_bdd_from_user_stories():
  
     prompt = f"""
     Você é um especialista em BDD.
-    Com base nos seguintes histórias de usuários, gere cenários no formato Gherkin (Given, When, Then).
+    Com base nos seguintes histórias de usuários, gere cenários no formato Gherkin (Given, When, Then), 
+    foque em criar cenários tanto em casos positivos, quanto em casos negativos.
  
     Critérios:
     {stories}
