@@ -4,7 +4,7 @@ from groq import Groq
 def generate_bdd_from_user_stories():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
  
-    with open("ai/generated_user_stories.feature", "r", encoding="utf-8") as f:
+    with open("ai/user_stories/generated_user_stories.feature", "r", encoding="utf-8") as f:
         stories = f.read()
  
     prompt = f"""
