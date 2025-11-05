@@ -1,164 +1,263 @@
 ```gherkin
-# Feature: Cadastro de Usuário
+# ParaBank – Cenários BDD (Gherkin, Português)
+
+# ==============================================================
+# 1. Cadastro de Usuário
+# ==============================================================
+
 Feature: Cadastro de Usuário
-  Para garantir que apenas dados válidos sejam aceitos, o sistema deve validar
-  todos os campos obrigatórios e apresentar mensagens de erro claras.
+  Como novo cliente
+  Quero registrar uma conta no ParaBank
+  Para ter acesso ao sistema após a criação da conta
 
-  Scenario: Cadastro bem‑sucedido
-    Given o usuário abre a página de cadastro
-    When ele preenche todos os campos obrigatórios com valores válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “Cadastro concluído com sucesso”
-    And o usuário pode realizar login com as credenciais recém‑criado
+  # US-01 – Cadastro bem-sucedido
+  Scenario: Cadastro de usuário com dados corretos
+    Dado que o usuário acessa a página de registro
+    Quando ele preenche todos os campos obrigatórios com dados válidos
+    E clica no botão “Criar Conta”
+    Então a página exibe a mensagem “Registro concluído com sucesso”
+    E o usuário é redirecionado para a tela de login
 
-  Scenario Outline: Cadastro com campo obrigatório em branco
-    Given o usuário abre a página de cadastro
-    When ele deixa o campo "<campo>" em branco e preenche os demais com dados válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “Campo <campo> é obrigatório”
-
-    Examples:
-      | campo          |
-      | Nome           |
-      | Email          |
-      | Senha          |
-      | CEP            |
-      | Telefone       |
-
-  Scenario Outline: Cadastro com dados inválidos
-    Given o usuário abre a página de cadastro
-    When ele preenche o campo "<campo>" com valor "<valor_invalido>" e os demais com dados válidos
-    And clica em “Cadastrar”
-    Then o sistema exibe a mensagem “<mensagem_erro>”
+  # US-02 – Campos obrigatórios
+  Scenario Outline: Tentativa de cadastro sem preencher campos obrigatórios
+    Dado que o usuário acessa a página de registro
+    Quando ele preenche os seguintes campos obrigatórios: <campos>
+    E clica no botão “Criar Conta”
+    Então a página exibe a mensagem de erro “<mensagem>”
+    E o campo <campo_erro> é destacado
 
     Examples:
-      | campo   | valor_invalido      | mensagem_erro                                  |
-      | Email   | usuario@          | Email inválido                                 |
-      | CEP     | 123                 | CEP inválido                                   |
-      | Telefone| 12abc               | Telefone inválido                              |
+      | campos                     | mensagem                                   | campo_erro   |
+      | Nome completo              | O campo Nome completo é obrigatório       | Nome completo|
+      | E‑mail, Telefone, CPF      | O campo CPF é obrigatório                 | CPF          |
+      | Endereço, CEP, Cidade, Estado | O campo CEP é obrigatório                 | CEP          |
 
-# Feature: Login
+  # US-03 – Validação de dados
+  Scenario Outline: Validação em tempo real de telefone, CEP e e‑mail
+    Dado que o usuário acessa a página de registro
+    Quando ele digita <valor> no campo <campo>
+    Então a página exibe a mensagem de erro “<mensagem>” em tempo real
+
+    Examples:
+      | campo   | valor            | mensagem                                |
+      | Telefone| 123            | Telefone inválido, digite 10 dígitos   |
+      | CEP     | ABC12345       | CEP inválido, digite apenas números   |
+      | E‑mail  | usuario@       | E‑mail inválido, verifique o domínio  |
+
+  # US-04 – Confirmação de cadastro
+  Scenario: Mensagem de confirmação após cadastro
+    Dado que o usuário preencheu todos os campos obrigatórios corretamente
+    Quando ele confirma o cadastro
+    Então o sistema exibe “Registro concluído com sucesso”
+    E o usuário pode prosseguir ao login
+
+# ==============================================================
+# 2. Login
+# ==============================================================
+
 Feature: Login
-  O sistema deve permitir o acesso apenas com credenciais válidas.
+  Como cliente existente
+  Quero entrar no sistema
+  Para ter acesso à minha conta bancária
 
+  # US-05 – Login bem-sucedido
   Scenario: Login com credenciais válidas
-    Given o usuário está na página de login
-    When ele insere email e senha válidos
-    And clica em “Entrar”
-    Then o sistema redireciona para a página inicial da conta
+    Dado que o usuário já possui uma conta cadastrada
+    Quando ele insere seu e‑mail/CPF e senha corretos
+    E clica em “Entrar”
+    Então ele é redirecionado para a página inicial da conta
+    E a sessão permanece válida até que ele faça logout
 
-  Scenario: Login com credenciais inválidas
-    Given o usuário está na página de login
-    When ele insere email ou senha inválidos
-    And clica em “Entrar”
-    Then o sistema exibe a mensagem “Credenciais inválidas”
+  # US-06 – Credenciais inválidas
+  Scenario Outline: Tentativa de login com credenciais inválidas
+    Dado que o usuário tem uma conta cadastrada
+    Quando ele tenta fazer login com e‑mail/CPF “<email>” e senha “<senha>”
+    Então o sistema exibe a mensagem “E‑mail ou senha inválidos”
 
-# Feature: Acesso à Conta (Saldo e Extrato)
-Feature: Acesso à Conta
-  O usuário deve visualizar saldo atualizado e extrato ordenado cronologicamente.
+    Examples:
+      | email           | senha     |
+      | errado@email.com | senha123  |
+      | certo@email.com  | wrongPass |
 
-  Scenario: Exibição de saldo atualizado
-    Given o usuário está na página inicial da conta
-    When ele acessa a seção “Saldo”
-    Then o sistema exibe o saldo correto e atualizado
+# ==============================================================
+# 3. Saldo e Extrato
+# ==============================================================
 
-  Scenario: Lista de extrato em ordem cronológica
-    Given o usuário está na página “Extrato”
-    When ele visualiza as transações
-    Then as transações são listadas em ordem decrescente de data (mais recente primeiro)
+Feature: Saldo e Extrato
+  Como cliente logado
+  Quero visualizar saldo e extrato
+  Para saber quanto dinheiro tenho disponível e meu histórico de movimentações
 
-# Feature: Transferência de Fundos
+  # US-07 – Visualizar saldo atualizado
+  Scenario: Visualização do saldo após operação
+    Dado que o usuário está logado
+    E ele realizou uma operação (depósito, retirada, transferência, pagamento) de <valor> em <tipo>
+    Quando ele acessa a página de saldo
+    Então ele vê o valor atualizado do saldo: <saldo_atual>
+
+    Examples:
+      | valor | tipo       | saldo_atual |
+      | 500   | Depósito   | 1500        |
+      | 200   | Retirada   | 1300        |
+
+  # US-08 – Visualizar extrato
+  Scenario: Visualização do extrato em ordem cronológica decrescente
+    Dado que o usuário está logado
+    E ele realizou várias transações
+    Quando ele acessa a página de extrato
+    Então o extrato lista as transações nas seguintes linhas (mais recente primeiro):
+      | Data       | Tipo             | Valor | Saldo após |
+      | 2025‑10‑03 | Transferência    | -200  | 1300      |
+      | 2025‑10‑02 | Depósito         | +500  | 1500      |
+      | 2025‑10‑01 | Pagamento        | -100  | 1000      |
+
+# ==============================================================
+# 4. Transferência de Fundos
+# ==============================================================
+
 Feature: Transferência de Fundos
-  O sistema deve gerenciar transferências entre contas, evitando saldo insuficiente.
+  Como cliente logado
+  Quero transferir dinheiro para outra conta
+  Para movimentar fundos sem sair da aplicação
 
-  Scenario: Transferência bem‑sucedida
-    Given o usuário está na página de transferências
-    When ele seleciona “Conta A” como origem
-    And seleciona “Conta B” como destino
-    And insere valor “100.00” (≤ saldo disponível)
-    And confirma a transferência
-    Then o valor “100.00” é debitado da Conta A
-    And o valor “100.00” é creditado na Conta B
-    And a transação é registrada nos históricos de ambas as contas
+  # US-09 – Transferência bem-sucedida
+  Scenario: Transferência de valor dentro do saldo disponível
+    Dado que o usuário está logado com saldo de 1000
+    Quando ele preenche “Conta de origem”, “Conta de destino” e valor “200”
+    E confirma a transferência
+    Então o saldo da conta de origem diminui em 200
+    E o saldo da conta de destino aumenta em 200
+    E a transação aparece no extrato da origem como “Transferência” e na destino como “Transferência recebida”
 
-  Scenario: Transferência com saldo insuficiente
-    Given o usuário está na página de transferências
-    When ele tenta transferir “2000.00” (excede o saldo)
-    And confirma a transferência
-    Then o sistema exibe a mensagem “Saldo insuficiente”
-
-  Scenario Outline: Transferência com valor inválido
-    Given o usuário na página de transferências
-    When ele insere valor "<valor>"
-    And confirma
-    Then o sistema exibe a mensagem “<mensagem>”
+  # US-10 – Seleção de contas e valor
+  Scenario Outline: Validação de valores e contas na transferência
+    Dado que o usuário está logado
+    Quando ele tenta transferir <valor> da conta <origem> para a conta <destino>
+    Então o sistema exibe a mensagem de erro “<mensagem>”
 
     Examples:
-      | valor          | mensagem                   |
-      | 0              | Valor mínimo é 0,01        |
-      | -50.00         | Valor negativo não permitido|
+      | valor | origem | destino | mensagem                     |
+      | 200   | 12345  | 54321   | Transferência concluída      |
+      | 0     | 12345  | 54321   | Valor deve ser maior que zero|
+      | 2000  | 12345  | 54321   | Saldo insuficiente           |
 
-# Feature: Solicitação de Empréstimo
+  # US-11 – Evitar saldo insuficiente
+  Scenario: Tentativa de transferência com saldo insuficiente
+    Dado que o usuário tem saldo de 100
+    Quando ele tenta transferir 200
+    Então o sistema exibe a mensagem “Saldo insuficiente”
+    E a transferência não é realizada
+
+# ==============================================================
+# 5. Solicitação de Empréstimo
+# ==============================================================
+
 Feature: Solicitação de Empréstimo
-  O usuário pode solicitar empréstimo e receber feedback de aprovação ou negação.
+  Como cliente logado
+  Quero solicitar um empréstimo
+  Para obter crédito adicional se necessário
 
-  Scenario: Empréstimo aprovado
-    Given o usuário está na página de empréstimo
-    When ele insere valor “5000” e renda anual “60000”
-    And envia a solicitação
-    Then o sistema exibe “Aprovado”
+  # US-12 – Formulário de empréstimo
+  Scenario: Preenchimento do formulário de empréstimo
+    Dado que o usuário está logado
+    Quando ele preenche “Valor do empréstimo” e “Renda anual”
+    E clica em “Solicitar Empréstimo”
+    Então o sistema processa a solicitação
 
-  Scenario: Empréstimo negado
-    Given o usuário está na página de empréstimo
-    When ele insere valor “20000” e renda anual “30000”
-    And envia a solicitação
-    Then o sistema exibe “Negado”
-
-# Feature: Pagamento de Contas
-Feature: Pagamento de Contas
-  O usuário deve registrar pagamentos com dados completos e respeitar a data agendada.
-
-  Scenario: Pagamento futuro agendado
-    Given o usuário está na página de pagamento de contas
-    When ele preenche beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor “150.00” e data “2025-12-31”
-    And confirma
-    Then o sistema registra o pagamento
-    And o pagamento aparece no histórico de transações com data “2025-12-31”
-
-  Scenario Outline: Pagamento com campo obrigatório em branco
-    Given o usuário na página de pagamento
-    When ele deixa o campo "<campo>" em branco e preenche os demais
-    And confirma
-    Then o sistema exibe “Campo <campo> é obrigatório”
+  # US-13 – Decisão de aprovação ou negação
+  Scenario Outline: Resposta ao pedido de empréstimo
+    Dado que o sistema processa o pedido
+    Quando a análise determina status <status>
+    Então o usuário vê um banner <mensagem> no topo da tela
 
     Examples:
-      | campo           |
-      | Beneficiário    |
-      | Endereço        |
-      | Cidade          |
-      | Estado          |
-      | CEP             |
-      | Telefone        |
-      | Conta de destino|
-      | Valor           |
-      | Data            |
+      | status   | mensagem                                   |
+      | Aprovado | Empréstimo aprovado! Valor creditado      |
+      | Negado   | Empréstimo negado. Motivo: renda insuficiente |
 
-# Feature: Requisitos Gerais de Navegação e Usabilidade
+  # US-14 – Crédito em conta após aprovação
+  Scenario: Crédito de empréstimo aprovado
+    Dado que o empréstimo foi aprovado
+    Quando o valor é creditado na conta do cliente
+    Então o saldo da conta aumenta em <valor_emprestimo>
+
+    Examples:
+      | valor_emprestimo |
+      | 5000             |
+
+# ==============================================================
+# 6. Pagamento de Contas
+# ==============================================================
+
+Feature: Pagamento de Contas
+  Como cliente logado
+  Quero registrar pagamento a terceiros
+  Para pagar contas de forma automatizada
+
+  # US-15 – Registro de pagamento
+  Scenario: Registro de pagamento imediato
+    Dado que o usuário está logado
+    Quando ele preenche todos os campos obrigatórios do formulário de pagamento
+    E confirma o pagamento
+    Então o pagamento é registrado no histórico de transações
+    E o usuário vê a mensagem “Pagamento confirmado”
+
+  # US-16 – Dados completos do pagamento
+  Scenario Outline: Validação dos campos obrigatórios do pagamento
+    Dado que o usuário está logado
+    Quando ele tenta salvar o pagamento sem preencher <campo>
+    Então o sistema exibe a mensagem de erro “<mensagem>”
+
+    Examples:
+      | campo                | mensagem                         |
+      | Beneficiário         | Beneficiário é obrigatório       |
+      | CEP                   | CEP é obrigatório                 |
+      | Conta de destino     | Conta de destino é obrigatória  |
+
+  # US-17 – Pagamento agendado
+  Scenario: Pagamento agendado
+    Dado que o usuário preenche o formulário com data futura “<data_futura>”
+    Quando ele confirma o pagamento
+    Então o pagamento fica marcado como “Agendado”
+    E não é debitado antes de <data_futura>
+
+    Examples:
+      | data_futura   |
+      | 2025‑10‑20    |
+
+# ==============================================================
+# 7. Navegação e Usabilidade
+# ==============================================================
+
 Feature: Navegação e Usabilidade
-  Garantir que todas as páginas carreguem sem erros e que mensagens de erro sejam claras.
+  Como usuário em qualquer página
+  Quero navegar entre funcionalidades sem erros
+  Para ter experiência de uso fluida
 
-  Scenario: Todas as páginas carregam corretamente
-    Given o usuário navega por todas as páginas do sistema
-    When ele acessa cada uma
-    Then nenhuma página apresenta erro de carregamento
+  # US-18 – Navegação sem erros
+  Scenario Outline: Acesso a páginas de navegação
+    Dado que o usuário está logado
+    Quando ele clica no link “<link>”
+    Então a página <pagina> carrega sem erros
 
-  Scenario: Mensagens de erro claras e objetivas
-    Given o usuário tenta uma operação inválida (ex.: transferir com saldo insuficiente)
-    When a ação falha
-    Then a mensagem exibida é clara, objetiva e localizada próximo ao campo afetado
+    Examples:
+      | link        | pagina          |
+      | Saldo       | /conta/saldo    |
+      | Extrato     | /conta/extrato  |
+      | Empréstimos | /emprestimos    |
 
-  Scenario: Consistência de menus e links
-    Given o usuário está em qualquer página
-    When ele verifica a barra de navegação
-    Then todos os links (Home, Conta, Transferência, Empréstimo, Pagamento) estão presentes e levam à página correta
+  # US-19 – Mensagens de erro claras
+  Scenario: Erro de campo inválido
+    Dado que o usuário tenta inserir dados inválidos em um campo
+    Quando ele tenta submeter o formulário
+    Então a mensagem de erro aparece imediatamente e indica exatamente o que está errado
+
+  # US-20 – Menus consistentes
+  Scenario: Menus consistentes em todas as páginas
+    Dado que o usuário está em qualquer página
+    Quando ele inspeciona o cabeçalho, barra lateral e rodapé
+    Então os mesmos itens de menu aparecem em todas as páginas
+    E o layout é responsivo em desktop, tablet e mobile
 ```
+
+> **Observação**: Cada cenário cobre um dos critérios de aceitação definidos nas histórias de usuário. Eles podem ser utilizados diretamente em ferramentas de BDD (Cucumber, SpecFlow, etc.) para gerar testes automatizados.
