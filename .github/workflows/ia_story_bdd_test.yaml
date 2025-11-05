@@ -1,5 +1,5 @@
 name: BDD Test Generation
-run-name: Running - Workflow BDD Test Generation
+run-name: Running - Workflow USER STORY BDD TEST Generation
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
-      - name: Generate BDD from criterios.md
+      - name: Generate BDD from generated_user_stories.feature
         run: python ai/generate/generate_bdd.py
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
