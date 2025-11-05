@@ -6,7 +6,7 @@ on:
     branches: 
       - user-story
     paths:
-      - 'ai/requirements/criterios.md'
+      - 'ai/requirements/*'
 
 permissions:
   contents: write

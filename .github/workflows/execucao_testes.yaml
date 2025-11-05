@@ -6,7 +6,7 @@ on:
     branches: 
       - main
     paths:
-      - 'ai/requirements/criterios.md'
+      - 'ai/requirements/*'
   workflow_dispatch:
 
 permissions:
