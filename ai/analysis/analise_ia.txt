@@ -1,0 +1,46 @@
+## 1. Testes que falharam
+
+| Data/Hora | Nome do teste | Resultado |
+|-----------|----------------|-----------|
+| 2025‑11‑05 18:41:06 | **Login inválido falhou** | ❌ **Falhou** |
+| 2025‑11‑05 18:41:07 | **Usuário deve atualizar telefone com campo vazio falhou** | ❌ **Falhou** |
+
+## 2. Motivo de cada falha
+
+| Teste | Mensagem de erro | Por quê? |
+|-------|------------------|----------|
+| **Login inválido falhou** | <pre>expect(locator('.error')).toContainText("An internal error has occurred and has been logged.")<br>element(s) not found<br>unexpected value "The username and password could not be verified."</pre> | O teste buscou um elemento `<p class="error">` e esperava que esse elemento contenha a substring **“An internal error has occurred and has been logged.”**. <br> • O elemento **foi encontrado** (o Playwright reporta “7 × locator resolved to …”), mas o texto real era **“The username and password could not be verified.”** <br> • O texto esperado não corresponde ao texto exibido na página, então `toContainText` falha. |
+| **Usuário deve atualizar telefone com campo vazio falhou** | <pre>expect(locator('//*[@id="phone-error"]')).toContainText("Phone is required.")<br>element(s) not found</pre> | O teste tentou localizar o erro de telefone usando um XPath que busca um elemento com `id="phone-error"`. <br> • Nenhum elemento com esse `id` estava presente na árvore DOM quando o teste rodou, resultando em “element(s) not found”. <br> • Se o elemento existisse, o texto esperado (“Phone is required.”) deveria estar presente, mas o teste não chegou a verificar isso. |
+
+## 3. Sugestões para corrigir os erros
+
+### 3.1. Teste “Login inválido falhou”
+
+| Problema | Solução prática | Observação |
+|----------|-----------------|------------|
+| **Texto esperado incorreto** | 1. Verifique qual mensagem o sistema realmente devolve para um login inválido (por exemplo, via inspeção do console ou manual).  <br>2. Atualize o teste para usar essa mensagem real: `<expect(locator('.error')).toContainText('The username and password could not be verified.')>`. | Se o sistema for configurado para exibir mensagens de erro customizadas por ambiente, use variáveis de ambiente ou um arquivo de configuração para escolher a string correta. |
+| **Tempo de espera insuficiente (timeout 5000ms)** | Se o erro leva mais tempo para aparecer (por exemplo, depois de uma chamada de API), aumente o timeout: `<expect(locator('.error')).toContainText('…', { timeout: 10000 })>`. | Evite aumentar o timeout de forma excessiva; prefira usar `waitForSelector` ou `waitForFunction` para garantir que o elemento exista antes de fazer a asserção. |
+| **Uso de `locator` vs `elementHandle`** | Em vez de `locator('.error')`, pode-se usar `page.waitForSelector('.error')` seguido de `expect(element).toContainText(...)`. | Isso dá mais controle sobre o momento da espera e facilita a depuração. |
+
+### 3.2. Teste “Usuário deve atualizar telefone com campo vazio falhou”
+
+| Problema | Solução prática | Observação |
+|----------|-----------------|------------|
+| **XPath inválido / elemento inexistente** | 1. Confirme se o elemento realmente tem o `id="phone-error"`. Se não, atualize o seletor: <br>```js<br>await expect(page.locator('#phone-error')).toBeVisible();<br>await expect(page.locator('#phone-error')).toContainText('Phone is required.');<br>```. <br>2. Se o erro aparecer como um `<span>` ou `<div>` sem `id`, use outra forma de localizar, como `role="alert"` ou uma classe: `<page.locator('.phone-error')>`. | XPath pode ser mais propenso a falhas quando a estrutura muda; prefira seletores CSS se possível. |
+| **Elemento não aparece** | Se o erro depende de um evento (ex.: blur no campo), garanta que o teste realmente dispara esse evento: <br>```js<br>await page.fill('#phone', '');<br>await page.blur('#phone');<br>```. <br>Depois, aguarde a visibilidade do erro: <br>```js<br>await expect(page.locator('#phone-error')).toBeVisible({ timeout: 5000 });<br>```. | Se o componente usar frameworks como React ou Vue, pode ser necessário usar `page.waitForResponse` ou `page.waitForSelector` com `state: 'visible'`. |
+| **Timeout baixo** | Aumentar o timeout no `toContainText` ou usar `expect(page.locator(...)).toHaveText('…', { timeout: 8000 })`. | Isso garante que, caso haja atraso de renderização, o teste ainda espere. |
+
+### 3.3. Boas práticas gerais
+
+1. **Separar seleção e asserção** – use `const errorEl = page.locator('.error')` e depois `await expect(errorEl).toContainText(...)`.
+2. **Centralizar textos de erro** – mantenha um arquivo `errorMessages.ts` ou JSON que contém todas as mensagens esperadas, permitindo alteração central sem tocar nos testes.
+3. **Logs detalhados** – adicione `console.log(await page.innerHTML('.error'))` antes da asserção para imprimir o HTML real em caso de falha.
+4. **Timeouts contextuais** – em testes de login, geralmente 5‑10 s são suficientes; em testes de UI que dependem de transições de animação, pode ser necessário 15‑20 s.
+5. **Verifique a condição de erro** – se o erro só aparece quando a API falha, simule a falha na API (mock) para garantir previsibilidade.
+
+## Resumo rápido
+
+- **Login inválido**: o teste esperava a mensagem de erro errada. Altere a string esperada para a real ou use uma variável de ambiente que reflita o ambiente de teste.
+- **Telefone vazio**: o seletor usado (`//*[@id="phone-error"]`) não corresponde a nenhum elemento na página. Confirme o `id` ou troque o seletor por CSS/role e assegure que o evento que dispara o erro seja realmente acionado antes de esperar o elemento.
+
+Implementando essas alterações, os testes devem passar de forma estável e refletir fielmente o comportamento do aplicativo.
