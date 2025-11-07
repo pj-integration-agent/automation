@@ -27,6 +27,7 @@ jobs:
   user-stories:
     if: ${{ inputs.criacao-user-stories }}
     uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-user-stories.yaml@main
+    secrets: inherit
 
   # bdd:
   #   if: ${{ inputs.criacao-bdd }}
