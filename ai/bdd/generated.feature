@@ -1,220 +1,451 @@
-**US01 – Cadastro de Usuário**  
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: Registro com todos os campos válidos,
-    tipo: positivo,
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Registro com todos os campos válidos\n  Given I am on the registration page\n  When I enter \"João Silva\" in the name field\n  And I enter \"12345678901\" in the CPF field\n  And I enter \"01/01/1990\" in the birth date field\n  And I enter \"(11) 98765-4321\" in the phone field\n  And I enter \"12345678\" in the ZIP code field\n  And I enter \"Rua Exemplo, 100\" in the address field\n  And I enter \"joao.silva@example.com\" in the email field\n  And I enter \"Password123\" in the password field\n  And I confirm \"Password123\" in the confirm password field\n  And I click the submit button\n  Then I should see the message \"Cadastro concluído com sucesso. Você pode agora fazer login.\""
-```
+**titulo: US01 – Cadastro de cliente bancário**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Cadastro bem‑sucedido com todos os campos válidos  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Cadastro de cliente
+Scenario: Cadastro bem-sucedido com dados válidos
+  Given o usuário acessa a tela de cadastro
+  When preenche todos os campos obrigatórios com dados válidos
+  And clica no botão "Registrar"
+  Then a mensagem "Cadastro concluído!" é exibida
+  And o usuário é redirecionado para a tela de login
+  And um e‑mail de confirmação é enviado com link de ativação
+  ```
 
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: Telefone inválido com 9 dígitos,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Telefone inválido com 9 dígitos\n  Given I am on the registration page\n  When I enter \"(11) 9876-543\" in the phone field\n  And I fill all other required fields with valid data\n  And I click the submit button\n  Then I should see the error message \"Telefone inválido – insira 10 ou 11 dígitos\" below the phone field"
-```
+&nbsp;&nbsp;- **nome:** Erro de e‑mail inválido no cadastro  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Cadastro de cliente
+Scenario: Cadastro com e‑mail inválido
+  Given o usuário acessa a tela de cadastro
+  When preenche todos os campos obrigatórios com e‑mail "usuario[sem]@exemplo.com"
+  And clica no botão "Registrar"
+  Then a mensagem de erro "E‑mail inválido" aparece ao lado do campo e‑mail
+  And o cadastro não é concluído
+  ```
 
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: CEP inválido com 7 dígitos,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\nScenario: CEP inválido com 7 dígitos\n  Given I am on the registration page\n  When I enter \"1234567\" in the ZIP code field\n  And I fill all other required fields with valid data\n  And I click the submit button\n  Then I should see the error message \"CEP inválido – insira 8 dígitos\" below the ZIP code field"
-```
-
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: E‑mail inválido sem domínio,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\nScenario: E‑mail inválido sem domínio\n  Given I am on the registration page\n  When I enter \"joao.silva@\" in the email field\n  And I fill all other required fields with valid data\n  And I click the submit button\n  Then I should see the error message \"E‑mail inválido\" below the email field"
-```
-
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: Senha e confirmação diferentes,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Senha e confirmação diferentes\n  Given I am on the registration page\n  When I enter \"Password123\" in the password field\n  And I confirm \"Password321\" in the confirm password field\n  And I fill all other required fields with valid data\n  And I click the submit button\n  Then I should see the error message \"Senhas não correspondem\" below the confirm password field"
-```
-
-```
-titulo: Cadastro de Usuário,
-cenario_bdd:
-    nome: Registro completo seguido de login imediato,
-    tipo: positivo,
-    gherkin: "Feature: Cadastro e Login\nScenario: Registro completo seguido de login imediato\n  Given I have successfully registered with valid data\n  When I navigate to the login page\n  And I enter the registered email \"joao.silva@example.com\" in the email field\n  And I enter the password \"Password123\" in the password field\n  And I click the login button\n  Then I should be redirected to the Dashboard\n  And I should see the message \"Olá, João\" in the top bar"
-```
+&nbsp;&nbsp;- **nome:** Tentativa de login antes de ativação da conta  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Cadastro de cliente
+Scenario: Login antes de ativar a conta
+  Given o usuário já concluiu o cadastro mas ainda não clicou em "Ativar conta" no e‑mail
+  When tenta fazer login com e‑mail cadastrado e senha correta
+  Then a mensagem "Conta não ativada. Verifique seu e‑mail" é exibida
+  ```
 
 ---
 
-**US02 – Login**  
-```
-titulo: Login,
-cenario_bdd:
-    nome: Login com credenciais válidas,
-    tipo: positivo,
-    gherkin: "Feature: Login\nScenario: Login com credenciais válidas\n  Given I am on the login page\n  When I enter \"joao.silva@example.com\" in the email field\n  And I enter \"Password123\" in the password field\n  And I click the login button\n  Then I should be redirected to the Dashboard\n  And I should see the message \"Olá, João\" in the top bar"
-```
+**titulo: US02 – Recuperação de senha**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Recuperação de senha com e‑mail existente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Recuperação de senha
+Scenario: Envio de link de redefinição para e‑mail existente
+  Given o usuário acessa a tela de login
+  When clica em "Esqueci minha senha"
+  And insere e‑mail "cliente@exemplo.com"
+  And confirma envio
+  Then o sistema envia e‑mail com link de redefinição
+  ```
 
-```
-titulo: Login,
-cenario_bdd:
-    nome: Login com credenciais inválidas,
-    tipo: negativo,
-    gherkin: "Feature: Login\nScenario: Login com credenciais inválidas\n  Given I am on the login page\n  When I enter \"joao.silva@example.com\" in the email field\n  And I enter \"WrongPass\" in the password field\n  And I click the login button\n  Then I should see the error message \"E‑mail ou senha incorretos. Tente novamente.\""
-```
+&nbsp;&nbsp;- **nome:** Recuperação com e‑mail não cadastrado  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Recuperação de senha
+Scenario: E‑mail não cadastrado
+  Given o usuário acessa a tela de recuperação
+  When insere e‑mail "inexistente@exemplo.com"
+  And confirma envio
+  Then a mensagem "E‑mail não cadastrado" é exibida
+  ```
 
-```
-titulo: Login,
-cenario_bdd:
-    nome: Login com campo de e‑mail vazio,
-    tipo: negativo,
-    gherkin: "Feature: Login\nScenario: Login com campo de e‑mail vazio\n  Given I am on the login page\n  When I leave the email field blank\n  And I enter \"Password123\" in the password field\n  And I click the login button\n  Then I should see the error message \"E‑mail ou senha incorretos. Tente novamente.\""
-```
+&nbsp;&nbsp;- **nome:** Link de redefinição expirado (15 min)  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Recuperação de senha
+Scenario: Link de redefinição expirado
+  Given o usuário recebeu link de redefinição
+  When espera 16 minutos e tenta usar o link
+  Then a mensagem "Link expirado. Solicite um novo" é exibida
+  ```
 
----
-
-**US03 – Acesso à Conta (Saldo e Extrato)**  
-```
-titulo: Acesso à Conta,
-cenario_bdd:
-    nome: Exibição do saldo atual na Dashboard,
-    tipo: positivo,
-    gherkin: "Feature: Acesso à Conta\nScenario: Exibição do saldo atual na Dashboard\n  Given I am logged in and on the Dashboard\n  Then I should see my current account balance displayed prominently"
-```
-
-```
-titulo: Acesso à Conta,
-cenario_bdd:
-    nome: Exibir extrato com pelo menos 10 transações,
-    tipo: positivo,
-    gherkin: "Feature: Acesso à Conta\nScenario: Exibir extrato com pelo menos 10 transações\n  Given I am logged in and click \"Extrato\"\n  Then I should see a list containing at least 10 transaction entries sorted from most recent to oldest"
-```
-
-```
-titulo: Acesso à Conta,
-cenario_bdd:
-    nome: Mensagem quando não há transações,
-    tipo: negativo,
-    gherkin: "Feature: Acesso à Conta\nScenario: Mensagem quando não há transações\n  Given I am logged in and my account has zero transactions\n  And I click \"Extrato\"\n  Then I should see the message \"Nenhuma transação encontrada\""
-```
-
-```
-titulo: Acesso à Conta,
-cenario_bdd:
-    nome: Filtrar extrato por intervalo de datas,
-    tipo: positivo,
-    gherkin: "Feature: Acesso à Conta\nScenario: Filtrar extrato por intervalo de datas\n  Given I am logged in and click \"Extrato\"\n  When I set the start date to \"01/01/2024\"\n  And I set the end date to \"31/01/2024\"\n  And I apply the filter\n  Then I should see only transactions dated between 01/01/2024 and 31/01/2024"
-```
+&nbsp;&nbsp;- **nome:** Redefinição de senha válida  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Recuperação de senha
+Scenario: Redefinição de senha dentro do prazo
+  Given o usuário tem link de redefinição válido
+  When abre o link e define nova senha "Senha123!"
+  And confirma
+  Then a mensagem "Senha redefinida com sucesso" é exibida
+  And o usuário pode logar com a nova senha
+  ```
 
 ---
 
-**US04 – Transferência de Fundos**  
-```
-titulo: Transferência de Fundos,
-cenario_bdd:
-    nome: Transferência com saldo suficiente,
-    tipo: positivo,
-    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência com saldo suficiente\n  Given I am logged in and have a balance of at least R$200\n  And I navigate to the Transfer page\n  When I select my checking account as origin\n  And I select my savings account as destination\n  And I enter \"100\" as the amount\n  And I confirm the transfer\n  Then I should see the message \"Transferência realizada com sucesso\"\n  And the origin account balance should decrease by 100\n  And the destination account balance should increase by 100\n  And the transaction should appear in both accounts’ extrato"
-```
+**titulo: US03 – Login com credenciais válidas**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Login com credenciais corretas  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Login
+Scenario: Login bem‑sucedido
+  Given o usuário está na tela de login
+  When entra e‑mail "cliente@exemplo.com"
+  And senha "SenhaSegura123"
+  And clica em "Entrar"
+  Then o usuário é redirecionado para o Dashboard
+  And o saldo e extrato são exibidos
+  ```
 
-```
-titulo: Transferência de Fundos,
-cenario_bdd:
-    nome: Transferência com saldo insuficiente,
-    tipo: negativo,
-    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência com saldo insuficiente\n  Given I am logged in and have a balance of R$50\n  And I navigate to the Transfer page\n  When I select my checking account as origin\n  And I select my savings account as destination\n  And I enter \"100\" as the amount\n  And I confirm the transfer\n  Then I should see the error message \"Saldo insuficiente\" and no transaction should be recorded"
-```
+&nbsp;&nbsp;- **nome:** Login com senha incorreta  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Login
+Scenario: Senha inválida
+  Given o usuário está na tela de login
+  When entra e‑mail "cliente@exemplo.com"
+  And senha "SenhaErrada"
+  And clica em "Entrar"
+  Then a mensagem "Credenciais inválidas. Tente novamente." é exibida
+  ```
 
----
-
-**US05 – Solicitação de Empréstimo**  
-```
-titulo: Solicitação de Empréstimo,
-cenario_bdd:
-    nome: Empréstimo aprovado por renda suficiente,
-    tipo: positivo,
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Empréstimo aprovado por renda suficiente\n  Given I am logged in and navigate to the Loan page\n  When I enter \"5000\" as loan amount\n  And I enter \"60000\" as annual income\n  And I submit the request\n  Then I should see the message \"Empréstimo aprovado\"\n  And the loan record should be saved in my loan history"
-```
-
-```
-titulo: Solicitação de Empréstimo,
-cenario_bdd:
-    nome: Empréstimo negado por renda insuficiente,
-    tipo: negativo,
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Empréstimo negado por renda insuficiente\n  Given I am logged in and navigate to the Loan page\n  When I enter \"5000\" as loan amount\n  And I enter \"12000\" as annual income\n  And I submit the request\n  Then I should see the message \"Empréstimo negado – renda insuficiente\"\n  And no loan record should be created"
-```
-
-```
-titulo: Solicitação de Empréstimo,
-cenario_bdd:
-    nome: Visualizar histórico de empréstimos,
-    tipo: positivo,
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Visualizar histórico de empréstimos\n  Given I have previously requested a loan\n  And I am logged in and navigate to the Loans section\n  Then I should see my past loan requests listed with status and dates"
-```
+&nbsp;&nbsp;- **nome:** Conta bloqueada após cinco tentativas falhas  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Login
+Scenario: Conta bloqueada após 5 falhas
+  Given o usuário tenta logar 5 vezes com senha incorreta
+  When a sexta tentativa é feita
+  Then a mensagem "Conta bloqueada. Entre em contato com o suporte." é exibida
+  ```
 
 ---
 
-**US06 – Pagamento de Contas**  
-```
-titulo: Pagamento de Contas,
-cenario_bdd:
-    nome: Pagamento registrado com sucesso,
-    tipo: positivo,
-    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento registrado com sucesso\n  Given I am logged in and navigate to the Payments page\n  When I enter \"Conta de Luz\" as beneficiary\n  And I provide address, city, state, \"12345678\" as CEP, \"(11) 91234-5678\" as phone\n  And I select my checking account as destination\n  And I enter \"200\" as amount\n  And I set the payment date to tomorrow\n  And I confirm the payment\n  Then I should see the message \"Pagamento registrado com sucesso\"\n  And the payment should appear in the extrato with status \"Pendente\""
-```
+**titulo: US04 – Visualização do saldo atualizado**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Saldo exibido corretamente na inicialização  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Saldo da conta
+Scenario: Exibição de saldo inicial
+  Given o usuário está no Dashboard
+  Then o saldo exibido corresponde ao valor presente na base de dados
+  ```
 
-```
-titulo: Pagamento de Contas,
-cenario_bdd:
-    nome: Data inválida (passado) ao registrar pagamento,
-    tipo: negativo,
-    gherkin: "Feature: Pagamento de Contas\nScenario: Data inválida (passado) ao registrar pagamento\n  Given I am logged in and navigate to the Payments page\n  When I set the payment date to yesterday\n  And I attempt to confirm the payment\n  Then I should see the error message \"Data inválida – não pode ser anterior a hoje\""
-```
+&nbsp;&nbsp;- **nome:** Saldo atualizado após transferência  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Saldo da conta
+Scenario: Saldo após transferência interna
+  Given o usuário realizou transferência de R$ 200,00 para outra conta própria
+  When retorna ao Dashboard
+  Then o saldo diminui em R$ 200,00
+  And o saldo não fica negativo
+  ```
 
-```
-titulo: Pagamento de Contas,
-cenario_bdd:
-    nome: Pagamento aparece no extrato com status Pendente,
-    tipo: positivo,
-    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento aparece no extrato com status Pendente\n  Given I have scheduled a future payment\n  And I navigate to the Extrato page\n  Then I should see the payment entry with status \"Pendente\" and the scheduled date"
-```
+&nbsp;&nbsp;- **nome:** Bloqueio de transação quando saldo insuficiente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Saldo da conta
+Scenario: Tentativa de transferência com saldo insuficiente
+  Given o saldo atual é R$ 100,00
+  When tenta transferir R$ 150,00
+  Then a mensagem "Saldo insuficiente – saldo atual: R$ 100,00" é exibida
+  And a transferência não ocorre
+  ```
 
 ---
 
-**US07 – Navegação & Usabilidade**  
-```
-titulo: Navegação & Usabilidade,
-cenario_bdd:
-    nome: Menu principal visível em todas as páginas,
-    tipo: positivo,
-    gherkin: "Feature: Navegação & Usabilidade\nScenario: Menu principal visível em todas as páginas\n  Given I am logged in\n  When I navigate to any page (Dashboard, Extrato, Transfer, Loan, Payments)\n  Then the main menu with links to Login, Cadastro, Dashboard, Extrato, Transferência, Empréstimo, Pagamentos should be present"
-```
+**titulo: US05 – Visualização do extrato em ordem cronológica**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Exibição das 20 transações mais recentes  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Extrato
+Scenario: Lista das 20 transações mais recentes
+  Given o usuário abre a página de extrato
+  Then as primeiras 20 linhas exibem transações em ordem decrescente de data/hora
+  And cada linha contém data, descrição, valor e saldo pós‑transação
+  ```
 
-```
-titulo: Navegação & Usabilidade,
-cenario_bdd:
-    nome: Links de navegação levam à página correta,
-    tipo: positivo,
-    gherkin: "Feature: Navegação & Usabilidade\nScenario: Links de navegação levam à página correta\n  Given I am on the Dashboard\n  When I click the \"Extrato\" link\n  Then I should be on the Extrato page\n  And the URL should contain \"/extrato\"\n  And there should be no 404 or navigation error"
-```
+&nbsp;&nbsp;- **nome:** Paginação de extrato após 20 transações  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Extrato
+Scenario: Paginação de extrato
+  Given existem mais de 20 transações
+  When o usuário clica em "Ver mais"
+  Then as próximas 20 transações são carregadas
+  ```
 
-```
-titulo: Navegação & Usabilidade,
-cenario_bdd:
-    nome: Mensagem de erro exibida imediatamente abaixo do campo obrigatório em branco,
-    tipo: negativo,
-    gherkin: "Feature: Navegação & Usabilidade\nScenario: Mensagem de erro exibida imediatamente abaixo do campo obrigatório em branco\n  Given I am on the registration page\n  And I leave the CPF field empty\n  When I attempt to submit the form\n  Then I should see the error message \"CPF é obrigatório\" displayed directly below the CPF field"
-```
+---
 
-```
-titulo: Navegação & Usabilidade,
-cenario_bdd:
-    nome: Layout responsivo adapta-se a diferentes larguras de tela,
-    tipo: positivo,
-    gherkin: "Feature: Navegação & Usabilidade\nScenario: Layout responsivo adapta-se a diferentes larguras de tela\n  Given I open the application on a device with width 320px\n  Then all UI elements should be visible and usable\n  And I repeat the test on a device with width 1920px\n  Then the layout should remain functional and aesthetically consistent"
-```
+**titulo: US06 – Transferência entre contas**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Transferência interna bem‑sucedida  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Transferência
+Scenario: Transferência interna
+  Given o usuário possui Conta A com saldo R$ 1.000,00
+  When seleciona Conta A como origem e Conta B como destino
+  And insere valor R$ 300,00
+  And confirma a transferência
+  Then o saldo de Conta A passa a ser R$ 700,00
+  And o saldo de Conta B passa a ser R$ 300,00
+  And a transação aparece no extrato de ambas as contas
+  ```
+
+&nbsp;&nbsp;- **nome:** Transferência bloqueada por saldo insuficiente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Transferência
+Scenario: Transferência com saldo insuficiente
+  Given o usuário possui saldo de R$ 100,00 na Conta A
+  When tenta transferir R$ 200,00 para Conta B
+  Then a mensagem "Saldo insuficiente" é exibida
+  And a transferência não é realizada
+  ```
+
+&nbsp;&nbsp;- **nome:** Transferência para conta externa  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Transferência
+Scenario: Transferência externa
+  Given o usuário possui Conta A com saldo suficiente
+  When seleciona Conta A como origem e conta externa cadastrada como destino
+  And confirma a transferência
+  Then a transferência é registrada no extrato da conta externa
+  ```
+
+&nbsp;&nbsp;- **nome:** Valor inválido (número negativo) na transferência  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Transferência
+Scenario: Valor negativo na transferência
+  Given o usuário tenta transferir -R$ 50,00
+  When confirma a operação
+  Then a mensagem "Valor inválido" é exibida
+  And a transferência não é processada
+  ```
+
+---
+
+**titulo: US07 – Aprovação de pedido de empréstimo**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Empréstimo aprovado com renda suficiente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Empréstimo
+Scenario: Empréstimo aprovado
+  Given o usuário preenche valor R$ 10.000,00 e renda anual R$ 80.000,00
+  When envia o formulário
+  Then a mensagem "Aprovado" aparece em destaque
+  And a solicitação fica registrada no histórico de empréstimos
+  ```
+
+&nbsp;&nbsp;- **nome:** Empréstimo negado por renda insuficiente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Empréstimo
+Scenario: Negação por renda insuficiente
+  Given o usuário preenche renda anual R$ 20.000,00
+  When envia o formulário
+  Then a mensagem "Negado – Renda insuficiente" é exibida
+  And a solicitação permanece no histórico com status negado
+  ```
+
+&nbsp;&nbsp;- **nome:** Empréstimo negado por baixo score de crédito  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Empréstimo
+Scenario: Negação por score de crédito baixo
+  Given o usuário possui score de crédito 300
+  When envia pedido de R$ 5.000,00
+  Then a mensagem "Negado – Score de crédito baixo" é exibida
+  ```
+
+---
+
+**titulo: US08 – Pagamento de contas agendado**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Agendamento de pagamento futuro  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Pagamento agendado
+Scenario: Agendamento com data futura
+  Given o usuário acessa a tela de pagamentos
+  When preenche todos os campos obrigatórios
+  And define data de pagamento 5 dias depois da data atual
+  And salva
+  Then a mensagem "Pagamento agendado para DD/MM/AAAA" é exibida
+  And o pagamento aparece no extrato na data programada
+  ```
+
+&nbsp;&nbsp;- **nome:** Erro ao selecionar data no passado  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Pagamento agendado
+Scenario: Data de pagamento no passado
+  Given o usuário define data de pagamento 2 dias antes da data atual
+  When salva
+  Then a mensagem "Data de pagamento não pode ser anterior à data atual" é exibida
+  ```
+
+&nbsp;&nbsp;- **nome:** Falha por campo obrigatório em falta  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Pagamento agendado
+Scenario: Campo obrigatório ausente
+  Given o usuário deixa o campo "Valor" em branco
+  When tenta salvar
+  Then a mensagem de erro "Valor é obrigatório" aparece ao lado do campo
+  ```
+
+&nbsp;&nbsp;- **nome:** Execução automática na data agendada  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Pagamento agendado
+Scenario: Execução automática
+  Given existe pagamento agendado para data DD/MM/AAAA
+  When a data atual chega a DD/MM/AAAA
+  Then o sistema debita automaticamente R$ X na conta do usuário
+  And a transação aparece no extrato
+  ```
+
+---
+
+**titulo: US09 – Navegação sem erros 404**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Navegação entre páginas não gera 404  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Navegação
+Scenario: Navegação entre páginas
+  Given o usuário está em qualquer página
+  When clica em cada link do menu principal
+  Then nenhuma página retorna erro 404
+  And a mesma estrutura de header/footer permanece consistente
+  ```
+
+---
+
+**titulo: US10 – Mensagens de erro claras e objetivas**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Mensagem de campo inválido  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Mensagens de erro
+Scenario: Campo telefone inválido
+  Given o usuário preenche telefone "1234"
+  When tenta registrar
+  Then a mensagem "Telefone inválido – ex.: (11) 91234-5678" aparece ao lado do campo
+  ```
+
+&nbsp;&nbsp;- **nome:** Mensagem de login inválido  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Mensagens de erro
+Scenario: Credenciais inválidas no login
+  Given o usuário tenta logar com senha errada
+  Then a mensagem "Credenciais inválidas. Tente novamente." aparece no topo da tela
+  ```
+
+&nbsp;&nbsp;- **nome:** Mensagem de saldo insuficiente  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** negativo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Mensagens de erro
+Scenario: Saldo insuficiente na transferência
+  Given o saldo atual é R$ 50,00
+  When tenta transferir R$ 100,00
+  Then a mensagem "Saldo insuficiente – saldo atual: R$ 50,00" aparece
+  ```
+
+---
+
+**titulo: US11 – Consistência de menus e links**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Menus idênticos em todas as páginas  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Menus consistentes
+Scenario: Verificação de menu em todas as páginas
+  Given o usuário navega para cada página (Dashboard, Transferências, Empréstimos, Pagamentos, Extrato)
+  Then cada página exibe o mesmo menu principal com opções "Contas", "Transferências", "Empréstimos", "Pagamentos", "Extrato"
+  And o link "Início" leva sempre ao Dashboard
+  And o rodapé contém links "Termos", "Privacidade", "Ajuda" em todas as páginas
+  ```
+
+---
+
+**titulo: US12 – Confirmações visuais de operações**  
+**cenario_bdd:**  
+&nbsp;&nbsp;- **nome:** Banner de confirmação de cadastro  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Confirmações visuais
+Scenario: Banner após cadastro
+  Given o usuário conclui o cadastro
+  Then um banner "Cadastro concluído com sucesso!" aparece
+  And o banner desaparece após 3 s ou quando o usuário clica em "x"
+  ```
+
+&nbsp;&nbsp;- **nome:** Banner de confirmação de transferência  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Confirmações visuais
+Scenario: Banner após transferência
+  Given o usuário conclui uma transferência de R$ 200,00 para conta YYY
+  Then o banner "Transferência concluída: R$ 200,00 transferido para conta YYY" aparece
+  And desaparece em 3 s ou quando o usuário fecha
+  ```
+
+&nbsp;&nbsp;- **nome:** Banner de confirmação de pagamento agendado  
+&nbsp;&nbsp;&nbsp;&nbsp;**tipo:** positivo  
+&nbsp;&nbsp;&nbsp;&nbsp;**gherkin:**  
+&nbsp;&nbsp;&nbsp;&nbsp;```
+Feature: Confirmações visuais
+Scenario: Banner após agendamento de pagamento
+  Given o usuário agenda pagamento de R$ 150,00 para data futura
+  Then o banner "Pagamento agendado com sucesso" aparece
+  And desaparece em 3 s ou quando o usuário clica em "x"
+  ```
 
 ---
