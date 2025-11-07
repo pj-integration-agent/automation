@@ -1,320 +1,289 @@
 ```gherkin
-# Feature: Cadastro de Usuário
-#   Como usuário que nunca utilizou o ParaBank
-#   Quero criar uma conta
-#   Para acessar os serviços bancários online
+# Features do Sistema ParaBank
+# ==============================================================
+# 1 – Cadastro de Usuário
+# ==============================================================
 Feature: Cadastro de Usuário
+  Como novo cliente do ParaBank, eu quero criar uma conta
+  Para poder acessar os serviços bancários online.
 
-  Scenario: Cadastro completo e válido
-    Given eu acesso a página de cadastro
-    When preencho todos os campos obrigatórios com dados válidos
-      | Campo          | Valor                    |
-      | Nome           | João da Silva            |
-      | CPF            | 123.456.789-00           |
-      | Email          | joao@email.com          |
-      | Telefone       | (11)98765-4321           |
-      | CEP            | 01001-000                |
-      | Senha          | Senha@123                |
-      | Confirma Senha | Senha@123                |
-    And clico em "Registrar"
-    Then devo ver a mensagem "Cadastro concluído"
-    And devo ser redirecionado para a página de login
+  Background:
+    Dado que o usuário está na página de cadastro
 
-  Scenario: Cadastro com campo obrigatório em branco
-    Given eu acesso a página de cadastro
-    When preencho o campo "Nome" com ""
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Nome é obrigatório"
-    And o formulário não deve ser submetido
+  Scenario: Cadastro bem‑sucedido com todos os campos corretos
+    When preencho o campo "Nome Completo" com "Maria Silva"
+    And preencho o campo "Data de Nascimento" com "15/04/1990"
+    And preencho o campo "CPF" com "12345678901"
+    And preencho o campo "E‑mail" com "maria.silva@example.com"
+    And preencho o campo "Telefone" com "(11) 98765-4321"
+    And preencho o campo "CEP" com "01234567"
+    And preencho o campo "Endereço" com "Rua das Flores, 123"
+    And preencho o campo "Cidade" com "São Paulo"
+    And preencho o campo "Estado" com "SP"
+    And preencho o campo "Senha" com "S3gur0Pa$$"
+    And confirmo a senha com "S3gur0Pa$$"
+    And clica em "Cadastrar"
+    Then devo ver a mensagem "Cadastro concluído – verifique seu e‑mail"
+    And devo conseguir fazer login com o e‑mail e a senha cadastrados
 
-  Scenario: Cadastro com CEP inválido
-    Given eu acesso a página de cadastro
-    When preencho o campo "CEP" com "ABCDE"
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "CEP inválido"
-    And o formulário não deve ser submetido
+  Scenario: Cadastro falha quando um campo obrigatório está vazio
+    When preencho o campo "Nome Completo" com ""
+    And preencho o campo "Data de Nascimento" com "15/04/1990"
+    And preencho o campo "CPF" com "12345678901"
+    And preencho o campo "E‑mail" com "maria.silva@example.com"
+    And preencho o campo "Telefone" com "(11) 98765-4321"
+    And preencho o campo "CEP" com "01234567"
+    And preencho o campo "Endereço" com "Rua das Flores, 123"
+    And preencho o campo "Cidade" com "São Paulo"
+    And preencho o campo "Estado" com "SP"
+    And preencho o campo "Senha" com "S3gur0Pa$$"
+    And confirmo a senha com "S3gur0Pa$$"
+    And clica em "Cadastrar"
+    Then devo ver a mensagem de erro "Nome completo é obrigatório"
 
-  Scenario: Cadastro com telefone com formato errado
-    Given eu acesso a página de cadastro
-    When preencho o campo "Telefone" com "123456"
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Telefone inválido"
-    And o formulário não deve ser submetido
+  Scenario: Cadastro falha com e‑mail no formato inválido
+    When preencho o campo "E‑mail" com "maria.silva.com"
+    And clica em "Cadastrar"
+    Then devo ver a mensagem "Formato de e‑mail inválido" abaixo do campo
 
-  Scenario: Cadastro com email sem “@”
-    Given eu acesso a página de cadastro
-    When preencho o campo "Email" com "joaoemail.com"
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Email inválido"
-    And o formulário não deve ser submetido
+  Scenario: Cadastro falha quando o CPF já existe
+    Given existe um usuário registrado com CPF "12345678901"
+    When preencho o campo "CPF" com "12345678901"
+    And clica em "Cadastrar"
+    Then devo ver a mensagem "CPF já cadastrado"
 
-  Scenario: Cadastro com senha e confirmação diferentes
-    Given eu acesso a página de cadastro
-    When preencho o campo "Senha" com "Senha@123"
-    And preencho o campo "Confirma Senha" com "Senha@321"
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Senha e confirmação não coincidem"
-    And o formulário não deve ser submetido
-```
+  Scenario: Cadastro falha quando o e‑mail já existe
+    Given existe um usuário registrado com e‑mail "maria.silva@example.com"
+    When preencho o campo "E‑mail" com "maria.silva@example.com"
+    And clica em "Cadastrar"
+    Then devo ver a mensagem "E‑mail já em uso"
 
-```gherkin
-# Feature: Login do Usuário
-#   Como usuário já registrado
-#   Quero fazer login usando email e senha
-#   Para acessar minha conta e serviços bancários
-Feature: Login do Usuário
+# ==============================================================
+# 2 – Login
+# ==============================================================
+Feature: Login
+  Como cliente registrado, eu quero fazer login
+  Para acessar minha conta de forma segura.
 
-  Scenario: Login com credenciais corretas
-    Given eu acesso a página de login
-    When preencho "Email" com "joao@email.com"
-    And preencho "Senha" com "Senha@123"
-    And clico em "Entrar"
-    Then devo ser redirecionado para a Dashboard
-    And a mensagem "Bem‑vindo, João" é exibida
+  Background:
+    Dado que o usuário está na página de login
+    E o usuário "maria.silva@example.com" está cadastrado com senha "S3gur0Pa$$"
 
-  Scenario: Login com senha incorreta
-    Given eu acesso a página de login
-    When preencho "Email" com "joao@email.com"
-    And preencho "Senha" com "Errada@123"
-    And clico em "Entrar"
-    Then devo ver a mensagem "Usuário ou senha inválidos"
-    And não devo ser redirecionado para a Dashboard
+  Scenario: Login bem‑sucedido com e‑mail e senha corretos
+    When preencho o campo "E‑mail" com "maria.silva@example.com"
+    And preencho o campo "Senha" com "S3gur0Pa$$"
+    And clica em "Entrar"
+    Then devo ser redirecionado para a página "Conta"
+    And devo ver o título "Olá, Maria Silva"
 
-  Scenario: Login com email inexistente
-    Given eu acesso a página de login
-    When preencho "Email" com "naoexiste@email.com"
-    And preencho "Senha" com "Senha@123"
-    And clico em "Entrar"
-    Then devo ver a mensagem "Usuário ou senha inválidos"
-    And não devo ser redirecionado para a Dashboard
+  Scenario: Login falha com credenciais inválidas
+    When preencho o campo "E‑mail" com "maria.silva@example.com"
+    And preencho o campo "Senha" com "SenhaErrada"
+    And clica em "Entrar"
+    Then devo ver a mensagem "Credenciais inválidas – tente novamente"
+    And permanecerei na página de login
 
-  Scenario: Login com campo em branco
-    Given eu acesso a página de login
-    When deixo os campos de email e senha em branco
-    And clico em "Entrar"
-    Then devo ver mensagens de erro "Email é obrigatório" e "Senha é obrigatória"
-    And não devo ser redirecionado para a Dashboard
-```
+  Scenario: Conta bloqueada após cinco tentativas falhas consecutivas
+    When tento fazer login 5 vezes com senha "SenhaErrada"
+    And na quinta tentativa, clica em "Entrar"
+    Then devo ver a mensagem "Conta bloqueada – tente novamente em 5 min"
+    And a conta ficará bloqueada por 5 minutos
 
-```gherkin
-# Feature: Visualização do Saldo
-#   Como usuário logado
-#   Quero ver meu saldo atual
-#   Para saber quanto dinheiro tenho disponível
-Feature: Visualização do Saldo
+# ==============================================================
+# 3 – Visualização de Saldo e Extrato
+# ==============================================================
+Feature: Visualização de Saldo e Extrato
+  Como cliente autenticado, eu quero ver meu saldo e extrato
+  Para acompanhar minhas finanças.
 
-  Scenario: Saldo exibido após login
-    Given estou logado na Dashboard
-    Then devo ver o saldo exibido em destaque
+  Background:
+    Dado que o usuário está na página "Conta"
 
-  Scenario: Saldo atualizado após transferência
-    Given estou logado na Dashboard
-    And tenho saldo de R$ 500,00
-    When faço uma transferência de R$ 100,00 para outra conta
-    Then o saldo exibido deve ser R$ 400,00
+  Scenario: Saldo exibido com duas casas decimais
+    Then a visualização do saldo deve mostrar "R$ 1.234,56"
 
-  Scenario: Saldo atualizado após pagamento de conta
-    Given estou logado na Dashboard
-    And tenho saldo de R$ 300,00
-    When pago R$ 50,00 em uma conta a pagar
-    Then o saldo exibido deve ser R$ 250,00
-```
+  Scenario: Exibir mensagem quando não há transações
+    And não há transações registradas no extrato
+    When clica em "Extrato"
+    Then devo ver a mensagem "Nenhuma transação encontrada"
 
-```gherkin
-# Feature: Exibição do Extrato
-#   Como usuário logado
-#   Quero visualizar o extrato de transações
-#   Para acompanhar histórico e validar movimentações
-Feature: Exibição do Extrato
+  Scenario: Lista de extrato ordenada por data (mais recente acima)
+    And há pelo menos 3 transações registradas
+    When clica em "Extrato"
+    Then a primeira linha da lista deve conter a transação com a data mais recente
 
-  Scenario: Extrato mostra transações em ordem cronológica
-    Given estou na página de Extrato
-    And existem transações nas datas 01/10/2024, 02/10/2024 e 03/10/2024
-    Then a lista deve exibir primeiro a transação de 03/10/2024
-    And em seguida 02/10/2024
-    And depois 01/10/2024
+  Scenario: Exibir cada transação com data, descrição, valor e saldo final
+    And há uma transação de "Transferência para 123‑456" de R$ 200,00
+    When clica em "Extrato"
+    Then a linha correspondente deve mostrar:
+      | Data       | Descrição           | Valor     | Saldo Final |
+      | 01/11/2025 | Transferência para  | -200,00   | 1.034,56    |
 
-  Scenario: Cada entrada exibe detalhes corretos
-    Given estou na página de Extrato
-    And há uma transação de R$ 200,00 de crédito em 02/10/2024
-    Then a linha da transação deve mostrar
-      | Data      | Descrição | Débito | Crédito | Saldo Após |
-      | 02/10/2024 | Depósito  |        | 200,00 | 700,00      |
-
-  Scenario: Página carrega sem erros de navegação
-    Given estou na página de Extrato
-    And não há erros 404 ou 500
-    Then a página deve ser carregada corretamente
-```
-
-```gherkin
-# Feature: Transferência de Fundos
-#   Como usuário que possui várias contas
-#   Quero transferir fundos entre minhas contas
-#   Para movimentar recursos conforme necessidade
+# ==============================================================
+# 4 – Transferência de Fundos
+# ==============================================================
 Feature: Transferência de Fundos
+  Como cliente, eu quero transferir um valor de minha conta
+  Para pagar serviços ou amigos.
 
-  Scenario: Transferência válida entre contas
-    Given estou na tela de Transferência
-    And minha Conta A tem saldo de R$ 500,00
-    When escolho conta origem "Conta A"
-    And escolho conta destino "Conta B"
-    And insiro valor "200,00"
-    And clico em "Confirmar"
-    Then o saldo da Conta A deve ser R$ 300,00
-    And o saldo da Conta B deve ser atualizado com +R$ 200,00
-    And a transação deve aparecer no extrato de ambas as contas
+  Background:
+    Dado que o usuário está na página "Transferências"
+    E a conta possui saldo de R$ 5.000,00
 
-  Scenario: Transferência com saldo insuficiente
-    Given estou na tela de Transferência
-    And minha Conta A tem saldo de R$ 100,00
-    When escolho conta origem "Conta A"
-    And escolho conta destino "Conta B"
-    And insiro valor "150,00"
-    And clico em "Confirmar"
-    Then devo ver mensagem de erro "Saldo insuficiente"
-    And os saldos das contas não devem mudar
+  Scenario: Transferência bem‑sucedida para conta válida
+    When preencho o campo "Conta de Destino" com "987654321"
+    And preencho o campo "Valor" com "500,00"
+    And clica em "Confirmar Transferência"
+    Then devo ver a mensagem "Transferência concluída com sucesso"
+    And o saldo da conta de origem deve diminuir em R$ 500,00
+    And a conta de destino deve receber R$ 500,00
 
-  Scenario: Transferência com valor em branco
-    Given estou na tela de Transferência
-    When deixo o campo "Valor" em branco
-    And clico em "Confirmar"
-    Then devo ver mensagem de erro "Valor é obrigatório"
-    And a transferência não é realizada
+  Scenario: Transferência falha por saldo insuficiente
+    When preencho o campo "Conta de Destino" com "987654321"
+    And preencho o campo "Valor" com "10.000,00"
+    And clica em "Confirmar Transferência"
+    Then devo ver a mensagem "Saldo insuficiente"
 
-  Scenario: Transferência para a mesma conta (não permitido)
-    Given estou na tela de Transferência
-    When escolho conta origem "Conta A"
-    And escolho conta destino "Conta A"
-    And insiro valor "50,00"
-    And clico em "Confirmar"
-    Then devo ver mensagem de erro "Conta origem e destino não podem ser iguais"
-    And a transferência não é realizada
-```
+  Scenario: Transferência falha quando conta de destino não existe
+    When preencho o campo "Conta de Destino" com "000000000"
+    And preencho o campo "Valor" com "100,00"
+    And clica em "Confirmar Transferência"
+    Then devo ver a mensagem "Conta de destino inválida"
 
-```gherkin
-# Feature: Solicitação de Empréstimo
-#   Como usuário interessado em crédito
-#   Quero solicitar um empréstimo
-#   Para obter recursos adicionais
+  Scenario: Transferência falha por valor negativo
+    When preencho o campo "Conta de Destino" com "987654321"
+    And preencho o campo "Valor" com "-200,00"
+    And clica em "Confirmar Transferência"
+    Then devo ver a mensagem "Valor deve ser positivo"
+
+# ==============================================================
+# 5 – Solicitação de Empréstimo
+# ==============================================================
 Feature: Solicitação de Empréstimo
+  Como cliente, eu quero solicitar um empréstimo
+  Para obter recursos adicionais quando necessário.
 
-  Scenario: Empréstimo aprovado
-    Given estou na tela de Empréstimo
-    When preencho o valor "10.000,00"
-    And preencho a renda anual "120.000,00"
-    And clico em "Solicitar"
-    Then devo ver a mensagem "Empréstimo aprovado"
-    And o valor do empréstimo deve aparecer no extrato
+  Background:
+    Dado que o usuário está na página "Empréstimos"
 
-  Scenario: Empréstimo negado por renda insuficiente
-    Given estou na tela de Empréstimo
-    When preencho o valor "10.000,00"
-    And preencho a renda anual "20.000,00"
-    And clico em "Solicitar"
-    Then devo ver a mensagem "Empréstimo negado"
-    And não há registro no extrato
+  Scenario: Empréstimo aprovado quando renda ≥ 3× valor
+    When preencho o campo "Valor do Empréstimo" com "2.000,00"
+    And preencho o campo "Renda Anual" com "8.000,00"
+    And clica em "Simular"
+    Then devo ver a mensagem "Empréstimo Aprovado – crédito de R$ 2.000,00"
+    And o registro aparece no histórico de solicitações
 
-  Scenario: Empréstimo com campo vazio
-    Given estou na tela de Empréstimo
-    When deixo o campo "Valor" em branco
-    And clico em "Solicitar"
-    Then devo ver mensagem de erro "Valor é obrigatório"
-    And a solicitação não é processada
-```
+  Scenario: Empréstimo negado quando renda < 3× valor
+    When preencho o campo "Valor do Empréstimo" com "2.000,00"
+    And preencho o campo "Renda Anual" com "5.000,00"
+    And clica em "Simular"
+    Then devo ver a mensagem "Empréstimo Negado – renda insuficiente"
+    And o registro aparece no histórico de solicitações
 
-```gherkin
-# Feature: Registro de Pagamentos de Contas
-#   Como usuário que tem contas a pagar
-#   Quero registrar pagamentos de contas
-#   Para manter histórico e agendar futuros pagamentos
-Feature: Registro de Pagamentos de Contas
+  Scenario: Empréstimo falha quando valor ou renda inválida
+    When preencho o campo "Valor do Empréstimo" com "-1.000,00"
+    And preencho o campo "Renda Anual" com "abc"
+    And clica em "Simular"
+    Then devo ver as mensagens de erro:
+      | Campo                | Mensagem                     |
+      | Valor do Empréstimo  | Valor deve ser positivo      |
+      | Renda Anual          | Valor deve ser numérico      |
 
-  Scenario: Pagamento imediato registrado com sucesso
-    Given estou na tela de Pagamento
-    When preencho
-      | Beneficiário | Conta Bancária | Valor | Data de Pagamento |
-      | Luz           | 1234-5         | 200   | 01/10/2024        |
-    And clico em "Registrar"
-    Then devo ver mensagem "Pagamento registrado com sucesso"
-    And a transação deve aparecer no extrato com data 01/10/2024
+# ==============================================================
+# 6 – Pagamento de Contas
+# ==============================================================
+Feature: Pagamento de Contas
+  Como cliente, eu quero registrar e agendar pagamentos
+  Para quitar contas de forma automatizada.
 
-  Scenario: Pagamento futuro agendado corretamente
-    Given estou na tela de Pagamento
-    When preencho
-      | Beneficiário | Conta Bancária | Valor | Data de Pagamento |
-      | Água          | 5678-9         | 120   | 10/10/2024        |
-    And clico em "Registrar"
-    Then devo ver mensagem "Pagamento agendado para 10/10/2024"
-    And a transação não deve aparecer no extrato antes da data agendada
+  Background:
+    Dado que o usuário está na página "Pagamentos"
 
-  Scenario: Pagamento com data no passado
-    Given estou na tela de Pagamento
-    When preencho
-      | Beneficiário | Conta Bancária | Valor | Data de Pagamento |
-      | Internet     | 1111-1         | 80    | 01/01/2023        |
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Data de pagamento não pode ser anterior à data atual"
-    And a transação não é cadastrada
+  Scenario: Pagamento agendado para data futura sem reduzir saldo imediatamente
+    When preencho o campo "Beneficiário" com "José Pereira"
+    And preencho o campo "Endereço" com "Av. Central, 200"
+    And preencho o campo "Cidade" com "Rio de Janeiro"
+    And preencho o campo "Estado" com "RJ"
+    And preencho o campo "CEP" com "12345678"
+    And preencho o campo "Telefone" com "(21) 99876-5432"
+    And preencho o campo "Conta de Destino" com "123456789"
+    And preencho o campo "Valor" com "150,00"
+    And preencho o campo "Data de Pagamento" com "15/12/2025"
+    And clica em "Agendar Pagamento"
+    Then devo ver a mensagem "Pagamento de R$ 150,00 ao beneficiário José Pereira agendado para 15/12/2025"
+    And o saldo da conta de origem não diminuiu ainda
 
-  Scenario: Registro de pagamento com campo obrigatório vazio
-    Given estou na tela de Pagamento
+  Scenario: Pagamento imediato reduz saldo imediatamente
+    When preencho o campo "Valor" com "100,00"
+    And preencho o campo "Data de Pagamento" com "01/11/2025"
+    And clica em "Confirmar Pagamento"
+    Then devo ver a mensagem "Pagamento de R$ 100,00 concluído"
+    And o saldo da conta de origem diminuiu em R$ 100,00
+
+  Scenario: Pagamento falha quando CEP inválido
+    When preencho o campo "CEP" com "12A45678"
+    And clica em "Agendar Pagamento"
+    Then devo ver a mensagem "Formato inválido – por favor, insira 8 dígitos numéricos"
+
+  Scenario: Pagamento falha quando campo obrigatório está vazio
     When deixo o campo "Beneficiário" em branco
-    And clico em "Registrar"
-    Then devo ver mensagem de erro "Beneficiário é obrigatório"
-    And a transação não é cadastrada
+    And clica em "Agendar Pagamento"
+    Then devo ver a mensagem "Beneficiário é obrigatório"
+
+# ==============================================================
+# 7 – Navegação e Usabilidade Geral
+# ==============================================================
+Feature: Navegação e Usabilidade Geral
+  Como usuário, eu quero que todas as páginas carreguem sem erros
+  E que os menus sejam consistentes.
+
+  Scenario: Todas as páginas carregam em ≤ 3 s em 3G
+    When acesso a cada página do menu (Home, Conta, Transferências, Empréstimos, Pagamentos, Extrato, Ajuda)
+    Then o tempo de carregamento deve ser ≤ 3 s
+
+  Scenario: Todos os links do menu abrem a página correta
+    When clica no link "Extrato" do menu
+    Then devo ser redirecionado para a página "Extrato"
+
+  Scenario: Botão “Sair” redireciona para login
+    When clica em “Sair”
+    Then devo ser redirecionado para a página de login
+
+  Scenario: Mensagem amigável em erro 404
+    When acessa uma URL inexistente
+    Then devo ver a mensagem "O que aconteceu? Tente novamente"
+
+# ==============================================================
+# 8 – Mensagens de Erro e Validação de Dados
+# ==============================================================
+Feature: Mensagens de Erro e Validação de Dados
+  Como usuário, eu quero receber mensagens claras quando digitar dados inválidos
+
+  Scenario: Telefone com formato inválido
+    When preencho o campo "Telefone" com "1234-5678"
+    And perco foco no campo
+    Then devo ver a mensagem "Formato inválido – por favor, insira (xx) xxxx‑xxxx ou +55 xxxx‑xxxx"
+
+  Scenario: CEP com mais de 8 dígitos
+    When preencho o campo "CEP" com "123456789"
+    And perco foco no campo
+    Then devo ver a mensagem "Formato inválido – por favor, insira 8 dígitos numéricos"
+
+  Scenario: E‑mail sem “@” ou domínio
+    When preencho o campo "E‑mail" com "usuarioexemplo.com"
+    And perco foco no campo
+    Then devo ver a mensagem "Formato inválido – por favor, insira e‑mail válido"
+
+  Scenario: Data de pagamento no futuro (para pagamento) inválida
+    When preencho o campo "Data de Pagamento" com "01/01/2100"
+    And perco foco no campo
+    Then devo ver a mensagem "Data não pode estar no futuro"
+
+  Scenario: Valor monetário negativo ou maior que o máximo permitido
+    When preencho o campo "Valor" com "-500,00"
+    And perco foco no campo
+    Then devo ver a mensagem "Valor deve ser positivo"
+    When preencho o campo "Valor" com "1.000.000,00"
+    And perco foco no campo
+    Then devo ver a mensagem "Valor máximo permitido é 999 999,99"
 ```
-
-```gherkin
-# Feature: Navegação sem erros de página
-#   Como qualquer usuário
-#   Quero que todas as páginas carreguem sem erros de navegação
-#   Para garantir experiência de uso fluída
-Feature: Navegação Sem Erros
-
-  Scenario: Todos os links e botões funcionam em todas as páginas
-    Given acesso a todas as páginas do sistema (Dashboard, Cadastro, Login, Transferência, Empréstimo, Pagamentos, Extrato)
-    When clico em todos os links e botões disponíveis
-    Then cada navegação deve resultar em carregamento completo sem mensagens 404 ou 500
-
-  Scenario: Menus e links permanecem consistentes
-    Given acesso à página inicial
-    When observo o menu principal
-    Then devo ver os itens "Minha Conta", "Transferir", "Empréstimos" e "Pagamentos" visíveis e funcionando
-```
-
-```gherkin
-# Feature: Feedback Imediato em Cada Ação
-#   Como qualquer usuário
-#   Quero que o sistema forneça feedback imediato em cada ação
-#   Para saber se a operação foi bem‑sucesso ou falhou
-Feature: Feedback Imediato
-
-  Scenario: Mensagem de sucesso após cadastro
-    Given eu finalizo o cadastro corretamente
-    Then devo ver um banner verde com a mensagem "Cadastro concluído"
-
-  Scenario: Mensagem de erro ao tentar login com senha inválida
-    Given estou na tela de login
-    When preencho senha inválida
-    And clico em "Entrar"
-    Then devo ver um banner vermelho com a mensagem "Usuário ou senha inválidos"
-
-  Scenario: Mensagem de sucesso após transferência
-    Given estou na tela de Transferência e faço uma transferência válida
-    Then devo ver um modal verde com a mensagem "Transferência concluída"
-
-  Scenario: Mensagem de erro de saldo insuficiente
-    Given faço uma transferência que excede o saldo disponível
-    Then devo ver um modal vermelho com a mensagem "Saldo insuficiente"
-
-  Scenario: Mensagem de erro ao enviar formulário incompleto
-    Given deixo um campo obrigatório em branco e envio o formulário
-    Then devo ver um banner amarelo com a mensagem "Campos obrigatórios não preenchidos"
-
-  Scenario: Mensagens exibidas de forma contextual
-    Given a operação falha
-    Then a mensagem exibida deve indicar a causa específica (ex.: "CPF já cadastrado" ou "Conta inexistente")
-```
-
-Cada *Feature* contempla cenários positivos e negativos, cobrindo todos os critérios de aceitação das User Stories indicadas. Os cenários são escritos em português e seguem a estrutura Gherkin, prontamente utilizáveis em ferramentas de BDD como Cucumber, SpecFlow ou Behave.
