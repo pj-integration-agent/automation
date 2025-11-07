@@ -3,16 +3,28 @@ name: Orquestrador CI/CD
 on:
   workflow_dispatch:
     inputs:
+
+      tipo-prompt:
+        description: "Qual prompt deseja usar? (ex: robot ou playwrigth)"
+        required: true
+        type: choice
+        options:
+          - robot
+          - playwright
+        default: robot
+
       criacao-user-stories:
         description: "Criar user stories?"
         type: boolean
         required: true
         default: true
+
       criacao-bdd:
         description: "Criação dos BDDs?"
         type: boolean
         required: true
         default: false
+
       criacao-testes:
         description: "Criar testes?"
         type: boolean

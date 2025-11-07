@@ -3,30 +3,21 @@ from groq import Groq
  
 def generate_tests_from_bdd():
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    prompt_tipo = os.getenv("PROMPT_TIPO", "default").lower()
+    prompt_path = f"ai/prompts/{prompt_tipo}.txt"
+
+    if not os.path.exists(prompt_path):
+        raise FileNotFoundError(f"❌ Arquivo de prompt não encontrado: {prompt_path}")
+
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        prompt_base = f.read()
  
     with open("ai/bdd/generated.feature", "r", encoding="utf-8") as f:
         bdd_content = f.read()
  
-    prompt = f"""
-Você é um engenheiro de automação de testes sênior, especialista em Playwright com TypeScript/JavaScript.
-
-Com base no seguinte arquivo BDD (formato Gherkin), converta-o em **código de teste automatizado funcional**, seguindo as **melhores práticas de automação**.
-
-Diretrizes obrigatórias:
-- Utilize a **estrutura do Playwright Test Runner** (`@playwright/test`).
-- Implemente os **cenários Given/When/Then** como testes organizados e legíveis.
-- Utilize **TypeScript (preferencial)** ou **JavaScript** conforme a convenção do projeto.
-- Inclua:
-  - Declaração de imports necessários.
-  - Uso correto do `test.describe`, `test.beforeEach`, e `test` para os cenários.
-  - **Seletores claros e estáveis**, com boas práticas de localização de elementos.
-  - **Tratamento de esperas e erros** com `await expect()` e `page.waitFor...` adequados.
-  - **Comentários explicativos** antes de cada passo descrevendo a intenção e a lógica.
-- Mantenha a **estrutura modular e reutilizável**, facilitando manutenção futura.
-
-Arquivo BDD fornecido:
-{bdd_content}
-"""
+ 
+    prompt = f"{prompt_base}\n\nArquivo BDD fornecido:\n{bdd_content}"
 
  
     response = client.chat.completions.create(
