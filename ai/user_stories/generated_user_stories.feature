@@ -1,121 +1,128 @@
-**User Stories – Sistema ParaBank**
+**User Stories – ParaBank (Visão de Usuário e Critérios de Aceite)**  
+
+*(Todas as histórias seguem o padrão: “Como [tipo de usuário], eu quero [objetivo] para [benefício]”. A descrição detalha a funcionalidade, os critérios de aceite são objetivos, mensuráveis e vinculam‑se diretamente aos requisitos do documento de aceitação.)*  
 
 ---
 
-### 1. Cadastro de Usuário  
-**Como** novo cliente, **eu quero** criar uma conta no ParaBank, **para** poder acessar os serviços bancários online.  
+### US01 – Cadastro de Usuário  
+**Como** potencial cliente do ParaBank, **eu quero** preencher um formulário de cadastro para criar minha conta no sistema, **para** ter acesso aos serviços bancários online.  
 
-**Descrição detalhada**  
-O cliente deve preencher um formulário de cadastro com os campos obrigatórios: nome completo, data de nascimento, CPF, email, telefone, CEP, endereço, cidade, estado e senha. O sistema deve validar cada campo em tempo real, exibindo mensagens de erro específicas (ex.: “Formato de email inválido”, “CEP não encontrado”). Ao enviar o formulário, o sistema verifica duplicidade de CPF/email, envia e‑mail de confirmação e habilita o login.  
+**Descrição**  
+O usuário deve conseguir criar uma nova conta fornecendo seus dados pessoais. O formulário exige os campos obrigatórios (nome completo, data de nascimento, endereço, CEP, telefone, e‑mail e senha). O sistema valida formato e conteúdo de cada campo e, ao concluir, envia uma mensagem de confirmação e permite o login imediato.  
 
 **Critérios de Aceite**  
-- Todos os campos obrigatórios são obrigatórios; envio sem preencher qualquer um deles impede o cadastro.  
-- Campos com formato inválido (email, telefone, CEP) geram mensagem de erro em tempo real.  
-- CPF ou e‑mail já existentes bloqueiam o cadastro com mensagem “CPF já cadastrado” ou “E‑mail já em uso”.  
-- Após cadastro bem‑sucedido o sistema exibe uma mensagem “Cadastro concluído – verifique seu e‑mail” e o usuário pode fazer login.  
+1. Todos os campos obrigatórios são obrigatórios – a tentativa de submeter o formulário vazio resulta em mensagem de erro específica para cada campo.  
+2. Validação de campos:  
+   - **Telefone**: aceita apenas números, 10–11 dígitos, exibindo erro em caso de formato inválido.  
+   - **CEP**: 8 dígitos numéricos; exibe erro se não for numérico ou inválido.  
+   - **E‑mail**: segue padrão RFC 5322; exibe erro em caso de formato incorreto.  
+3. Ao submeter dados válidos, o sistema cria a conta, grava os dados no banco e exibe mensagem “Cadastro concluído com sucesso”.  
+4. Após cadastro, o usuário pode imediatamente fazer login com as credenciais geradas.  
+
+**Rastreabilidade**: (US01)  
 
 ---
 
-### 2. Login  
-**Como** cliente registrado, **eu quero** fazer login no ParaBank, **para** acessar minha conta de forma segura.  
+### US02 – Login do Usuário  
+**Como** cliente já cadastrado, **eu quero** autenticar-me no ParaBank com meu e‑mail e senha, **para** acessar minha conta e realizar operações.  
 
-**Descrição detalhada**  
-O cliente informa e‑mail (ou CPF) e senha. O sistema autentica as credenciais, bloqueia tentativas repetidas em caso de erro e redireciona o usuário para a página inicial da conta. Se a senha estiver incorreta, exibe mensagem clara (“Credenciais inválidas – tente novamente”).  
+**Descrição**  
+A tela de login aceita credenciais e verifica sua validade. Em caso de sucesso, redireciona para a página inicial da conta. Em caso de falha, exibe mensagem de erro adequada e mantém a página de login.  
 
 **Critérios de Aceite**  
-- Credenciais válidas redirecionam para a página de “Conta” (dashboard).  
-- Credenciais inválidas exibem mensagem de erro e mantêm o usuário na tela de login.  
-- 5 tentativas consecutivas falhadas bloqueiam a conta por 5 minutos (mensagem “Conta bloqueada – tente novamente em 5 min”).  
+1. Login com credenciais válidas → redirecionamento imediato para a “Dashboard” da conta.  
+2. Login com credenciais inválidas (e‑mail inexistente ou senha errada) → exibição de mensagem “Credenciais inválidas. Por favor, tente novamente.”  
+3. O botão de login fica habilitado apenas quando ambos os campos (e‑mail e senha) não estão vazios.  
+4. O histórico de tentativas de login inválidas não é armazenado (segurança).  
+
+**Rastreabilidade**: (US02)  
 
 ---
 
-### 3. Visualização de Saldo e Extrato  
-**Como** cliente autenticado, **eu quero** visualizar meu saldo atualizado e extrato de transações, **para** acompanhar minhas finanças.  
+### US03 – Visualização do Saldo e Extrato  
+**Como** cliente autenticado, **eu quero** ver o saldo atual da minha conta e o extrato das transações recentes, **para** acompanhar minhas finanças em tempo real.  
 
-**Descrição detalhada**  
-Na página “Conta” o sistema mostra o saldo atual em real e um botão “Extrato”. Ao clicar, o usuário vê uma lista cronológica das 20 transações mais recentes (data, descrição, valor, saldo final). O saldo deve refletir imediatamente qualquer operação recente (transferência, pagamento, empréstimo).  
+**Descrição**  
+Ao acessar a página da conta, o sistema mostra:  
+- Saldo atual, atualizado após cada operação financeira.  
+- Lista de transações nas últimas 30 dias, ordenada cronologicamente (mais recente primeiro). Cada linha exibe data, descrição, tipo (crédito/débito) e valor.  
 
 **Critérios de Aceite**  
-- Saldo exibido em reais com duas casas decimais.  
-- Lista de extrato ordenada por data (mais recente acima).  
-- Cada transação exibe: data, descrição (ex.: “Transferência para 123‑456”), valor debitado/creditado, saldo após a operação.  
-- Se não houver transações, mensagem “Nenhuma transação encontrada”.  
+1. Saldo exibido em moeda real (R$) com duas casas decimais.  
+2. Ao executar qualquer operação (transferência, pagamento, empréstimo), o saldo na página reflete imediatamente o novo valor (debito/credito).  
+3. Extrato mostra no mínimo 5 transações recentes; se houver menos, exibe todas disponíveis.  
+4. As transações são ordenadas pelo campo “data” em ordem decrescente.  
+
+**Rastreabilidade**: (US03)  
 
 ---
 
-### 4. Transferência de Fundos  
-**Como** cliente, **eu quero** transferir um valor de minha conta para outra conta, **para** pagar serviços ou amigos.  
+### US04 – Transferência de Fundos  
+**Como** cliente autenticado, **eu quero** transferir dinheiro de minha conta para outra conta bancária, **para** movimentar recursos entre contas de forma segura e automática.  
 
-**Descrição detalhada**  
-O cliente seleciona a conta de origem (sua própria), a conta de destino (campo de busca/CPF) e insere o valor. O sistema valida que o valor não ultrapassa o saldo disponível. Ao confirmar, debita a origem, credita a destino, e grava a transação em ambos os extratos.  
+**Descrição**  
+O usuário seleciona a conta de origem (sempre a sua conta), escolhe a conta de destino (número fornecido) e digita o valor da transferência. O sistema verifica saldo suficiente, executa a transferência, atualiza os saldos e registra a transação no histórico de ambas as contas.  
 
 **Critérios de Aceite**  
-- Campos obrigatórios: conta de origem, conta de destino, valor.  
-- Valor deve ser numérico positivo e menor ou igual ao saldo atual.  
-- Se valor > saldo, mensagem “Saldo insuficiente”.  
-- Transação registrada em ambos os extratos, com data/hora, descrição “Transferência para X”.  
-- Usuário recebe notificação “Transferência concluída com sucesso”.  
+1. O campo de valor aceita apenas números positivos com até duas casas decimais; exibe erro se o valor for zero ou negativo.  
+2. A transferência só pode ser concluída se o saldo disponível for ≥ valor da transferência.  
+3. Ao confirmar, o saldo da conta de origem diminui e o saldo da conta de destino aumenta imediatamente.  
+4. Transação aparece no extrato de ambas as contas, com descrição “Transferência recebida” ou “Transferência enviada”, data e valor.  
+
+**Rastreabilidade**: (US04)  
 
 ---
 
-### 5. Solicitação de Empréstimo  
-**Como** cliente, **eu quero** solicitar um empréstimo informando o valor desejado e minha renda anual, **para** obter recursos adicionais quando necessário.  
+### US05 – Solicitação de Empréstimo  
+**Como** cliente autenticado, **eu quero** solicitar um empréstimo informando o valor desejado e minha renda anual, **para** avaliar se o banco aprovará o pedido e ter acesso ao montante solicitado.  
 
-**Descrição detalhada**  
-O cliente preenche o formulário com “Valor do Empréstimo” e “Renda Anual”. O sistema avalia o pedido (simulação de regra simples: renda ≥ 3 × valor) e devolve “Aprovado” ou “Negado” com justificativa. O resultado aparece na tela e é armazenado no histórico de solicitações.  
+**Descrição**  
+O formulário de solicitação pede: valor do empréstimo, renda anual e dados de contato. O sistema processa a solicitação instantaneamente e devolve status “Aprovado” ou “Negado” com explicação resumida.  
 
 **Critérios de Aceite**  
-- Campos obrigatórios: valor do empréstimo, renda anual.  
-- Valor e renda devem ser numéricos > 0.  
-- Se renda < 3 × valor → “Empréstimo Negado – renda insuficiente”.  
-- Se renda ≥ 3 × valor → “Empréstimo Aprovado – crédito de X reais”.  
-- Resultado armazenado no histórico de “Solicitações de Empréstimo”.  
+1. Campo “valor do empréstimo” aceita números positivos até 10 000 000 (R$) com até duas casas decimais.  
+2. Campo “renda anual” aceita números positivos com até duas casas decimais.  
+3. O sistema determina status baseado em regras fictícias (ex.: renda anual ≥ 4 × valor do empréstimo → aprovado; caso contrário → negado).  
+4. Mensagem de resultado exibe:  
+   - Aprovado: “Seu empréstimo de R$ {valor} foi aprovado.”  
+   - Negado: “Seu empréstimo de R$ {valor} foi negado. Motivo: renda insuficiente.”  
+5. O histórico de solicitações fica visível na página da conta.  
+
+**Rastreabilidade**: (US05)  
 
 ---
 
-### 6. Pagamento de Contas  
-**Como** cliente, **eu quero** registrar e agendar pagamentos, **para** quitar contas de forma automatizada.  
+### US06 – Pagamento de Contas  
+**Como** cliente autenticado, **eu quero** registrar pagamentos de contas (bancos, serviços, etc.) informando beneficiário e dados da fatura, **para** garantir que as contas sejam salvas no histórico e que futuros pagamentos sejam agendados corretamente.  
 
-**Descrição detalhada**  
-O cliente fornece: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento. O sistema valida todos os campos, registra o pagamento no histórico e, se agendado para data futura, bloqueia a confirmação até a data de vencimento.  
+**Descrição**  
+O usuário preenche: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino (número bancário), valor, data de pagamento. Após confirmação, o pagamento é salvo no histórico e, se agendado para uma data futura, o sistema garante que a transação ocorra na data marcada.  
 
 **Critérios de Aceite**  
-- Campos obrigatórios: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor, data.  
-- Validação de CEP, telefone e e‑mail (se houver) em tempo real.  
-- Pagamentos agendados para datas futuras não reduzem saldo imediatamente.  
-- Pagamento confirmado (data atual ou futura) debita/credita as contas e aparece no extrato.  
-- Mensagem de confirmação: “Pagamento de X reais ao beneficiário Y agendado para DD/MM/AAAA”.  
+1. Todos os campos são obrigatórios; mensagem de erro específica para campos vazios.  
+2. **Data de pagamento** deve ser uma data no futuro ou no dia corrente; data passada gera erro “Data inválida”.  
+3. Valor aceita números positivos, até 1 000 000,00 com duas casas decimais.  
+4. Após confirmação, a transação aparece no extrato com data de pagamento e descrição “Pagamento de {beneficiário}”.  
+5. O saldo da conta de destino diminui no dia de pagamento.  
+
+**Rastreabilidade**: (US06)  
 
 ---
 
-### 7. Navegação e Usabilidade Geral  
-**Como** usuário, **eu quero** que todas as páginas carreguem sem erros e que os menus sejam consistentes, **para** navegar de forma intuitiva no sistema.  
+### US07 – Navegação e Usabilidade Consistente  
+**Como** usuário do ParaBank, **eu quero** navegar de forma intuitiva, com menus e links consistentes e mensagens de erro claras, **para** ter uma experiência de uso sem confusão e erros técnicos.  
 
-**Descrição detalhada**  
-Cada página deve carregar em menos de 3 segundos, não apresentar links quebrados ou redirecionamentos errados. Menus (home, conta, transferências, empréstimos, pagamentos, extrato, ajuda) permanecem visíveis em todas as telas, com destaque na página atual.  
+**Descrição**  
+Todas as páginas devem carregar sem falhas, menus de navegação (Home, Conta, Transferências, Empréstimos, Pagamentos, Logout) devem estar visíveis em todas as telas, e as mensagens de erro devem seguir o padrão de cores (vermelho) e texto objetivo.  
 
 **Critérios de Aceite**  
-- Tempo de carregamento ≤ 3 segundos em conexão 3G.  
-- Todos os links do menu abrem a página correta sem erros 404.  
-- Botão “Sair” sempre disponível e redireciona para login.  
-- Mensagens de erro (404, 500) exibem texto amigável (“O que aconteceu? Tente novamente”).  
+1. Navegação entre páginas ocorre em ≤ 3 segundos sem erro 404.  
+2. Todos os links de menu estão ativos e levam à página correta.  
+3. Mensagens de erro exibidas em modal ou banner, com texto claro e sem ambiguidade (“Campo obrigatório”, “Saldo insuficiente”, “Data inválida”).  
+4. Layout responsivo (desktop, tablet, mobile) mantém a mesma estrutura de navegação.  
+
+**Rastreabilidade**: (US07)  
 
 ---
 
-### 8. Mensagens de Erro e Validação de Dados  
-**Como** usuário, **eu quero** receber mensagens claras quando digitar dados inválidos, **para** corrigir imediatamente e evitar falhas no fluxo de negócio.  
-
-**Descrição detalhada**  
-Para cada campo de entrada (telefone, CEP, email, data, valor monetário) o sistema verifica o formato ao perder foco ou ao submeter o formulário. As mensagens aparecem imediatamente abaixo do campo, com ícone de alerta e texto explicativo.  
-
-**Critérios de Aceite**  
-- Telefone: formato (xxx) xxxx-xxxx ou +55 xxxx-xxxx.  
-- CEP: 8 dígitos numéricos, sem traço.  
-- Email: padrão RFC 5322.  
-- Data: DD/MM/AAAA, não no futuro (para pagamento) ou não no passado (para transferências).  
-- Valor: número positivo, máximo 999 999,99.  
-- Mensagens de erro exibidas em vermelho, com texto “Formato inválido – por favor, insira XX”.  
-
----
-
-> **Obs.:** Cada User Story possui escopo isolado, garantindo que não haja sobreposição. Todas são testáveis por meio de testes de UI, validação de dados e fluxo funcional. O foco está no valor entregue ao cliente e na experiência de uso.
+> **Observação**: Cada User Story possui escopo bem definido, não sobrepõe outra e pode ser testada de forma independente, garantindo a entrega incremental e a validação conforme os critérios de aceite descritos no documento.
