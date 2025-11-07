@@ -1,683 +1,457 @@
-**Arquivo: `tests/user-flow.spec.ts`**  
-*Obs.: O código abaixo segue a estrutura do Playwright Test Runner, está escrito em TypeScript e contém todos os cenários BDD descritos na sua especificação.  
-Os seletores são baseados em rótulos (`role('textbox', { name: '...' })`) ou em texto de botão, o que costuma ser mais estável em aplicações que seguem boas práticas de acessibilidade. Se o seu projeto usa atributos `data-qa` ou `id` específicos, basta trocar os seletores por esses.*
-
-```ts
-// ──────────────────────────────────────────────────────────────────────
-//   1. Imports e configuração inicial
-// ──────────────────────────────────────────────────────────────────────
-import { test, expect, Page } from '@playwright/test';
-
-/**
- * Base URL do ambiente de testes (configurado no arquivo playwright.config.ts).
- * Se não houver configuração, você pode substituir `baseURL` por uma string fixa.
- */
-const baseURL = process.env.BASE_URL ?? 'http://localhost:3000';
-
-/**
- * Helpers reutilizáveis – mantêm o código DRY e legível.
- */
-
-/**
- * Navega para a página de cadastro.
- */
-async function goToRegistration(page: Page) {
-  await page.goto(`${baseURL}/register`);
-  await expect(page).toHaveURL(/\/register/);
-}
-
-/**
- * Navega para a página de login.
- */
-async function goToLogin(page: Page) {
-  await page.goto(`${baseURL}/login`);
-  await expect(page).toHaveURL(/\/login/);
-}
-
-/**
- * Preenche o formulário de cadastro com os dados informados.
- */
-async function fillRegistrationForm(
-  page: Page,
-  data: {
-    fullName: string;
-    birthDate: string;
-    cpf: string;
-    address: string;
-    cep: string;
-    phone: string;
-    email: string;
-    password: string;
-  }
-) {
-  await page.fill(
-    'input[name="fullName"]',
-    data.fullName
-  );
-  await page.fill(
-    'input[name="birthDate"]',
-    data.birthDate
-  );
-  await page.fill(
-    'input[name="cpf"]',
-    data.cpf
-  );
-  await page.fill(
-    'input[name="address"]',
-    data.address
-  );
-  await page.fill(
-    'input[name="cep"]',
-    data.cep
-  );
-  await page.fill(
-    'input[name="phone"]',
-    data.phone
-  );
-  await page.fill(
-    'input[name="email"]',
-    data.email
-  );
-  await page.fill(
-    'input[name="password"]',
-    data.password
-  );
-  await page.fill(
-    'input[name="confirmPassword"]',
-    data.password
-  );
-}
-
-/**
- * Clica no botão “Cadastrar”.
- */
-async function clickRegister(page: Page) {
-  await page.click('button:has-text("Cadastrar")');
-}
-
-/**
- * Verifica se o botão “Cadastrar” está ativo (habilitado).
- */
-async function expectRegisterActive(page: Page) {
-  await expect(
-    page.getByRole('button', { name: 'Cadastrar' })
-  ).toBeEnabled();
-}
-
-/**
- * Verifica se o botão “Cadastrar” está inativo (desabilitado).
- */
-async function expectRegisterInactive(page: Page) {
-  await expect(
-    page.getByRole('button', { name: 'Cadastrar' })
-  ).toBeDisabled();
-}
-
-/**
- * Espera uma resposta HTTP com status 200 para a URL atual.
- */
-async function expectStatus200(page: Page) {
-  await page.waitForResponse((response) =>
-    response.status() === 200 &&
-    response.url() === page.url()
-  );
-}
-
-/**
- * ------------------------------------------
- *   2. Cenários de Cadastro de Usuário
- * ------------------------------------------
- */
-test.describe('Cadastro de Usuário', () => {
-  test.beforeEach(async ({ page }) => {
-    // Cada cenário começa na página de cadastro.
-    await goToRegistration(page);
-  });
-
-  test('Cadastro com todos os campos válidos', async ({ page }) => {
-    // Preenchimento completo do formulário
-    await fillRegistrationForm(page, {
-      fullName: 'Ana Maria da Silva',
-      birthDate: '15/04/1990',
-      cpf: '123.456.789-10',
-      address: 'Rua das Flores, 123',
-      cep: '12345-678',
-      phone: '(11) 91234-5678',
-      email: 'ana.silva@example.com',
-      password: 'Segura123!'
-    });
-
-    // Clica em “Cadastrar”
-    await clickRegister(page);
-
-    // Verifica que o botão permanece habilitado após o clique
-    await expectRegisterActive(page);
-
-    // Confirma que a página de confirmação aparece
-    await expect(page.locator('text=Cadastro concluído')).toBeVisible();
-
-    // E que o usuário está autenticado e redirecionado para “Minha Conta”
-    await expect(page).toHaveURL(/\/my-account/);
-    await expect(page.locator('text=Olá, Ana')).toBeVisible();
-  });
-
-  test('Erro de campo obrigatório em branco – CPF', async ({ page }) => {
-    // Preenche todos os campos exceto CPF
-    await page.fill(
-      'input[name="fullName"]',
-      'Ana Maria da Silva'
-    );
-    await page.fill(
-      'input[name="birthDate"]',
-      '15/04/1990'
-    );
-    // Deixa CPF em branco
-    await page.fill(
-      'input[name="cpf"]',
-      ''
-    );
-    await page.fill(
-      'input[name="address"]',
-      'Rua das Flores, 123'
-    );
-    await page.fill(
-      'input[name="cep"]',
-      '12345-678'
-    );
-    await page.fill(
-      'input[name="phone"]',
-      '(11) 91234-5678'
-    );
-    await page.fill(
-      'input[name="email"]',
-      'ana.silva@example.com'
-    );
-    await page.fill(
-      'input[name="password"]',
-      'Segura123!'
-    );
-    await page.fill(
-      'input[name="confirmPassword"]',
-      'Segura123!'
-    );
-
-    // O botão “Cadastrar” deve permanecer inativo
-    await expectRegisterInactive(page);
-
-    // Exibe mensagem de erro abaixo do campo CPF
-    await expect(
-      page.locator('text=CPF é obrigatório')
-    ).toBeVisible();
-  });
-
-  test('Erro de validação de telefone', async ({ page }) => {
-    // Preenche telefone com letras
-    await page.fill(
-      'input[name="phone"]',
-      'telefone123'
-    );
-    // Tenta enviar o formulário
-    await clickRegister(page);
-
-    // Exibe mensagem de erro específica
-    await expect(
-      page.locator('text=Telefone inválido – use números')
-    ).toBeVisible();
-  });
-});
-
-/**
- * ------------------------------------------
- *   3. Cenários de Login
- * ------------------------------------------
- */
-test.describe('Login', () => {
-  test.beforeEach(async ({ page }) => {
-    await goToLogin(page);
-  });
-
-  test('Login com credenciais válidas', async ({ page }) => {
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Segura123!');
-
-    await page.click('button:has-text("Entrar")');
-
-    // Redireciona para “Minha Conta”
-    await expect(page).toHaveURL(/\/my-account/);
-    await expect(page.locator('text=Olá, Ana')).toBeVisible();
-
-    // Verifica que a sessão permanece ativa
-    await page.waitForTimeout(5000); // Simula tempo de espera
-    await expect(
-      page.locator('button:has-text("Logout")')
-    ).toBeVisible();
-  });
-
-  test('Login falha com senha incorreta', async ({ page }) => {
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Errada123!');
-
-    await page.click('button:has-text("Entrar")');
-
-    await expect(
-      page.locator('text=Usuário ou senha inválidos')
-    ).toBeVisible();
-  });
-
-  test('Login falha com e‑mail não registrado', async ({ page }) => {
-    await page.fill('input[name="email"]', 'nao.cadastrado@example.com');
-    await page.fill('input[name="password"]', 'Qualquer123!');
-
-    await page.click('button:has-text("Entrar")');
-
-    await expect(
-      page.locator('text=Usuário ou senha inválidos')
-    ).toBeVisible();
-  });
-});
-
-/**
- * ------------------------------------------
- *   4. Visualizar Saldo e Extrato
- * ------------------------------------------
- */
-test.describe('Visualizar Saldo e Extrato', () => {
-  test.beforeEach(async ({ page }) => {
-    // Assume que o usuário já está autenticado; caso contrário, faça login
-    await goToLogin(page);
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Segura123!');
-    await page.click('button:has-text("Entrar")');
-    await expect(page).toHaveURL(/\/my-account/);
-  });
-
-  test('Usuário vê saldo atualizado e extrato completo', async ({ page }) => {
-    // Abre a seção “Extrato”
-    await page.click('text=Extrato');
-
-    // Exibe saldo corrente
-    await expect(page.locator('text=Saldo atual')).toBeVisible();
-    await expect(page.locator('css=.balance')).toHaveText(/\d+,\d{2}/);
-
-    // Lista as 10 transações mais recentes
-    const rows = await page.locator('css=.transaction-row').all();
-    expect(rows.length).toBeGreaterThanOrEqual(10);
-
-    // Cada linha possui data, descrição e valor
-    for (const row of rows) {
-      await expect(row.locator('.date')).toBeVisible();
-      await expect(row.locator('.description')).toBeVisible();
-      await expect(row.locator('.amount')).toBeVisible();
-    }
-  });
-
-  test('Usuário com menos de 10 transações', async ({ page }) => {
-    // Para fins de teste, vamos supor que já existem 7 transações
-    await page.click('text=Extrato');
-
-    const rows = await page.locator('css=.transaction-row').all();
-    expect(rows.length).toBeLessThanOrEqual(7);
-
-    // Verifica que não existem linhas vazias
-    const emptyRows = await page.locator('css=.transaction-row:has-text("")').all();
-    expect(emptyRows.length).toBe(0);
-  });
-});
-
-/**
- * ------------------------------------------
- *   5. Transferência de Fundos
- * ------------------------------------------
- */
-test.describe('Transferência de Fundos', () => {
-  test.beforeEach(async ({ page }) => {
-    // Autenticação
-    await goToLogin(page);
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Segura123!');
-    await page.click('button:has-text("Entrar")');
-    await expect(page).toHaveURL(/\/my-account/);
-
-    // Navega para a página de Transferências
-    await page.click('nav >> text=Transferências');
-    await expect(page).toHaveURL(/\/transfers/);
-  });
-
-  test('Transferência dentro do limite de saldo', async ({ page }) => {
-    // Assume saldo disponível é R$ 500,00
-    // Seleciona conta de origem
-    await page.click('select[name="originAccount"]');
-    await page.selectOption('select[name="originAccount"]', 'Conta Corrente');
-
-    // Insere conta de destino
-    await page.fill('input[name="destinationAccount"]', '12345-6');
-
-    // Preenche valor
-    await page.fill('input[name="amount"]', '200,00');
-
-    // Confirma a transferência
-    await page.click('button:has-text("Confirmar")');
-
-    // Mensagem de sucesso
-    await expect(page.locator('text=Transferência concluída')).toBeVisible();
-
-    // Verifica saldos atualizados
-    await expect(
-      page.locator('text=Saldo disponível').filter({ hasText: /R\$\s*300,00/ })
-    ).toBeVisible();
-
-    // Verifica que o extrato de origem mostra –200,00
-    await page.click('text=Extrato');
-    await expect(
-      page.locator('.transaction-row').filter({
-        hasText: /–200,00/
-      })
-    ).toBeVisible();
-
-    // Para a conta de destino, assumimos que a interface exibe o saldo
-    await page.goto(`${baseURL}/accounts/12345-6`);
-    await expect(
-      page.locator('text=Saldo disponível').filter({
-        hasText: /R\$\s*200,00/
-      })
-    ).toBeVisible();
-  });
-
-  test('Transferência bloqueada por saldo insuficiente', async ({ page }) => {
-    // Saldo disponível é R$ 150,00
-    // Insere conta de destino
-    await page.fill('input[name="destinationAccount"]', '12345-6');
-
-    // Preenche valor maior que o saldo
-    await page.fill('input[name="amount"]', '200,00');
-
-    // Tenta confirmar
-    await page.click('button:has-text("Confirmar")');
-
-    // Mensagem de erro
-    await expect(
-      page.locator('text=Valor excede saldo disponível')
-    ).toBeVisible();
-  });
-
-  test('Transferência bloqueada por valor inválido – negativo', async ({ page }) => {
-    await page.fill('input[name="amount"]', '-100,00');
-    await page.click('button:has-text("Confirmar")');
-
-    await expect(
-      page.locator('text=Valor inválido – apenas números positivos')
-    ).toBeVisible();
-  });
-});
-
-/**
- * ------------------------------------------
- *   6. Solicitação de Empréstimo
- * ------------------------------------------
- */
-test.describe('Solicitação de Empréstimo', () => {
-  test.beforeEach(async ({ page }) => {
-    // Autenticação
-    await goToLogin(page);
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Segura123!');
-    await page.click('button:has-text("Entrar")');
-    await expect(page).toHaveURL(/\/my-account/);
-
-    // Vai para a página de Empréstimos
-    await page.click('nav >> text=Empréstimos');
-    await expect(page).toHaveURL(/\/loans/);
-  });
-
-  test('Empréstimo aprovado com renda suficiente', async ({ page }) => {
-    await page.fill('input[name="loanAmount"]', '5.000,00');
-    await page.fill('input[name="annualIncome"]', '80.000,00');
-
-    await page.click('button:has-text("Solicitar")');
-
-    // Espera 2 segundos (simulando backend)
-    await page.waitForTimeout(2000);
-
-    // Status aprovado
-    await expect(
-      page.locator('text=Aprovado')
-    ).toBeVisible();
-
-    // Crédito na conta
-    await expect(
-      page.locator('text=Saldo disponível').filter({
-        hasText: /R\$\s*5\.000,00/
-      })
-    ).toBeVisible();
-
-    // Extrato
-    await page.click('text=Extrato');
-    await expect(
-      page.locator('.transaction-row').filter({
-        hasText: /Empréstimo aprovado/
-      })
-    ).toBeVisible();
-  });
-
-  test('Empréstimo negado por renda insuficiente', async ({ page }) => {
-    await page.fill('input[name="loanAmount"]', '10.000,00');
-    await page.fill('input[name="annualIncome"]', '30.000,00');
-
-    await page.click('button:has-text("Solicitar")');
-
-    await page.waitForTimeout(2000);
-
-    await expect(
-      page.locator('text=Empréstimo negado – renda insuficiente')
-    ).toBeVisible();
-  });
-
-  test('Empréstimo falha com valor negativo', async ({ page }) => {
-    await page.fill('input[name="loanAmount"]', '-1.000,00');
-    await page.click('button:has-text("Solicitar")');
-
-    await expect(
-      page.locator('text=Valor do empréstimo inválido – apenas números positivos')
-    ).toBeVisible();
-  });
-});
-
-/**
- * ------------------------------------------
- *   7. Pagamento de Contas
- * ------------------------------------------
- */
-test.describe('Pagamento de Contas', () => {
-  test.beforeEach(async ({ page }) => {
-    // Autenticação
-    await goToLogin(page);
-    await page.fill('input[name="email"]', 'ana.silva@example.com');
-    await page.fill('input[name="password"]', 'Segura123!');
-    await page.click('button:has-text("Entrar")');
-    await expect(page).toHaveURL(/\/my-account/);
-
-    // Navega para a página de Pagamentos
-    await page.click('nav >> text=Pagamentos');
-    await expect(page).toHaveURL(/\/payments/);
-  });
-
-  test('Pagamento imediato para beneficiário', async ({ page }) => {
-    await page.fill('input[name="beneficiary"]', 'João Pereira');
-    await page.fill('input[name="address"]', 'Av. Brasil, 456');
-    await page.fill('input[name="city"]', 'São Paulo');
-    await page.fill('input[name="state"]', 'SP');
-    await page.fill('input[name="cep"]', '01000-000');
-    await page.fill('input[name="phone"]', '(11) 98765-4321');
-    await page.fill('input[name="destinationAccount"]', '12345-6');
-    await page.fill('input[name="amount"]', '300,00');
-    await page.click('button:has-text("Hoje")'); // Seleção de data
-    await page.click('button:has-text("Confirmar")');
-
-    await expect(
-      page.locator('text=Pagamento registrado')
-    ).toBeVisible();
-
-    await page.click('text=Extrato');
-    await expect(
-      page.locator('.transaction-row').filter({
-        hasText: /Pagamento para João Pereira – 300,00/
-      })
-    ).toBeVisible();
-  });
-
-  test('Pagamento agendado para data futura', async ({ page }) => {
-    await page.fill('input[name="beneficiary"]', 'Maria Souza');
-    await page.fill('input[name="destinationAccount"]', '98765-4');
-    await page.fill('input[name="amount"]', '150,00');
-    await page.click('button:has-text("10 dias depois")');
-    await page.click('button:has-text("Confirmar")');
-
-    await expect(
-      page.locator('text=Pagamento registrado')
-    ).toBeVisible();
-
-    await page.click('text=Extrato');
-    await expect(
-      page.locator('.transaction-row').filter({
-        hasText: /10 dias depois/
-      })
-    ).toBeVisible();
-  });
-
-  test('Pagamento bloqueado por saldo insuficiente na data programada', async ({ page }) => {
-    // Saldo atual: R$ 200,00 – vamos simular
-    // Agenda pagamento de R$ 300,00 para 12 dias depois
-    await page.fill('input[name="beneficiary"]', 'Fulano');
-    await page.fill('input[name="destinationAccount"]', '12345-6');
-    await page.fill('input[name="amount"]', '300,00');
-    await page.click('button:has-text("12 dias depois")');
-    await page.click('button:has-text("Confirmar")');
-
-    await expect(
-      page.locator('text=Saldo insuficiente no dia do pagamento')
-    ).toBeVisible();
-  });
-
-  test('Pagamento bloqueado por CEP inválido', async ({ page }) => {
-    await page.fill('input[name="cep"]', '1234'); // inválido
-    await page.click('button:has-text("Enviar")');
-
-    await expect(
-      page.locator('text=CEP inválido – use 8 dígitos')
-    ).toBeVisible();
-  });
-});
-
-/**
- * ------------------------------------------
- *   8. Navegação e Usabilidade
- * ------------------------------------------
- */
-test.describe('Navegação e Usabilidade', () => {
-  test('Navegação completa sem erro 404/500', async ({ page }) => {
-    // Inicia na página de login
-    await goToLogin(page);
-    await expect(page).toHaveURL(/\/login/);
-
-    // Clica em “Cadastrar”
-    await page.click('a:has-text("Cadastrar")');
-    await expectStatus200(page);
-
-    // Volta ao login
-    await page.click('a:has-text("Entrar")');
-    await expectStatus200(page);
-
-    // Menu “Transferências”
-    await page.click('nav >> text=Transferências');
-    await expectStatus200(page);
-
-    // Menu “Empréstimos”
-    await page.click('nav >> text=Empréstimos');
-    await expectStatus200(page);
-
-    // Menu “Pagamentos”
-    await page.click('nav >> text=Pagamentos');
-    await expectStatus200(page);
-  });
-
-  test('Página 404 mostra link de retorno ao dashboard ou login', async ({ page }) => {
-    // Navega para rota inexistente
-    await page.goto(`${baseURL}/rota-inexistente`);
-    await page.waitForResponse((res) => res.status() === 404);
-
-    // Verifica mensagem
-    await expect(
-      page.locator('text=Página não encontrada')
-    ).toBeVisible();
-
-    // Se autenticado (vamos supor que já está logado)
-    await expect(
-      page.locator('text=Voltar ao dashboard')
-    ).toBeVisible();
-
-    // Se não autenticado – usar outro teste
-  });
-
-  test('Erro de validação aparece corretamente', async ({ page }) => {
-    // Já na página de cadastro (desde que test anterior tenha navegado)
-    await goToRegistration(page);
-
-    // Deixa telefone em branco e tenta cadastrar
-    await page.fill('input[name="phone"]', '');
-    await clickRegister(page);
-
-    // Mensagem de erro em vermelho
-    const errorMsg = page.locator('text=Telefone é obrigatório');
-    await expect(errorMsg).toBeVisible();
-    await expect(errorMsg).toHaveCSS('color', /rgb\(255, 0, 0\)/);
-
-    // Botão “Cadastrar” permanece inativo
-    await expectRegisterInactive(page);
-  });
-
-  test('Menus responsivos em telas pequenas', async ({ page, context }) => {
-    // Redimensiona para 320px
-    await context.setViewportSize({ width: 320, height: 800 });
-
-    // Abre o menu principal
-    await page.click('button:has-text("Menu")');
-
-    // Todos os links aparecem em vertical
-    const menuLinks = page.locator('nav >> a');
-    await expect(menuLinks).toHaveCountGreaterThan(0);
-    await expect(menuLinks).toBeVisible();
-
-    // Cada link tem ícone + texto legível
-    const icons = page.locator('nav >> svg');
-    await expect(icons).toHaveCountGreaterThan(0);
-
-    // Fecha o menu ao clicar fora
-    await page.click('body');
-    await expect(menuLinks).toBeHidden();
-  });
-});
+**UserFlowTests.robot** – Automated Robot Framework suite (BDD → Robot Framework)
+
+```robot
+*** Settings ***
+Library           SeleniumLibrary    timeout=10
+Library           Collections
+Library           OperatingSystem
+Library           BuiltIn
+Suite Setup       Open Browser To Home Page
+Suite Teardown    Close Browser
+Test Setup        Prepare Test Environment
+Test Teardown     Capture Page Screenshot
+
+# Tags that help to filter by feature or by positive/negative flow
+Metadata          Author            Senior Test Automation Engineer
+Metadata          Language          Portuguese
+
+*** Variables ***
+# Base URL of the application
+${BASE_URL}          https://examplebank.com
+
+# Common locators (use data-test or id where possible)
+${REG_PAGE}          ${BASE_URL}/register
+${LOGIN_PAGE}        ${BASE_URL}/login
+${DASHBOARD_PAGE}    ${BASE_URL}/dashboard
+${TRANSFER_PAGE}     ${BASE_URL}/transfer
+${LOAN_PAGE}         ${BASE_URL}/loan
+${PAYMENT_PAGE}      ${BASE_URL}/payment
+
+# Field locators – keep them stable (id or name)
+${FULLNAME_FIELD}     id=fullName
+${EMAIL_FIELD}        id=email
+${PHONE_FIELD}        id=phone
+${ZIP_FIELD}          id=zip
+${PASS_FIELD}         id=password
+${CONFIRM_PASS_FIELD} id=confirmPassword
+${CREATE_BTN}         xpath=//button[normalize-space()='Criar Conta']
+${LOGIN_BTN}          xpath=//button[normalize-space()='Login']
+${SUBMIT_TRANSFER}    xpath=//button[normalize-space()='Confirmar Transferência']
+${SUBMIT_LOAN}        xpath=//button[normalize-space()='Confirmar Solicitação']
+${SUBMIT_PAYMENT}     xpath=//button[normalize-space()='Confirmar Pagamento']
+
+# Error / success messages (text)
+${MSG_EMAIL_SENT}          Mensagem de confirmação de e‑mail enviado
+${MSG_REQ_FIELDS}          Preencha todos os campos obrigatórios
+${MSG_INVALID_EMAIL}       Formato de e‑mail inválido
+${MSG_INVALID_ZIP}         CEP inválido
+${MSG_INVALID_PHONE}       Telefone deve conter apenas números
+${MSG_PASS_MISMATCH}       As senhas não correspondem
+${MSG_LOGIN_SUCCESS}       Dashboard
+${MSG_INCORRECT_CRED}      Credenciais inválidas. Tente novamente.
+${MSG_NO_TRANSACTIONS}     Nenhuma transação encontrada
+${MSG_TRANSFER_OK}         Transferência concluída – Ref:
+${MSG_TRANSFER_FAIL}       Saldo insuficiente
+${MSG_TRANSFER_INVALID}    Valor de transferência inválido
+${MSG_LOAN_APPROVED}       Empréstimo Aprovado – 12% ao ano
+${MSG_LOAN_DENIED_R}       Empréstimo Negado – Renda insuficiente
+${MSG_LOAN_DENIED_L}       Dados fora do limite permitido
+${MSG_PAYMENT_SCHEDULED}   Pagamento agendado para
+${MSG_PAYMENT_INVALID_DATE} Data inválida – escolha uma data futura
+${MSG_REQUIRED_FIELD}       Campo obrigatório
+${MSG_404}                  Página não encontrada
+
+# Test data
+${VALID_USER}          João da Silva
+${VALID_EMAIL}         joao.silva@email.com
+${VALID_PHONE}         11987654321
+${VALID_ZIP}           12345678
+${VALID_PASS}          Segura123
+${INVALID_EMAIL}       joaosilva@com
+${INVALID_ZIP}         12345
+${INVALID_PHONE}       11987-5432a
+${MISMATCH_PASS}       Segura321
+
+*** Test Cases ***
+# ===================================================================== #
+# US01 – Cadastro de Usuário
+# ===================================================================== #
+Cadastro De Conta Com Dados Válidos
+    [Tags]    US01    positive
+    Go To Registration Page
+    Fill Registration Form    ${VALID_USER}    ${VALID_EMAIL}    ${VALID_PHONE}
+    ...                        ${VALID_ZIP}      ${VALID_PASS}    ${VALID_PASS}
+    Click Create Account
+    Verify Email Sent Confirmation
+    Verify Redirect To Login
+
+Usuário Tenta Cadastrar Sem Preencher Campos Obrigatórios
+    [Tags]    US01    negative
+    Go To Registration Page
+    Click Create Account
+    Verify Mandatory Fields Error
+
+E‑mail Inválido
+    [Tags]    US01    negative
+    Go To Registration Page
+    Fill Registration Form    ${VALID_USER}    ${INVALID_EMAIL}    ${VALID_PHONE}
+    ...                        ${VALID_ZIP}      ${VALID_PASS}    ${VALID_PASS}
+    Click Create Account
+    Verify Error Message Below Field    ${EMAIL_FIELD}    ${MSG_INVALID_EMAIL}
+
+CEP Com Menos De 8 Dígitos
+    [Tags]    US01    negative
+    Go To Registration Page
+    Fill Registration Form    ${VALID_USER}    ${VALID_EMAIL}    ${VALID_PHONE}
+    ...                        ${INVALID_ZIP}    ${VALID_PASS}    ${VALID_PASS}
+    Click Create Account
+    Verify Error Message Below Field    ${ZIP_FIELD}    ${MSG_INVALID_ZIP}
+
+Telefone Com Caracteres Não Numéricos
+    [Tags]    US01    negative
+    Go To Registration Page
+    Fill Registration Form    ${VALID_USER}    ${VALID_EMAIL}    ${INVALID_PHONE}
+    ...                        ${VALID_ZIP}      ${VALID_PASS}    ${VALID_PASS}
+    Click Create Account
+    Verify Error Message Below Field    ${PHONE_FIELD}    ${MSG_INVALID_PHONE}
+
+Senhas Não Correspondem
+    [Tags]    US01    negative
+    Go To Registration Page
+    Fill Registration Form    ${VALID_USER}    ${VALID_EMAIL}    ${VALID_PHONE}
+    ...                        ${VALID_ZIP}      ${VALID_PASS}    ${MISMATCH_PASS}
+    Click Create Account
+    Verify Error Message Below Field    ${CONFIRM_PASS_FIELD}    ${MSG_PASS_MISMATCH}
+
+# ===================================================================== #
+# US02 – Login
+# ===================================================================== #
+Login Bem‑Sucedido
+    [Tags]    US02    positive
+    Go To Login Page
+    Input Credentials    ${VALID_EMAIL}    ${VALID_PASS}
+    Click Login
+    Verify Redirect To Dashboard
+    Verify Balance Displayed
+
+Login Com Credenciais Inválidas
+    [Tags]    US02    negative
+    Go To Login Page
+    Input Credentials    ${VALID_EMAIL}    Errada123
+    Click Login
+    Verify Error Message Center    ${MSG_INCORRECT_CRED}
+
+Login Com Campos Vazios
+    [Tags]    US02    negative
+    Go To Login Page
+    # Leave fields blank
+    Click Login
+    Verify Error Message Below Field    ${EMAIL_FIELD}    ${MSG_REQUIRED_FIELD}
+    Verify Error Message Below Field    ${PASS_FIELD}    ${MSG_REQUIRED_FIELD}
+
+# ===================================================================== #
+# US03 – Exibir Saldo e Extrato
+# ===================================================================== #
+Dashboard Exibe Saldo E Extrato Mínimo
+    [Tags]    US03    positive
+    Authenticate And Navigate To Dashboard
+    Verify Balance Displayed
+    Verify Transaction List Size    10
+    Verify Each Transaction Contains    data    description    amount    type
+
+Carregamento De Extrato Completo Ao Clicar Em “Ver Mais”
+    [Tags]    US03    positive
+    Go To Dashboard
+    Verify Transaction List Size    10
+    Click Element    xpath=//button[normalize-space()='Ver mais']
+    Verify Additional Transactions Loaded
+
+Mensagem De Saldo Quando Nenhuma Transação
+    [Tags]    US03    negative
+    Authenticate And Navigate To Dashboard Without Transactions
+    Verify No Transactions Message
+
+# ===================================================================== #
+# US04 – Transferência de Fundos
+# ===================================================================== #
+Transferência Bem‑Sucedida Dentro Do Saldo Disponível
+    [Tags]    US04    positive
+    Authenticate And Navigate To Transfer Page
+    Set Current Balance    5000.00
+    Fill Transfer Form    Conta Corrente    Conta Poupança    1000.00
+    Confirm Transfer
+    Verify Transfer Success Message    Ref: 123456
+    Verify Balance Updated    4000.00
+    Verify Destination Account Balance    1000.00
+
+Transferência Com Valor Superior Ao Saldo
+    [Tags]    US04    negative
+    Authenticate And Navigate To Transfer Page
+    Set Current Balance    500.00
+    Fill Transfer Form    Conta Corrente    Conta Poupança    1000.00
+    Confirm Transfer
+    Verify Error Message Center    ${MSG_TRANSFER_FAIL}
+
+Transferência Com Valor Inválido (Nulo Ou Negativo)
+    [Tags]    US04    negative
+    Go To Transfer Page
+    Input Transfer Value    -100.00
+    Confirm Transfer
+    Verify Error Message Center    ${MSG_TRANSFER_INVALID}
+
+# ===================================================================== #
+# US05 – Solicitação de Empréstimo
+# ===================================================================== #
+Empréstimo Aprovado
+    [Tags]    US05    positive
+    Authenticate And Navigate To Loan Page
+    Fill Loan Form    200000    300000
+    Confirm Loan
+    Verify Loan Approval Message
+
+Empréstimo Negado Por Renda Insuficiente
+    [Tags]    US05    negative
+    Authenticate And Navigate To Loan Page
+    Fill Loan Form    100000    20000
+    Confirm Loan
+    Verify Loan Denial Message    ${MSG_LOAN_DENIED_R}
+
+Empréstimo Negado Por Valor Acima Do Limite
+    [Tags]    US05    negative
+    Authenticate And Navegatar Para Loan Page
+    Fill Loan Form    600000    500000
+    Confirm Loan
+    Verify Loan Denial Message    ${MSG_LOAN_DENIED_L}
+
+# ===================================================================== #
+# US06 – Pagamento de Contas
+# ===================================================================== #
+Pagamento Agendado Para Data Futura
+    [Tags]    US06    positive
+    Go To Payment Page
+    Fill Payment Form    Pedro    Rua A, 123    São Paulo    SP    12345678
+    ...                     11987654321    123456789    200.00    25/12/2025
+    Confirm Payment
+    Verify Payment Scheduled Message    25/12/2025
+    Verify Payment In History    Agendado
+
+Pagamento Com Data No Passado
+    [Tags]    US06    negative
+    Go To Payment Page
+    Fill Payment Form    Pedro    Rua A, 123    São Paulo    SP    12345678
+    ...                     11987654321    123456789    200.00    01/01/2020
+    Confirm Payment
+    Verify Error Message Below Field    //input[@name='paymentDate']    ${MSG_PAYMENT_INVALID_DATE}
+
+Pagamento Com Campo Obrigatório Em Branco
+    [Tags]    US06    negative
+    Go To Payment Page
+    Input Payment Beneficiary    # leave blank intentionally
+    Fill Rest Of Payment Fields
+    Confirm Payment
+    Verify Error Message Below Field    //input[@name='beneficiary']    ${MSG_REQUIRED_FIELD}
+
+# ===================================================================== #
+# US07 – Navegação e Usabilidade
+# ===================================================================== #
+Menu Principal Presente Em Todas As Páginas
+    [Tags]    US07    positive
+    Go To Dashboard
+    Verify Main Menu Contains    Dashboard    Transferir    Empréstimos
+    ...                                      Pagamentos    Extrato    Sair
+
+Navegação Sem Erros 404
+    [Tags]    US07    positive
+    Go To Dashboard
+    Click Element    //a[normalize-space()='Transferir']
+    Verify Current Page Contains    Transferência
+    Verify Page Does Not Contain    404
+
+Mensagens De Erro Em Vermelho Alinhadas Ao Campo
+    [Tags]    US07    positive
+    Go To Registration Page
+    Clear Field    ${EMAIL_FIELD}
+    Click Create Account
+    Verify Error Message Color And Position    ${EMAIL_FIELD}    ${MSG_REQUIRED_FIELD}    red
+
+Tempo De Carregamento Do Dashboard Menor Que 2 Segundos
+    [Tags]    US07    positive
+    Authenticate
+    ${load_time}=    Measure Page Load Time    ${DASHBOARD_PAGE}
+    Should Be True    ${load_time} < 2    msg=Dashboard load time exceeded 2 seconds
+
+Menu Colapsa Em Dispositivos Móveis
+    [Tags]    US07    positive
+    Set Window Size    320    800
+    Go To Home Page
+    Verify Menu Is Collapsed
+    Click Element    //button[@aria-label='Menu']
+    Verify All Menu Options Visible
+
+Página Retorna 404 Ao Acessar Link Inexistente
+    [Tags]    US07    negative
+    Go To URL    ${BASE_URL}/pagina-inexistente
+    Verify Page Contains    ${MSG_404}
 ```
 
 ---
 
-### Como usar
+## Explanation of the Key Parts
 
-1. **Instale o Playwright** (se ainda não tiver):  
-   ```bash
-   npm i -D @playwright/test
-   ```
+### Settings
+* `Suite Setup` opens a browser once per test‑suite and navigates to the home page.
+* `Test Setup`/`Test Teardown` are used for pre‑test preparation (e.g., clean cookies) and for debugging screenshots.
+* Tags (`US01`, `positive`, etc.) let you run only a subset of tests (`robot -t US01`).
 
-2. **Configure o `playwright.config.ts`** – defina o `baseURL`, browsers, etc.
+### Variables
+* Centralised locators and messages keep the suite maintainable: when the UI changes you only edit one place.
+* Data‑driven variables (valid/invalid credentials, amounts, etc.) make the test data easy to read.
 
-3. **Execute os testes**:  
-   ```bash
-   npx playwright test
-   ```
+### Test Cases
+* Each Gherkin scenario has its own Robot test case.
+* Every step is mapped to a keyword that contains a concise, reusable implementation.
+* Comments (the “Verify …” lines) clearly explain what each step is doing, which is a Robot‑friendly alternative to the Gherkin `#` comments.
 
-### Próximos passos
+### Keywords (Skeleton)
 
-- **Refatoração de seletores**: Se sua aplicação usa *data‑test* ou *id*, troque os seletores pelos mais estáveis.
-- **Data‑driven**: Para cenários com diferentes valores (por exemplo, saldo ou número de transações), crie data sets e use `test.each`.
-- **Mock de backend**: Para cenários de empréstimo ou transferência, você pode interceptar chamadas API (`page.route`) e retornar respostas fictícias, garantindo que os testes não dependam de dados reais.
+```robot
+*** Keywords ***
+Open Browser To Home Page
+    Open Browser    ${BASE_URL}    Chrome
+    Maximize Browser Window
 
-> **Nota:** Os testes acima são *exemplos* e podem precisar de ajustes dependendo da estrutura real da aplicação e da sua política de testes. Boa sorte!
+Prepare Test Environment
+    # Clear cookies, localStorage, etc., so tests are idempotent
+    Delete All Cookies
+    Page Should Contain Element    id=someHomeElement
+
+Authenticate
+    # Helper to login once and stay authenticated
+    Go To Login Page
+    Input Credentials    ${VALID_EMAIL}    ${VALID_PASS}
+    Click Login
+    Wait Until Page Contains    ${MSG_LOGIN_SUCCESS}    timeout=15
+
+Go To Registration Page
+    Go To    ${REG_PAGE}
+    Wait Until Page Contains Element    ${FULLNAME_FIELD}
+
+Go To Login Page
+    Go To    ${LOGIN_PAGE}
+    Wait Until Page Contains Element    ${EMAIL_FIELD}
+
+Go To Dashboard
+    Go To    ${DASHBOARD_PAGE}
+    Wait Until Page Contains    ${MSG_LOGIN_SUCCESS}
+
+Go To Transfer Page
+    Go To    ${TRANSFER_PAGE}
+    Wait Until Page Contains Element    ${CREATE_BTN}
+
+Go To Loan Page
+    Go To    ${LOAN_PAGE}
+    Wait Until Page Contains Element    ${CREATE_BTN}
+
+Go To Payment Page
+    Go To    ${PAYMENT_PAGE}
+    Wait Until Page Contains Element    ${CREATE_BTN}
+
+Input Credentials
+    [Arguments]    ${email}    ${password}
+    Input Text    ${EMAIL_FIELD}    ${email}
+    Input Text    ${PASS_FIELD}     ${password}
+
+Click Login
+    Click Button    ${LOGIN_BTN}
+
+Click Create Account
+    Click Button    ${CREATE_BTN}
+
+Verify Email Sent Confirmation
+    Page Should Contain    ${MSG_EMAIL_SENT}
+
+Verify Redirect To Login
+    Wait Until Page Contains    Login
+    Page Should Contain    Login
+
+Fill Registration Form
+    [Arguments]    ${name}    ${email}    ${phone}    ${zip}
+    ...              ${password}    ${confirmPassword}
+    Input Text    ${FULLNAME_FIELD}    ${name}
+    Input Text    ${EMAIL_FIELD}      ${email}
+    Input Text    ${PHONE_FIELD}      ${phone}
+    Input Text    ${ZIP_FIELD}        ${zip}
+    Input Text    ${PASS_FIELD}       ${password}
+    Input Text    ${CONFIRM_PASS_FIELD}   ${confirmPassword}
+
+Verify Mandatory Fields Error
+    [Arguments]    ${message}= ${MSG_REQ_FIELDS}
+    # Assuming the page displays the message near each field
+    Page Should Contain    ${message}
+
+Verify Error Message Below Field
+    [Arguments]    ${fieldLocator}    ${expectedMessage}
+    Wait Until Element Is Visible    ${fieldLocator}_error
+    Element Text Should Be            ${fieldLocator}_error    ${expectedMessage}
+
+Verify Error Message Center
+    [Arguments]    ${expectedMessage}
+    Page Should Contain    ${expectedMessage}
+
+Verify Balance Displayed
+    Page Should Contain Element    xpath=//span[contains(@class,'balance')]
+    ${balance}=    Get Text    xpath=//span[contains(@class,'balance')]
+    Log    Current balance: ${balance}
+
+Verify Transaction List Size
+    [Arguments]    ${minCount}
+    ${items}=    Get WebElements    xpath=//ul[@id='transactionList']/li
+    Length Should Be At Least    ${items}    ${minCount}
+
+Verify Each Transaction Contains
+    [Arguments]    @{fields}
+    ${items}=    Get WebElements    xpath=//ul[@id='transactionList']/li
+    :FOR    ${item}    IN    @{items}
+    \   :FOR    ${field}    IN    @{fields}
+    \   \   ${value}=    Get Text    ${item}//div[@class='${field}']
+    \   \   Should Not Be Empty    ${value}
+
+Click Element
+    [Arguments]    ${locator}
+    Wait Until Element Is Visible    ${locator}
+    Click Element    ${locator}
+
+# ... more keyword skeletons continue for the remaining steps
+```
+
+> **Tip** – Every keyword should be documented with a short comment (one line) so that new testers understand the intention.
+
+---
+
+## How to Run
+
+```bash
+# Run all tests
+robot -d results UserFlowTests.robot
+
+# Run only positive tests
+robot -t positive -d results UserFlowTests.robot
+
+# Run a single test by name
+robot -t "Cadastro De Conta Com Dados Válidos" -d results UserFlowTests.robot
+```
+
+The generated **`results`** folder will contain the logs, screenshots, and the test report in `report.html`. Adjust the browser (e.g., Chrome, Firefox) or headless mode in the `Open Browser To Home Page` keyword if needed.
+
+---
+
+### Final Note
+This skeleton captures every scenario from the BDD file, keeps the suite modular, and follows best practices such as:
+
+* **Stable, reusable selectors** (IDs or `data-test` attributes).
+* **Explicit waits** (`Wait Until Page Contains`, `Wait Until Element Is Visible`).
+* **Clear comments** above each step.
+* **Variables** for data and locators to ease maintenance.
+* **Tagging** for selective execution.
+
+You can now extend or modify individual keywords without touching the test cases – a hallmark of a sustainable Robot Framework automation suite.

@@ -1,372 +1,314 @@
-**User Story: US01 – Cadastro de Usuário**  
-titulo: Cadastro de Usuário  
+```
+titulo: US01 – Cadastro de Usuário
 cenario_bdd:
-    nome: Cadastro com todos os campos válidos  
-    tipo: positivo  
+  - nome: Usuário cadastra conta com dados válidos
+    tipo: positivo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário preenche formulário com dados válidos e recebe confirmação
-          Given o usuário está na página de cadastro
-          When preenche "Nome completo" com "Ana Maria da Silva"
-          And preenche "Data de nascimento" com "15/04/1990"
-          And preenche "CPF" com "123.456.789-10"
-          And preenche "Endereço" com "Rua das Flores, 123"
-          And preenche "CEP" com "12345-678"
-          And preenche "Telefone" com "(11) 91234-5678"
-          And preenche "E‑mail" com "ana.silva@example.com"
-          And preenche "Senha" com "Segura123!"
-          And confirma "Senha" com "Segura123!"
-          And clica no botão "Cadastrar"
-          Then o botão "Cadastrar" deve estar ativo
-          And a página de confirmação deve aparecer
-          And o usuário deve estar autenticado e redirecionado para a tela “Minha Conta”
+      Scenario: Registro de um novo usuário com dados corretos
+        Given eu estou na página de cadastro
+        When preencho o nome completo "João da Silva"
+        And preencho o e‑mail "joao.silva@email.com"
+        And preencho o telefone "11987654321"
+        And preencho o CEP "12345678"
+        And preencho a senha "Segura123"
+        And confirmo a senha "Segura123"
+        And clico no botão "Criar Conta"
+        Then devo receber uma mensagem de confirmação de e‑mail enviado
+        And devo ser redirecionado para a tela de login
 
----
-
-titulo: Cadastro bloqueado quando campo obrigatório em branco  
-cenario_bdd:
-    nome: Erro de campo obrigatório em branco  
-    tipo: negativo  
+  - nome: Usuário tenta cadastrar sem preencher campos obrigatórios
+    tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário deixa campo "CPF" em branco
-          Given o usuário está na página de cadastro
-          When preenche "Nome completo" com "Ana Maria da Silva"
-          And preenche "Data de nascimento" com "15/04/1990"
-          And deixa "CPF" em branco
-          And preenche "Endereço" com "Rua das Flores, 123"
-          And preenche "CEP" com "12345-678"
-          And preenche "Telefone" com "(11) 91234-5678"
-          And preenche "E‑mail" com "ana.silva@example.com"
-          And preenche "Senha" com "Segura123!"
-          And confirma "Senha" com "Segura123!"
-          Then o botão "Cadastrar" deve permanecer inativo
-          And exibe mensagem de erro abaixo do campo "CPF" com texto "CPF é obrigatório"
+      Scenario: Não é possível enviar formulário vazio
+        Given eu estou na página de cadastro
+        When deixo todos os campos em branco
+        And clico no botão "Criar Conta"
+        Then devo ver uma mensagem "Preencha todos os campos obrigatórios" abaixo de cada campo
 
----
-
-titulo: Cadastro bloqueado com telefone inválido  
-cenario_bdd:
-    nome: Erro de validação de telefone  
-    tipo: negativo  
+  - nome: E‑mail inválido
+    tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário entra telefone com letras
-          Given o usuário está na página de cadastro
-          When preenche "Telefone" com "telefone123"
-          And clica no botão "Cadastrar"
-          Then exibe mensagem de erro abaixo do campo "Telefone" com texto "Telefone inválido – use números"
+      Scenario: Validação de formato de e‑mail
+        Given eu estou na página de cadastro
+        When preencho o e‑mail "joaosilva@com"
+        And preencho o restante dos campos corretamente
+        And clico no botão "Criar Conta"
+        Then devo ver a mensagem "Formato de e‑mail inválido" abaixo do campo de e‑mail
 
----
+  - nome: CEP com menos de 8 dígitos
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Validação de CEP
+        Given eu estou na página de cadastro
+        When preencho o CEP "12345"
+        And preencho os demais campos corretamente
+        And clico no botão "Criar Conta"
+        Then devo ver a mensagem "CEP inválido" abaixo do campo de CEP
 
-**User Story: US02 – Login**  
-titulo: Login com credenciais válidas  
+  - nome: Telefone com caracteres não numéricos
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Validação de telefone
+        Given eu estou na página de cadastro
+        When preencho o telefone "11987-5432a"
+        And preencho os demais campos corretamente
+        And clico no botão "Criar Conta"
+        Then devo ver a mensagem "Telefone deve conter apenas números" abaixo do campo de telefone
+
+  - nome: Senhas não correspondem
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Validação de confirmação de senha
+        Given eu estou na página de cadastro
+        When preencho a senha "Segura123"
+        And confirmo a senha "Segura321"
+        And preencho os demais campos corretamente
+        And clico no botão "Criar Conta"
+        Then devo ver a mensagem "As senhas não correspondem" abaixo do campo de confirmação
+
+titulo: US02 – Login
 cenario_bdd:
-    nome: Usuário loga com e‑mail e senha corretos  
-    tipo: positivo  
+  - nome: Login bem‑sucedido
+    tipo: positivo
     gherkin: |
       Feature: Login
-      Scenario: Usuário autenticado com credenciais válidas
-          Given o usuário está na página de login
-          When preenche "E‑mail" com "ana.silva@example.com"
-          And preenche "Senha" com "Segura123!"
-          And clica no botão "Entrar"
-          Then o usuário deve ser redirecionado para a página “Minha Conta”
-          And a sessão deve permanecer ativa até logout ou timeout
+      Scenario: Usuário autenticado com credenciais corretas
+        Given eu estou na página de login
+        When preencho o e‑mail "joao.silva@email.com"
+        And preencho a senha "Segura123"
+        And clico em "Login"
+        Then devo ser redirecionado para o Dashboard
+        And devo ver o saldo da minha conta
 
----
-
-titulo: Login falha com senha incorreta  
-cenario_bdd:
-    nome: Usuário tenta login com senha errada  
-    tipo: negativo  
+  - nome: Login com credenciais inválidas
+    tipo: negativo
     gherkin: |
       Feature: Login
-      Scenario: Usuário entra com senha incorreta
-          Given o usuário está na página de login
-          When preenche "E‑mail" com "ana.silva@example.com"
-          And preenche "Senha" com "Errada123!"
-          And clica no botão "Entrar"
-          Then exibe mensagem de erro "Usuário ou senha inválidos"
+      Scenario: Credenciais inválidas
+        Given eu estou na página de login
+        When preencho o e‑mail "joao.silva@email.com"
+        And preencho a senha "Errada123"
+        And clico em "Login"
+        Then devo ver a mensagem "Credenciais inválidas. Tente novamente." no centro da página
 
----
-
-titulo: Login falha com e‑mail não registrado  
-cenario_bdd:
-    nome: Usuário tenta login com e‑mail não cadastrado  
-    tipo: negativo  
+  - nome: Login com campos vazios
+    tipo: negativo
     gherkin: |
       Feature: Login
-      Scenario: Usuário entra com e‑mail que não existe no sistema
-          Given o usuário está na página de login
-          When preenche "E‑mail" com "nao.cadastrado@example.com"
-          And preenche "Senha" com "Qualquer123!"
-          And clica no botão "Entrar"
-          Then exibe mensagem de erro "Usuário ou senha inválidos"
+      Scenario: Campos obrigatórios não preenchidos
+        Given eu estou na página de login
+        When deixo o campo de e‑mail em branco
+        And deixo o campo de senha em branco
+        And clico em "Login"
+        Then devo ver as mensagens "Campo obrigatório" abaixo de cada campo
 
----
-
-**User Story: US03 – Visualizar Saldo e Extrato**  
-titulo: Visualização de saldo e extrato com 10 transações  
+titulo: US03 – Exibir Saldo e Extrato
 cenario_bdd:
-    nome: Usuário vê saldo atualizado e extrato completo  
-    tipo: positivo  
+  - nome: Dashboard exibe saldo e extrato mínimo
+    tipo: positivo
     gherkin: |
-      Feature: Visualizar Saldo e Extrato
-      Scenario: Usuário autenticado visualiza saldo e extrato
-          Given o usuário está autenticado e na página “Minha Conta”
-          When abre a seção “Extrato”
-          Then exibe saldo corrente em moeda local
-          And lista as 10 transações mais recentes
-          And cada linha tem data, descrição e valor com saldo pós‑transação
+      Feature: Dashboard
+      Scenario: Visualização de saldo e extrato
+        Given eu estou autenticado e na página de Dashboard
+        Then devo ver meu saldo atual exibido em moeda local
+        And devo ver a lista com pelo menos 10 transações recentes
+        And cada transação deve conter data, descrição, valor e tipo (C/D)
 
----
-
-titulo: Extrato exibe todas as transações quando há menos de 10  
-cenario_bdd:
-    nome: Usuário com menos de 10 transações  
-    tipo: positivo  
+  - nome: Carregamento de extrato completo ao clicar em "Ver mais"
+    tipo: positivo
     gherkin: |
-      Feature: Visualizar Saldo e Extrato
-      Scenario: Usuário com menos de 10 transações
-          Given o usuário tem 7 transações na conta
-          And está autenticado em “Minha Conta”
-          When abre a seção “Extrato”
-          Then lista todas as 7 transações
-          And não exibe linhas vazias
+      Feature: Dashboard
+      Scenario: Carregar transações adicionais
+        Given eu estou na página de Dashboard
+        And já exibi as 10 transações recentes
+        When clico em "Ver mais"
+        Then as transações restantes devem ser carregadas sem recarregar a página inteira
 
----
+  - nome: Mensagem de saldo quando nenhuma transação
+    tipo: negativo
+    gherkin: |
+      Feature: Dashboard
+      Scenario: Usuário sem transações
+        Given eu estou autenticado e minha conta tem saldo mas zero transações
+        When acesso o Dashboard
+        Then devo ver a mensagem "Nenhuma transação encontrada" abaixo da lista de extrato
 
-**User Story: US04 – Transferência de Fundos**  
-titulo: Transferência dentro do limite de saldo  
+titulo: US04 – Transferência de Fundos
 cenario_bdd:
-    nome: Usuário transfere valor dentro do saldo disponível  
-    tipo: positivo  
+  - nome: Transferência bem‑sucedida dentro do saldo disponível
+    tipo: positivo
     gherkin: |
       Feature: Transferência de Fundos
-      Scenario: Transferência de R$ 200,00 para conta externa
-          Given o usuário está autenticado na página “Transferências”
-          And o saldo disponível é R$ 500,00
-          When seleciona conta de origem "Conta Corrente"
-          And insere conta de destino "12345-6"
-          And preenche "Valor" com "200,00"
-          And confirma a transferência
-          Then exibe mensagem "Transferência concluída"
-          And o saldo da conta de origem é R$ 300,00
-          And a conta de destino tem saldo aumentado em R$ 200,00
-          And a transação aparece no extrato de origem como "–200,00"
-          And a transação aparece no extrato de destino como "+200,00"
+      Scenario: Transferir valor dentro do saldo
+        Given eu estou autenticado na minha conta
+        And meu saldo atual é R$ 5.000,00
+        When seleciono a conta origem "Conta Corrente"
+        And seleciono a conta destino "Conta Poupança"
+        And informo o valor "1.000,00"
+        And confirmo a transferência
+        Then devo ver a mensagem "Transferência concluída – Ref: 123456"
+        And meu saldo atual deve ser R$ 4.000,00
+        And a conta de destino deve ter saldo atualizado
 
----
-
-titulo: Transferência bloqueada por saldo insuficiente  
-cenario_bdd:
-    nome: Usuário tenta transferir mais que o saldo disponível  
-    tipo: negativo  
+  - nome: Transferência com valor superior ao saldo
+    tipo: negativo
     gherkin: |
       Feature: Transferência de Fundos
-      Scenario: Transferência excede saldo
-          Given o usuário está autenticado na página “Transferências”
-          And o saldo disponível é R$ 150,00
-          When insere conta de destino "12345-6"
-          And preenche "Valor" com "200,00"
-          Then exibe mensagem de erro "Valor excede saldo disponível"
+      Scenario: Saldo insuficiente
+        Given eu estou autenticado na minha conta
+        And meu saldo atual é R$ 500,00
+        When informo o valor "1.000,00"
+        And confirmo a transferência
+        Then devo ver a mensagem "Saldo insuficiente"
 
----
-
-titulo: Transferência bloqueada por valor inválido  
-cenario_bdd:
-    nome: Usuário entra valor negativo  
-    tipo: negativo  
+  - nome: Transferência com valor inválido (nulo ou negativo)
+    tipo: negativo
     gherkin: |
       Feature: Transferência de Fundos
-      Scenario: Valor da transferência é negativo
-          Given o usuário está na página “Transferências”
-          When preenche "Valor" com "-100,00"
-          Then exibe mensagem de erro "Valor inválido – apenas números positivos"
+      Scenario: Valor de transferência inválido
+        Given eu estou na página de transferência
+        When informo o valor "-100,00"
+        And confirmo a transferência
+        Then devo ver a mensagem "Valor de transferência inválido"
 
----
-
-**User Story: US05 – Solicitação de Empréstimo**  
-titulo: Empréstimo aprovado com renda suficiente  
+titulo: US05 – Solicitação de Empréstimo
 cenario_bdd:
-    nome: Solicitação de empréstimo que é aprovada  
-    tipo: positivo  
+  - nome: Empréstimo aprovado
+    tipo: positivo
     gherkin: |
       Feature: Solicitação de Empréstimo
-      Scenario: Usuário solicita R$ 5.000,00 com renda anual de R$ 80.000,00
-          Given o usuário está autenticado na página “Empréstimos”
-          When preenche "Valor do empréstimo" com "5.000,00"
-          And preenche "Renda anual" com "80.000,00"
-          And confirma a solicitação
-          Then espera 2 segundos
-          And exibe status "Aprovado"
-          And o valor de R$ 5.000,00 é creditado imediatamente na conta
-          And aparece no extrato com descrição "Empréstimo aprovado"
+      Scenario: Aprovação de empréstimo dentro dos limites
+        Given eu estou autenticado na minha conta
+        When preencho o valor do empréstimo "200.000"
+        And preencho a renda anual "300.000"
+        And confirmo a solicitação
+        Then devo ver a mensagem "Empréstimo Aprovado – 12% ao ano"
 
----
-
-titulo: Empréstimo negado por renda insuficiente  
-cenario_bdd:
-    nome: Solicitação de empréstimo que é negada  
-    tipo: negativo  
+  - nome: Empréstimo negado por renda insuficiente
+    tipo: negativo
     gherkin: |
       Feature: Solicitação de Empréstimo
-      Scenario: Usuário solicita R$ 10.000,00 com renda anual de R$ 30.000,00
-          Given o usuário está autenticado na página “Empréstimos”
-          When preenche "Valor do empréstimo" com "10.000,00"
-          And preenche "Renda anual" com "30.000,00"
-          And confirma a solicitação
-          Then espera 2 segundos
-          And exibe status "Empréstimo negado – renda insuficiente"
+      Scenario: Negação por renda insuficiente
+        Given eu estou autenticado na minha conta
+        When preencho o valor do empréstimo "100.000"
+        And preencho a renda anual "20.000"
+        And confirmo a solicitação
+        Then devo ver a mensagem "Empréstimo Negado – Renda insuficiente"
 
----
-
-titulo: Empréstimo falha com valor negativo  
-cenario_bdd:
-    nome: Usuário entra valor do empréstimo negativo  
-    tipo: negativo  
+  - nome: Empréstimo negado por valor acima do limite
+    tipo: negativo
     gherkin: |
       Feature: Solicitação de Empréstimo
-      Scenario: Valor do empréstimo é negativo
-          Given o usuário está na página “Empréstimos”
-          When preenche "Valor do empréstimo" com "-1.000,00"
-          Then exibe mensagem de erro "Valor do empréstimo inválido – apenas números positivos"
+      Scenario: Negação por valor acima do limite permitido
+        Given eu estou autenticado na minha conta
+        When preencho o valor do empréstimo "600.000"
+        And preencho a renda anual "500.000"
+        And confirmo a solicitação
+        Then devo ver a mensagem "Dados fora do limite permitido"
 
----
-
-**User Story: US06 – Pagamento de Contas**  
-titulo: Pagamento imediato para beneficiário  
+titulo: US06 – Pagamento de Contas
 cenario_bdd:
-    nome: Usuário registra pagamento para hoje  
-    tipo: positivo  
+  - nome: Pagamento agendado para data futura
+    tipo: positivo
     gherkin: |
       Feature: Pagamento de Contas
-      Scenario: Pagamento imediato
-          Given o usuário está autenticado na página “Pagamentos”
-          And o saldo disponível é R$ 1.000,00
-          When preenche "Beneficiário" com "João Pereira"
-          And preenche "Endereço" com "Av. Brasil, 456"
-          And preenche "Cidade" com "São Paulo"
-          And preenche "Estado" com "SP"
-          And preenche "CEP" com "01000-000"
-          And preenche "Telefone" com "(11) 98765-4321"
-          And preenche "Conta de destino" com "12345-6"
-          And preenche "Valor" com "300,00"
-          And escolhe data de pagamento "Hoje"
-          And confirma o pagamento
-          Then exibe mensagem "Pagamento registrado"
-          And a transação aparece no extrato como "Pagamento para João Pereira – 300,00"
+      Scenario: Agendamento de pagamento futuro
+        Given eu estou na página de pagamento de contas
+        When preencho o beneficiário "Pedro"
+        And preencho o endereço "Rua A, 123"
+        And preencho a cidade "São Paulo"
+        And preencho o estado "SP"
+        And preencho o CEP "12345678"
+        And preencho o telefone "11987654321"
+        And preencho a conta de destino "123456789"
+        And preencho o valor "200,00"
+        And seleciono a data de pagamento "25/12/2025"
+        And confirmo o pagamento
+        Then devo ver a mensagem "Pagamento agendado para 25/12/2025"
+        And o pagamento aparece no histórico com status "Agendado"
 
----
-
-titulo: Pagamento agendado para data futura  
-cenario_bdd:
-    nome: Usuário agenda pagamento para 10 dias depois  
-    tipo: positivo  
+  - nome: Pagamento com data no passado
+    tipo: negativo
     gherkin: |
       Feature: Pagamento de Contas
-      Scenario: Pagamento agendado
-          Given o usuário está autenticado na página “Pagamentos”
-          When preenche "Beneficiário" com "Maria Souza"
-          And preenche "Conta de destino" com "98765-4"
-          And preenche "Valor" com "150,00"
-          And escolhe data de pagamento "10 dias depois"
-          And confirma o pagamento
-          Then exibe mensagem "Pagamento registrado"
-          And o extrato mostra data marcada "10 dias depois" com valor "150,00"
+      Scenario: Data de pagamento inválida
+        Given eu estou na página de pagamento de contas
+        When preencho todos os campos corretamente
+        And seleciono a data de pagamento "01/01/2020"
+        And confirmo o pagamento
+        Then devo ver a mensagem "Data inválida – escolha uma data futura" abaixo do campo de data
 
----
-
-titulo: Pagamento bloqueado por saldo insuficiente na data programada  
-cenario_bdd:
-    nome: Usuário agenda pagamento que ultrapassa saldo no dia agendado  
-    tipo: negativo  
+  - nome: Pagamento com campo obrigatório em branco
+    tipo: negativo
     gherkin: |
       Feature: Pagamento de Contas
-      Scenario: Saldo insuficiente no dia do pagamento
-          Given o usuário tem saldo de R$ 200,00
-          And agenda pagamento de R$ 300,00 para "12 dias depois"
-          Then exibe mensagem de erro "Saldo insuficiente no dia do pagamento"
+      Scenario: Campo obrigatório vazio
+        Given eu estou na página de pagamento de contas
+        When deixo o campo "Beneficiário" em branco
+        And preencho os demais campos corretamente
+        And confirmo o pagamento
+        Then devo ver a mensagem "Campo obrigatório" abaixo do campo Beneficiário
 
----
-
-titulo: Pagamento bloqueado por CEP inválido  
+titulo: US07 – Navegação e Usabilidade
 cenario_bdd:
-    nome: Usuário entra CEP com menos dígitos  
-    tipo: negativo  
+  - nome: Menu principal presente em todas as páginas
+    tipo: positivo
     gherkin: |
-      Feature: Pagamento de Contas
-      Scenario: CEP inválido
-          Given o usuário está na página “Pagamentos”
-          When preenche "CEP" com "1234"
-          And tenta enviar o pagamento
-          Then exibe mensagem de erro "CEP inválido – use 8 dígitos"
+      Feature: Navegação Consistente
+      Scenario: Verificar links do menu principal
+        Given eu navego para a página de Dashboard
+        Then devo ver o menu com os links "Dashboard", "Transferir", "Empréstimos", "Pagamentos", "Extrato" e "Sair"
 
----
-
-**User Story: US07 – Navegação e Usabilidade**  
-titulo: Navegação entre todas as páginas sem erro  
-cenario_bdd:
-    nome: Usuário navega por todas as rotas sem receber erro 404/500  
-    tipo: positivo  
+  - nome: Navegação sem erros 404
+    tipo: positivo
     gherkin: |
-      Feature: Navegação e Usabilidade
-      Scenario: Navegação completa
-          Given o usuário está no login
-          When clica em "Cadastrar"
-          Then a página de cadastro carrega com status 200
-          When clica em "Entrar" (login)
-          Then a página “Minha Conta” carrega com status 200
-          When clica no menu "Transferências"
-          Then a página de transferências carrega com status 200
-          When clica no menu "Empréstimos"
-          Then a página de empréstimos carrega com status 200
-          When clica no menu "Pagamentos"
-          Then a página de pagamentos carrega com status 200
+      Feature: Navegação Consistente
+      Scenario: Todos os links direcionam corretamente
+        Given eu estou no Dashboard
+        When clico em "Transferir"
+        Then devo ser redirecionado para a página de Transferência
+        And não deve aparecer erro 404
 
----
-
-titulo: Tela 404 mostra link de retorno ao dashboard ou login  
-cenario_bdd:
-    nome: Usuário acessa rota inexistente  
-    tipo: negativo  
+  - nome: Mensagens de erro em vermelho alinhadas ao campo
+    tipo: positivo
     gherkin: |
-      Feature: Navegação e Usabilidade
-      Scenario: Página 404
-          When o usuário digita na barra de endereço "/rota-inexistente"
-          Then o servidor responde com status 404
-          And exibe mensagem "Página não encontrada"
-          And mostra link "Voltar ao dashboard" se autenticado ou "Voltar ao login" se não autenticado
+      Feature: Mensagens de Erro
+      Scenario: Exibição correta de mensagens de erro
+        Given eu estou na página de cadastro
+        When deixo o campo de e‑mail vazio
+        And clico em "Criar Conta"
+        Then a mensagem "Campo obrigatório" deve aparecer em vermelho abaixo do campo e‑mail
 
----
-
-titulo: Mensagens de erro de validação aparecem corretamente  
-cenario_bdd:
-    nome: Erro de validação aparece abaixo do campo e em vermelho  
-    tipo: positivo  
+  - nome: Tempo de carregamento do Dashboard menor que 2 segundos
+    tipo: positivo
     gherkin: |
-      Feature: Navegação e Usabilidade
-      Scenario: Erro de validação
-          Given o usuário está na página de cadastro
-          When deixa "Telefone" em branco
-          And tenta cadastrar
-          Then a mensagem "Telefone é obrigatório" aparece abaixo do campo "Telefone" em texto vermelho
-          And o botão "Cadastrar" permanece inativo
+      Feature: Performance
+      Scenario: Tempo de resposta do Dashboard
+        Given eu estou autenticado
+        When acesso a página de Dashboard
+        Then o tempo de carregamento deve ser inferior a 2 segundos
 
----
-
-titulo: Menus responsivos em telas pequenas  
-cenario_bdd:
-    nome: Menu se adapta em tela de 320px  
-    tipo: positivo  
+  - nome: Menu colapsa em dispositivos móveis
+    tipo: positivo
     gherkin: |
-      Feature: Navegação e Usabilidade
-      Scenario: Responsividade do menu
-          Given a aplicação está aberta em um dispositivo com largura 320px
-          When o usuário abre o menu principal
-          Then todos os links do menu são exibidos em vertical
-          And cada link tem ícone e texto legível
-          And o menu fecha ao clicar fora ou no ícone de fechar
+      Feature: Responsividade
+      Scenario: Menu responsivo em mobile
+        Given eu acesso o site em um dispositivo com largura 320px
+        Then o menu deve colapsar em um ícone “hamburger”
+        And ao clicar no ícone, todas as opções devem aparecer
 
----
+  - nome: Página retorna 404 ao acessar link inexistente
+    tipo: negativo
+    gherkin: |
+      Feature: Navegação Consistente
+      Scenario: Acesso a URL inválida
+        Given eu clico em um link que leva a "/pagina-inexistente"
+        Then devo ver uma página de erro 404
+```
+
