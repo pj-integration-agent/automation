@@ -1,96 +1,72 @@
-## User‑Story Backlog – ParaBank  
-*(Siga a estrutura INVEST – Independente, Negotiable, Valuable, Estimável, Small, Testável)*  
+## User Stories – Sistema ParaBank  
+*(Todas as histórias estão escritas em português, seguindo o padrão INVEST – Independente, Negociável, Valorizável, Estimável, Pequeno, Testável.)*
 
-| ID | Epic | User Story | Critérios de Aceitação (adaptados do documento) | Estimativa (Pontos) | Dependências |
-|----|------|------------|----------------------------------------------|----------------------|--------------|
-| **US‑01** | Cadastro de Usuário | **Como** novo cliente do ParaBank **quero** cadastrar minha conta no sistema **para que** eu possa usar os serviços bancários. | 1. Todos os campos obrigatórios (nome, e‑mail, senha, telefone, CEP, endereço, cidade, estado, CPF) devem estar preenchidos para concluir o cadastro. <br> 2. Validações de campo (formato de e‑mail, telefone, CEP, CPF) devem gerar mensagens de erro claras e específicas. <br> 3. Após cadastro bem‑sucedido, a tela exibe confirmação e habilita o usuário a fazer login. | 5 | |
-| **US‑02** | Login | **Como** cliente já cadastrado **quero** fazer login no ParaBank **para que** eu acesse minha conta. | 1. A tela de login aceita e valida credenciais (e‑mail e senha) válidas. <br> 2. Se as credenciais forem inválidas, o sistema exibe mensagem de erro (ex.: “Usuário ou senha incorretos”). <br> 3. Após login bem‑sucedido, o usuário é redirecionado automaticamente para a página inicial da conta (dashboard). | 3 | US‑01 (pessoas já cadastradas) |
-| **US‑03** | Dashboard – Saldo e Extrato | **Como** cliente autenticado **quero** ver meu saldo e extrato atualizados **para que** eu tenha controle sobre minhas finanças. | 1. A página de dashboard exibe o saldo atual da conta, refletindo todas as operações recentes. <br> 2. O extrato lista as transações mais recentes em ordem cronológica (data/hora, tipo, valor, saldo pós‑transação). <br> 3. Saldo e extrato são atualizados em tempo real ou via refresh automático. | 4 | US‑02 |
-| **US‑04** | Transferência de Fundos | **Como** cliente autenticado **quero** transferir fundos entre minhas contas **para que** eu possa mover dinheiro de forma segura. | 1. A tela de transferência permite selecionar conta de origem, conta de destino e digitar valor. <br> 2. O sistema bloqueia transferências cujo valor excede o saldo disponível na conta de origem. <br> 3. Ao confirmar, o valor é debitado na origem e creditado na destino, e ambas as contas registram a transação no histórico. <br> 4. Mensagens de confirmação ou erro (ex.: “Transferência concluída com sucesso”) são exibidas. | 5 | US‑03 |
-| **US‑05** | Solicitação de Empréstimo | **Como** cliente autenticado **quero** solicitar um empréstimo **para que** eu possa obter crédito quando necessário. | 1. A tela de solicitação pede valor do empréstimo e renda anual. <br> 2. O sistema processa a solicitação e retorna status “Aprovado” ou “Negado”, com justificativa (ex.: “Renda insuficiente”). <br> 3. O resultado é exibido em destaque na tela de solicitação. | 3 | US‑03 |
-| **US‑06** | Pagamento de Contas | **Como** cliente autenticado **quero** registrar pagamentos de contas (eletrônicos ou agendados) **para que** eu mantenha meus débitos em dia. | 1. O formulário exige beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento. <br> 2. Após confirmação, o pagamento aparece no histórico de transações da conta. <br> 3. Pagamentos agendados respeitam a data programada (não são debitados antes). | 4 | US‑03 |
-| **US‑07** | Navegação e Usabilidade | **Como** usuário de qualquer página **quero** que a navegação seja consistente e livre de erros **para que** eu possa usar o sistema sem confusão. | 1. Todas as páginas carregam sem erros de navegação (links válidos, menus acessíveis). <br> 2. Mensagens de erro são claras, objetivas e exibidas perto do campo afetado. <br> 3. Links e menus (Home, Saldo, Extrato, Transferir, Empréstimo, Pagamento, Logout) são consistentes em todas as páginas. | 2 | Todas |
-| **US‑08** | Segurança e Validação | **Como** desenvolvedor QA **quero** que todas as validações sejam testáveis **para que** eu garanta qualidade. | 1. Todos os campos têm regras de validação unitárias e de integração. <br> 2. Mensagens de erro são retornadas via API com códigos HTTP adequados (400, 401, 403). <br> 3. Logs de erro não expõem dados sensíveis. | 3 | Todos |
-
----
-
-### Exemplos de Histórias detalhadas
-
-#### US‑01 – Cadastro de Usuário  
-**Como** novo cliente do ParaBank  
-**Quero** preencher um formulário de cadastro completo  
-**Para que** eu obtenha uma conta bancária válida e possa fazer login.
-
-- **Critérios**  
-  - O formulário possui campos: nome, e‑mail, senha, telefone, CEP, endereço, cidade, estado, CPF.  
-  - Se algum campo obrigatório estiver vazio, a mensagem “Campo obrigatório” aparece abaixo do campo.  
-  - Se o e‑mail não estiver no formato padrão, aparece “E‑mail inválido”.  
-  - Se o CEP não for numérico ou tiver tamanho incorreto, aparece “CEP inválido”.  
-  - Se o CPF não for válido, aparece “CPF inválido”.  
-  - Ao submeter dados válidos, a página exibe “Cadastro realizado com sucesso” e redireciona para a tela de login após 3 s.
-
-#### US‑04 – Transferência de Fundos  
-**Como** cliente autenticado  
-**Quero** transferir 100,00 R$ da minha Conta Corrente para a Conta Poupança  
-**Para que** eu possa movimentar dinheiro entre minhas contas.
-
-- **Critérios**  
-  1. O usuário abre a tela Transferir.  
-  2. Selecione “Conta Corrente” como origem e “Conta Poupança” como destino.  
-  3. Insira valor 100,00.  
-  4. Se o saldo da conta origem for < 100,00, exibe “Saldo insuficiente” e desabilita o botão “Confirmar”.  
-  5. Caso contrário, ao clicar “Confirmar”, a transação ocorre em < 5 s.  
-  6. O saldo da conta origem diminui 100,00; a conta destino aumenta 100,00.  
-  7. A transação aparece no extrato das duas contas com data/hora, tipo “Transferência”, valor e saldo pós‑transação.  
-  8. Exibe “Transferência concluída” em popup.
-
-#### US‑06 – Pagamento de Contas  
-**Como** cliente autenticado  
-**Quero** agendar um pagamento de 150,00 R$ para o beneficiário “Electric Co.” no dia 15/12/2025  
-**Para que** o pagamento seja debitado na data correta.
-
-- **Critérios**  
-  1. O usuário abre a tela “Pagamentos”.  
-  2. Preenche: Beneficiário = Electric Co., Endereço = Rua X, 123, Cidade = São Paulo, Estado = SP, CEP = 01234-567, Telefone = (11) 91234-5678, Conta de Destino = 987654321, Valor = 150,00, Data = 2025‑12‑15.  
-  3. Ao confirmar, aparece “Pagamento agendado para 15/12/2025”.  
-  4. No extrato, a transação aparece como “Pagamento” com data 15/12/2025, valor 150,00, saldo pós‑transação.  
-  5. Se a data for no passado, exibe “Data de pagamento inválida – deve ser futura”.  
+| # | Papel | Como | Quero | Para que | Critérios de Aceitação | Prioridade |
+|---|-------|------|-------|----------|------------------------|------------|
+| **1** | Usuário cadastrado | Como **usuário** que nunca usou o ParaBank, | eu quero poder criar uma conta | para acessar os serviços bancários online | • Todos os campos obrigatórios (nome, CPF, email, telefone, CEP, senha, confirm‑senha) são preenchidos.<br>• Campos inválidos (telefone com formato errado, CEP fora do padrão, email sem “@”) acionam mensagem de erro clara.<br>• Após cadastro bem‑sucedido, o sistema exibe “Cadastro concluído” e redireciona para a página de login. | Alta |
+| **2** | Usuário cadastrado | Como **usuário** já registrado, | eu quero fazer login usando email e senha | para acessar minha conta e serviços bancários | • Senha válida e email existentes permitem login.<br>• Credenciais inválidas mostram mensagem “Usuário ou senha inválidos”.<br>• Login bem‑sucedido redireciona para a **Dashboard** (página inicial da conta). | Alta |
+| **3** | Usuário logado | Como **usuário** logado, | eu quero ver meu saldo atual | para saber quanto dinheiro tenho disponível | • Saldo aparece imediatamente após login.<br>• Saldo atualiza automaticamente após qualquer operação (transferência, pagamento, empréstimo). | Alta |
+| **4** | Usuário logado | Como **usuário** logado, | eu quero visualizar o extrato de transações | para acompanhar histórico e validar movimentações | • Lista as transações recentes em ordem cronológica.<br>• Cada entrada mostra data, descrição, débito/crédito e saldo após a operação.<br>• Página carrega sem erros de navegação. | Média |
+| **5** | Usuário logado | Como **usuário** que possui várias contas, | eu quero transferir fundos entre minhas contas | para movimentar recursos conforme necessidade | • Seleção de conta origem e destino, campo de valor.<br>• Sistema bloqueia transferências cujo valor excede o saldo da conta origem.<br>• Confirmação da transferência debita origem e credita destino.<br>• Registro de transação aparece no extrato das duas contas. | Alta |
+| **6** | Usuário logado | Como **usuário** interessado em crédito, | eu quero solicitar um empréstimo | para obter recursos adicionais | • Entrada de valor do empréstimo e renda anual.<br>• Sistema processa e devolve status “Aprovado” ou “Negado”.<br>• Resultado é exibido de forma clara, sem erros de navegação. | Média |
+| **7** | Usuário logado | Como **usuário** que tem contas a pagar, | eu quero registrar pagamentos de contas | para manter histórico e agendar futuros pagamentos | • Cadastro requer beneficiário, endereço, cidade, estado, CEP, telefone, conta destino, valor e data de pagamento.<br>• Pagamento confirmado adiciona transação ao histórico.<br>• Pagamentos futuros respeitam data de agendamento e não são processados antes da data indicada.<br>• Mensagens de erro claras se campos obrigatórios não forem preenchidos. | Média |
+| **8** | Usuário | Como **qualquer usuário** (cadastrado ou não), | eu quero que todas as páginas carreguem sem erros de navegação | para garantir experiência de uso fluída | • Navegação entre menus, links e botões funciona em todas as páginas.<br>• Mensagens de erro aparecem de forma objetiva e contextual.<br>• Menus e links permanecem consistentes (ex.: “Minha Conta”, “Transferir”, “Empréstimos”, “Pagamentos”). | Alta |
+| **9** | Usuário | Como **qualquer usuário**, | eu quero que o sistema forneça feedback imediato em cada ação | para saber se a operação foi bem‑sucedida ou falhou | • Mensagens de sucesso e erro são exibidas em modais ou banners visíveis.<br>• Cada mensagem descreve claramente o problema ou a confirmação (ex.: “Transferência concluída” ou “Saldo insuficiente”). | Alta |
 
 ---
 
-### Prioridade (MVP)
+### Exemplos de Histórias Refinadas (para backlog)
 
-1. **US‑01** – Cadastro  
-2. **US‑02** – Login  
-3. **US‑03** – Dashboard (saldo & extrato)  
-4. **US‑04** – Transferência de Fundos  
-5. **US‑06** – Pagamento de Contas  
-6. **US‑05** – Solicitação de Empréstimo  
-7. **US‑07** – Navegação & Usabilidade  
-8. **US‑08** – Segurança & Validação  
+```gherkin
+Feature: Cadastro de Usuário
+  Como usuário que nunca utilizou o ParaBank
+  Quero criar uma conta
+  Para acessar os serviços bancários online
 
-> *Obs.: Os itens 6–8 são fundamentais para garantir qualidade e experiência, mas podem ser entregues em iterações posteriores.*
+  Scenario: Cadastro completo e válido
+    Given eu acesso a página de cadastro
+    When preencho todos os campos obrigatórios com dados válidos
+    And clico em "Registrar"
+    Then devo ver mensagem "Cadastro concluído"
+    And devo ser redirecionado para a página de login
+
+  Scenario: Cadastro com campo inválido
+    Given eu acesso a página de cadastro
+    When preencho o campo CEP com "ABCDE"
+    And clico em "Registrar"
+    Then devo ver mensagem de erro "CEP inválido"
+    And a página não deve submeter o cadastro
+```
+
+```gherkin
+Feature: Transferência de Fundos
+  Como usuário que possui múltiplas contas
+  Quero transferir fundos entre elas
+  Para movimentar recursos conforme minha necessidade
+
+  Scenario: Transferência válida
+    Given estou na tela de Transferência
+    When escolho conta origem "Conta A"
+    And escolho conta destino "Conta B"
+    And insiro valor "200"
+    And clico em "Confirmar"
+    Then o valor deve ser debitado de Conta A
+    And o valor deve ser creditado em Conta B
+    And a transação deve aparecer no extrato de ambas as contas
+
+  Scenario: Transferência com saldo insuficiente
+    Given estou na tela de Transferência
+    When escolho conta origem "Conta A" com saldo "100"
+    And escolho conta destino "Conta B"
+    And insiro valor "150"
+    And clico em "Confirmar"
+    Then devo ver mensagem "Saldo insuficiente"
+    And nenhuma conta deve ser alterada
+```
 
 ---
 
-## Checklist de Aceitação (para cada Epic)
-
-- **Validação de UI** – Todos os campos têm rótulos claros e placeholders (ex.: “ex.: joao@exemplo.com”).
-- **Validação de Dados** – Testes unitários (frontend) e de API (backend) cobrem casos de sucesso e falha.
-- **Teste de Navegação** – Navegações de página (Home → Transferir → Extrato → Logout) não geram erros 404.
-- **Testes de Segurança** – Senhas são criptografadas; CSRF/XSS mitigados; logs não expõem dados sensíveis.
-- **Testes de Performance** – Transferências e pagamentos respondem < 5 s em condições de carga padrão.
-- **Testes de Usabilidade** – 5 usuários de teste avaliam clareza das mensagens e fluxo de operação.
-
----
-
-### Próximos Passos
-
-1. **Backlog Refinement** – Ajustar estimativas e quebrar histórias muito grandes (ex.: “Transferência” pode ser subdividida em “Seleção de contas” e “Confirmação de valor”).  
-2. **Sprint Planning** – Definir iteração de 2 semanas para entregar o MVP (US‑01 a US‑04).  
-3. **Automated Acceptance Tests** – Implementar testes Cucumber/Gherkin alinhados aos critérios.  
-4. **UX Review** – Revisão de interface com designers para garantir consistência de menus e mensagens.  
-
---- 
-
-**Fim do backlog**
+> **Obs.:**  
+> - Todas as histórias podem ser quebradas em tarefas menores (ex.: criação da API de cadastro, UI, testes unitários, testes de aceitação) conforme necessário.  
+> - O backlog pode ser priorizado conforme as necessidades do negócio; as histórias listadas acima já trazem a prioridade sugerida.  
+> - Os critérios de aceitação são diretamente extraídos do documento fornecido e garantem cobertura completa das Features do ParaBank.
