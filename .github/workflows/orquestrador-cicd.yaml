@@ -24,12 +24,12 @@ jobs:
     if: ${{ inputs.criacao-user-stories }}
     uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-user-stories.yaml@main
 
-  bdd:
-    if: ${{ inputs.criacao-bdd }}
-    needs: user-stories
-    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-bdd.yml@main
+  # bdd:
+  #   if: ${{ inputs.criacao-bdd }}
+  #   needs: user-stories
+  #   uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-bdd.yml@main
 
-  testes:
-    if: ${{ inputs.criacao-testes }}
-    needs: bdd
-    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yml@main
+  # testes:
+  #   if: ${{ inputs.criacao-testes }}
+  #   needs: bdd
+  #   uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yml@main
