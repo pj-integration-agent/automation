@@ -40,7 +40,7 @@ Critérios fornecidos:
 
 
     response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+        model="llama3-8b-8192",
         messages=[{"role": "user", "content": prompt}]
     )
 
