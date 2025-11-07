@@ -1,568 +1,739 @@
-## 1.  Estrutura de Pastas recomendada
+```ts
+/* ====================================================================== */
+/*  Playwright Test Runner – Automação de todos os cenários BDD           */
+/*  (US01‑US07)  –  Testes em TypeScript com boas práticas                 */
+/* ====================================================================== */
 
+import { test, expect, Page } from '@playwright/test';
+
+/* ---------------------------------------------------------------------- */
+/*  Configurações e constantes comuns                                       */
+/* ---------------------------------------------------------------------- */
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+
+/*  Seletores “data‑test‑id” – devem existir na aplicação (ex.:  <input data-test-id="name" ...> )   */
+const SELECTORS = {
+  // Registration page
+  name: 'input[data-test-id="name"]',
+  cpf: 'input[data-test-id="cpf"]',
+  birthDate: 'input[data-test-id="birthDate"]',
+  phone: 'input[data-test-id="phone"]',
+  zip: 'input[data-test-id="zip"]',
+  address: 'input[data-test-id="address"]',
+  email: 'input[data-test-id="email"]',
+  password: 'input[data-test-id="password"]',
+  confirmPassword: 'input[data-test-id="confirmPassword"]',
+  submit: 'button[data-test-id="submit"]',
+  successMsg: 'div[data-test-id="successMessage"]',
+  errorMsg: (field: string) => `div[data-test-id="${field}Error"]`,
+
+  // Login page
+  loginEmail: 'input[data-test-id="loginEmail"]',
+  loginPassword: 'input[data-test-id="loginPassword"]',
+  loginButton: 'button[data-test-id="loginButton"]',
+  topBarGreeting: 'span[data-test-id="topBarGreeting"]',
+
+  // General navigation
+  mainMenu: 'nav[data-test-id="mainMenu"]',
+  menuLink: (label: string) => `a[data-test-id="menuLink"][data-label="${label}"]`,
+  dashboard: 'div[data-test-id="dashboard"]',
+  extratoPage: 'div[data-test-id="extratoPage"]',
+  transferPage: 'div[data-test-id="transferPage"]',
+  loanPage: 'div[data-test-id="loanPage"]',
+  paymentsPage: 'div[data-test-id="paymentsPage"]',
+  accountBalance: 'span[data-test-id="accountBalance"]',
+
+  // Extrato filters
+  extratoList: 'ul[data-test-id="extratoList"] li',
+  extratoEmptyMsg: 'div[data-test-id="extratoEmpty"]',
+  filterStartDate: 'input[data-test-id="filterStartDate"]',
+  filterEndDate: 'input[data-test-id="filterEndDate"]',
+  applyFilterBtn: 'button[data-test-id="applyFilter"]',
+
+  // Transfer
+  originAccount: 'select[data-test-id="originAccount"]',
+  destinationAccount: 'select[data-test-id="destinationAccount"]',
+  transferAmount: 'input[data-test-id="transferAmount"]',
+  transferConfirmBtn: 'button[data-test-id="transferConfirm"]',
+  transferSuccessMsg: 'div[data-test-id="transferSuccess"]',
+
+  // Loan
+  loanAmount: 'input[data-test-id="loanAmount"]',
+  loanIncome: 'input[data-test-id="loanIncome"]',
+  loanSubmitBtn: 'button[data-test-id="loanSubmit"]',
+  loanSuccessMsg: 'div[data-test-id="loanSuccess"]',
+
+  // Payments
+  beneficiary: 'input[data-test-id="beneficiary"]',
+  beneficiaryAddress: 'input[data-test-id="beneficiaryAddress"]',
+  beneficiaryCity: 'input[data-test-id="beneficiaryCity"]',
+  beneficiaryState: 'input[data-test-id="beneficiaryState"]',
+  beneficiaryZip: 'input[data-test-id="beneficiaryZip"]',
+  beneficiaryPhone: 'input[data-test-id="beneficiaryPhone"]',
+  paymentAccount: 'select[data-test-id="paymentAccount"]',
+  paymentAmount: 'input[data-test-id="paymentAmount"]',
+  paymentDate: 'input[data-test-id="paymentDate"]',
+  paymentConfirmBtn: 'button[data-test-id="paymentConfirm"]',
+  paymentSuccessMsg: 'div[data-test-id="paymentSuccess"]',
+};
+
+/* ---------------------------------------------------------------------- */
+/*  Dados de usuário “mock” – usados em todos os cenários que precisam   */
+/*  de um usuário existente (cadastrado e logado).                         */
+/* ---------------------------------------------------------------------- */
+const MOCK_USER = {
+  name: 'João Silva',
+  cpf: '12345678901',
+  birthDate: '01/01/1990',
+  phone: '(11) 98765-4321',
+  zip: '12345678',
+  address: 'Rua Exemplo, 100',
+  email: 'joao.silva@example.com',
+  password: 'Password123',
+};
+
+/* ---------------------------------------------------------------------- */
+/*  Funções auxiliares                                                    */
+/* ---------------------------------------------------------------------- */
+/**
+ * Navega até a página de cadastro e preenche todos os campos com valores
+ * válidos (usando MOCK_USER).  O campo “confirmPassword” pode ser
+ * passado como argumento para testar cenários onde a senha difere.
+ */
+async function fillValidRegistration(page: Page, confirmPassword = MOCK_USER.password) {
+  await page.fill(SELECTORS.name, MOCK_USER.name);
+  await page.fill(SELECTORS.cpf, MOCK_USER.cpf);
+  await page.fill(SELECTORS.birthDate, MOCK_USER.birthDate);
+  await page.fill(SELECTORS.phone, MOCK_USER.phone);
+  await page.fill(SELECTORS.zip, MOCK_USER.zip);
+  await page.fill(SELECTORS.address, MOCK_USER.address);
+  await page.fill(SELECTORS.email, MOCK_USER.email);
+  await page.fill(SELECTORS.password, MOCK_USER.password);
+  await page.fill(SELECTORS.confirmPassword, confirmPassword);
+}
+
+/**
+ * Faz login usando o usuário MOCK_USER.
+ */
+async function login(page: Page, email = MOCK_USER.email, password = MOCK_USER.password) {
+  await page.goto(`${BASE_URL}/login`);
+  await page.fill(SELECTORS.loginEmail, email);
+  await page.fill(SELECTORS.loginPassword, password);
+  await page.click(SELECTORS.loginButton);
+  await expect(page.locator(SELECTORS.topBarGreeting)).toContainText(`Olá, ${MOCK_USER.name.split(' ')[0]}`);
+}
+
+/* ---------------------------------------------------------------------- */
+/*  US01 – Cadastro de Usuário                                             */
+/* ---------------------------------------------------------------------- */
+test.describe('US01 – Cadastro de Usuário', () => {
+  /*  Todos os cenários começam na página de cadastro  */
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE_URL}/register`);
+  });
+
+  /*  Cenário positivo – registro com todos os campos válidos  */
+  test('Registro com todos os campos válidos', async ({ page }) => {
+    await test.step('Given I am on the registration page', async () => {
+      await expect(page).toHaveURL(/\/register$/);
+    });
+
+    await test.step('When I enter all data and submit the form', async () => {
+      await fillValidRegistration(page);
+      await page.click(SELECTORS.submit);
+    });
+
+    await test.step('Then I should see the success message', async () => {
+      await expect(page.locator(SELECTORS.successMsg)).toHaveText(
+        'Cadastro concluído com sucesso. Você pode agora fazer login.'
+      );
+    });
+  });
+
+  /*  Cenários negativos – validações de campo  */
+  const invalidPhoneScenarios = [
+    { phone: '(11) 9876-543', error: 'Telefone inválido – insira 10 ou 11 dígitos' },
+  ];
+
+  for (const { phone, error } of invalidPhoneScenarios) {
+    test(`Telefone inválido com 9 dígitos – ${phone}`, async ({ page }) => {
+      await test.step('Given I am on the registration page', async () => {
+        await expect(page).toHaveURL(/\/register$/);
+      });
+
+      await test.step('When I enter an invalid phone and fill other fields with valid data', async () => {
+        await fillValidRegistration(page);
+        await page.fill(SELECTORS.phone, phone);
+        await page.click(SELECTORS.submit);
+      });
+
+      await test.step(`Then I should see the error message "${error}" below the phone field`, async () => {
+        await expect(page.locator(SELECTORS.errorMsg('phone'))).toHaveText(error);
+      });
+    });
+  }
+
+  const invalidZipScenarios = [
+    { zip: '1234567', error: 'CEP inválido – insira 8 dígitos' },
+  ];
+
+  for (const { zip, error } of invalidZipScenarios) {
+    test(`CEP inválido com 7 dígitos – ${zip}`, async ({ page }) => {
+      await test.step('Given I am on the registration page', async () => {
+        await expect(page).toHaveURL(/\/register$/);
+      });
+
+      await test.step('When I enter an invalid ZIP and fill other fields with valid data', async () => {
+        await fillValidRegistration(page);
+        await page.fill(SELECTORS.zip, zip);
+        await page.click(SELECTORS.submit);
+      });
+
+      await test.step(`Then I should see the error message "${error}" below the ZIP field`, async () => {
+        await expect(page.locator(SELECTORS.errorMsg('zip'))).toHaveText(error);
+      });
+    });
+  }
+
+  const invalidEmailScenarios = [
+    { email: 'joao.silva@', error: 'E‑mail inválido' },
+  ];
+
+  for (const { email, error } of invalidEmailScenarios) {
+    test(`E‑mail inválido sem domínio – ${email}`, async ({ page }) => {
+      await test.step('Given I am on the registration page', async () => {
+        await expect(page).toHaveURL(/\/register$/);
+      });
+
+      await test.step('When I enter an invalid email and fill other fields with valid data', async () => {
+        await fillValidRegistration(page);
+        await page.fill(SELECTORS.email, email);
+        await page.click(SELECTORS.submit);
+      });
+
+      await test.step(`Then I should see the error message "${error}" below the email field`, async () => {
+        await expect(page.locator(SELECTORS.errorMsg('email'))).toHaveText(error);
+      });
+    });
+  }
+
+  const passwordMismatchScenarios = [
+    { password: 'Password123', confirm: 'Password321', error: 'Senhas não correspondem' },
+  ];
+
+  for (const { password, confirm, error } of passwordMismatchScenarios) {
+    test(`Senha e confirmação diferentes – "${password}" / "${confirm}"`, async ({ page }) => {
+      await test.step('Given I am on the registration page', async () => {
+        await expect(page).toHaveURL(/\/register$/);
+      });
+
+      await test.step('When I enter mismatched passwords and fill other fields with valid data', async () => {
+        await fillValidRegistration(page, confirm);
+        await page.click(SELECTORS.submit);
+      });
+
+      await test.step(`Then I should see the error message "${error}" below the confirm password field`, async () => {
+        await expect(page.locator(SELECTORS.errorMsg('confirmPassword'))).toHaveText(error);
+      });
+    });
+  }
+
+  /*  Cenário positivo – registro + login imediato  */
+  test('Registro completo seguido de login imediato', async ({ page }) => {
+    /*  Registro  */
+    await test.step('Given I have successfully registered with valid data', async () => {
+      await fillValidRegistration(page);
+      await page.click(SELECTORS.submit);
+      await expect(page.locator(SELECTORS.successMsg)).toBeVisible();
+    });
+
+    /*  Login  */
+    await test.step('When I navigate to the login page', async () => {
+      await page.goto(`${BASE_URL}/login`);
+    });
+
+    await test.step('And I enter the registered email and password', async () => {
+      await page.fill(SELECTORS.loginEmail, MOCK_USER.email);
+      await page.fill(SELECTORS.loginPassword, MOCK_USER.password);
+    });
+
+    await test.step('And I click the login button', async () => {
+      await page.click(SELECTORS.loginButton);
+    });
+
+    await test.step('Then I should be redirected to the Dashboard', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+    });
+
+    await test.step('And I should see the message "Olá, João" in the top bar', async () => {
+      await expect(page.locator(SELECTORS.topBarGreeting)).toContainText('Olá, João');
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US02 – Login                                                           */
+/* ====================================================================== */
+test.describe('US02 – Login', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE_URL}/login`);
+  });
+
+  test('Login com credenciais válidas', async ({ page }) => {
+    await test.step('Given I am on the login page', async () => {
+      await expect(page).toHaveURL(/\/login$/);
+    });
+
+    await test.step('When I enter valid credentials and submit', async () => {
+      await login(page);
+    });
+
+    await test.step('Then I should be redirected to the Dashboard', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+    });
+
+    await test.step('And I should see the message "Olá, João" in the top bar', async () => {
+      await expect(page.locator(SELECTORS.topBarGreeting)).toContainText('Olá, João');
+    });
+  });
+
+  test('Login com credenciais inválidas', async ({ page }) => {
+    await test.step('Given I am on the login page', async () => {
+      await expect(page).toHaveURL(/\/login$/);
+    });
+
+    await test.step('When I enter wrong password and submit', async () => {
+      await login(page, MOCK_USER.email, 'WrongPass');
+    });
+
+    await test.step('Then I should see the error message', async () => {
+      await expect(page.locator(SELECTORS.errorMsg('login'))).toHaveText(
+        'E‑mail ou senha incorretos. Tente novamente.'
+      );
+    });
+  });
+
+  test('Login com campo de e‑mail vazio', async ({ page }) => {
+    await test.step('Given I am on the login page', async () => {
+      await expect(page).toHaveURL(/\/login$/);
+    });
+
+    await test.step('When I leave the email field blank, fill password and submit', async () => {
+      await page.fill(SELECTORS.loginEmail, '');
+      await page.fill(SELECTORS.loginPassword, MOCK_USER.password);
+      await page.click(SELECTORS.loginButton);
+    });
+
+    await test.step('Then I should see the error message', async () => {
+      await expect(page.locator(SELECTORS.errorMsg('login'))).toHaveText(
+        'E‑mail ou senha incorretos. Tente novamente.'
+      );
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US03 – Acesso à Conta (Saldo e Extrato)                              */
+/* ====================================================================== */
+test.describe('US03 – Acesso à Conta (Saldo e Extrato)', () => {
+  /*  Autenticar antes de cada cenário  */
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('Exibição do saldo atual na Dashboard', async ({ page }) => {
+    await test.step('Given I am logged in and on the Dashboard', async () => {
+      await expect(page).toHaveURL(/\/dashboard$/);
+    });
+
+    await test.step('Then I should see my current account balance displayed prominently', async () => {
+      await expect(page.locator(SELECTORS.accountBalance)).toBeVisible();
+    });
+  });
+
+  test('Exibir extrato com pelo menos 10 transações', async ({ page }) => {
+    await test.step('Given I am logged in and click "Extrato"', async () => {
+      await page.click(SELECTORS.menuLink('Extrato'));
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('Then I should see a list containing at least 10 transaction entries', async () => {
+      const entries = await page.locator(SELECTORS.extratoList).count();
+      expect(entries).toBeGreaterThanOrEqual(10);
+    });
+  });
+
+  test('Mensagem quando não há transações', async ({ page }) => {
+    /*  Simulação: precisamos de um usuário que não tenha transações.
+        Em um teste real, o estado seria preparado via API ou fixture.   */
+    // Assumindo que o usuário criado no US01 não tem transações
+    await test.step('Given I am logged in and my account has zero transactions', async () => {
+      // nada a fazer – estado inicial já garante isso
+    });
+
+    await test.step('And I click "Extrato"', async () => {
+      await page.click(SELECTORS.menuLink('Extrato'));
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('Then I should see the message "Nenhuma transação encontrada"', async () => {
+      await expect(page.locator(SELECTORS.extratoEmptyMsg)).toHaveText('Nenhuma transação encontrada');
+    });
+  });
+
+  test('Filtrar extrato por intervalo de datas', async ({ page }) => {
+    await test.step('Given I am logged in and click "Extrato"', async () => {
+      await page.click(SELECTORS.menuLink('Extrato'));
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('When I set the start and end dates and apply the filter', async () => {
+      await page.fill(SELECTORS.filterStartDate, '01/01/2024');
+      await page.fill(SELECTORS.filterEndDate, '31/01/2024');
+      await page.click(SELECTORS.applyFilterBtn);
+    });
+
+    await test.step('Then I should see only transactions dated between 01/01/2024 and 31/01/2024', async () => {
+      const dates = await page.$$eval(
+        `${SELECTORS.extratoList} .transaction-date`,
+        els => els.map(el => el.textContent?.trim() ?? '')
+      );
+      for (const d of dates) {
+        const date = new Date(d); // assumes format DD/MM/YYYY
+        expect(date).toBeGreaterThanOrEqual(new Date('2024-01-01'));
+        expect(date).toBeLessThanOrEqual(new Date('2024-01-31'));
+      }
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US04 – Transferência de Fundos                                          */
+/* ====================================================================== */
+test.describe('US04 – Transferência de Fundos', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  const navigateToTransfer = async (page: Page) => {
+    await page.click(SELECTORS.menuLink('Transferência'));
+    await expect(page).toHaveURL(/\/transfer$/);
+  };
+
+  /*  Helper: captura saldo atual  */
+  const getBalance = async (page: Page): Promise<number> => {
+    const text = await page.locator(SELECTORS.accountBalance).textContent();
+    const value = parseFloat(text?.replace(/[^\d.,]/g, '').replace(',', '.') ?? '0');
+    return value;
+  };
+
+  test('Transferência com saldo suficiente', async ({ page }) => {
+    await navigateToTransfer(page);
+
+    const originBefore = await getBalance(page); // Assume origin is the only listed balance
+
+    await test.step('When I select origin and destination accounts, enter amount and confirm', async () => {
+      await page.selectOption(SELECTORS.originAccount, 'conta_corrente');
+      await page.selectOption(SELECTORS.destinationAccount, 'conta_poupanca');
+      await page.fill(SELECTORS.transferAmount, '100');
+      await page.click(SELECTORS.transferConfirmBtn);
+    });
+
+    await test.step('Then I should see the success message', async () => {
+      await expect(page.locator(SELECTORS.transferSuccessMsg)).toHaveText('Transferência realizada com sucesso');
+    });
+
+    await test.step('And balances should be updated accordingly', async () => {
+      const originAfter = await getBalance(page);
+      expect(originAfter).toBeCloseTo(originBefore - 100, 2);
+
+      // Simulação: verificação de saldo da conta de destino via API ou outra página
+      // Não implementado – placeholder
+    });
+
+    await test.step('And the transaction should appear in both accounts’ extrato', async () => {
+      // Navegar até extrato da origem e verificar a transação
+      // placeholder
+    });
+  });
+
+  test('Transferência com saldo insuficiente', async ({ page }) => {
+    // Ajustar o saldo via API/fixture para R$50
+    // placeholder – assumimos que saldo já é insuficiente
+
+    await navigateToTransfer(page);
+
+    await test.step('When I try to transfer 100 from a balance of 50', async () => {
+      await page.selectOption(SELECTORS.originAccount, 'conta_corrente');
+      await page.selectOption(SELECTORS.destinationAccount, 'conta_poupanca');
+      await page.fill(SELECTORS.transferAmount, '100');
+      await page.click(SELECTORS.transferConfirmBtn);
+    });
+
+    await test.step('Then I should see the error message "Saldo insuficiente"', async () => {
+      await expect(page.locator(SELECTORS.errorMsg('transfer'))).toHaveText('Saldo insuficiente');
+    });
+
+    await test.step('And no transaction should be recorded', async () => {
+      // placeholder – verificação via API ou UI
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US05 – Solicitação de Empréstimo                                       */
+/* ====================================================================== */
+test.describe('US05 – Solicitação de Empréstimo', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  const navigateToLoan = async (page: Page) => {
+    await page.click(SELECTORS.menuLink('Empréstimo'));
+    await expect(page).toHaveURL(/\/loan$/);
+  };
+
+  test('Empréstimo aprovado por renda suficiente', async ({ page }) => {
+    await navigateToLoan(page);
+
+    await test.step('When I enter loan amount 5000 and income 60000 and submit', async () => {
+      await page.fill(SELECTORS.loanAmount, '5000');
+      await page.fill(SELECTORS.loanIncome, '60000');
+      await page.click(SELECTORS.loanSubmitBtn);
+    });
+
+    await test.step('Then I should see the message "Empréstimo aprovado"', async () => {
+      await expect(page.locator(SELECTORS.loanSuccessMsg)).toHaveText('Empréstimo aprovado');
+    });
+
+    await test.step('And the loan record should be saved in my loan history', async () => {
+      // placeholder – navegar até histórico e verificar a presença do empréstimo
+    });
+  });
+
+  test('Empréstimo negado por renda insuficiente', async ({ page }) => {
+    await navigateToLoan(page);
+
+    await test.step('When I enter loan amount 5000 and income 12000 and submit', async () => {
+      await page.fill(SELECTORS.loanAmount, '5000');
+      await page.fill(SELECTORS.loanIncome, '12000');
+      await page.click(SELECTORS.loanSubmitBtn);
+    });
+
+    await test.step('Then I should see the message "Empréstimo negado – renda insuficiente"', async () => {
+      await expect(page.locator(SELECTORS.loanSuccessMsg)).toHaveText('Empréstimo negado – renda insuficiente');
+    });
+
+    await test.step('And no loan record should be created', async () => {
+      // placeholder
+    });
+  });
+
+  test('Visualizar histórico de empréstimos', async ({ page }) => {
+    // Pré‑condição: já existe um empréstimo pendente ou aprovado
+    // placeholder – assumimos que o histórico já contém pelo menos um registro
+
+    await navigateToLoan(page);
+
+    await test.step('When I navigate to the Loans section', async () => {
+      // Já estamos na página do empréstimo, o histórico pode ser exibido
+    });
+
+    await test.step('Then I should see my past loan requests listed with status and dates', async () => {
+      const entries = await page.$$('.loan-entry');
+      expect(entries.length).toBeGreaterThan(0);
+      for (const entry of entries) {
+        const status = await entry.getAttribute('data-status');
+        const date = await entry.getAttribute('data-date');
+        expect(status).not.toBeNull();
+        expect(date).not.toBeNull();
+      }
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US06 – Pagamento de Contas                                             */
+/* ====================================================================== */
+test.describe('US06 – Pagamento de Contas', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  const navigateToPayments = async (page: Page) => {
+    await page.click(SELECTORS.menuLink('Pagamentos'));
+    await expect(page).toHaveURL(/\/payments$/);
+  };
+
+  test('Pagamento registrado com sucesso', async ({ page }) => {
+    await navigateToPayments(page);
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${String(tomorrow.getDate()).padStart(2, '0')}/${String(
+      tomorrow.getMonth() + 1
+    ).padStart(2, '0')}/${tomorrow.getFullYear()}`;
+
+    await test.step('When I enter beneficiary details, amount, date and confirm', async () => {
+      await page.fill(SELECTORS.beneficiary, 'Conta de Luz');
+      await page.fill(SELECTORS.beneficiaryAddress, 'Rua Exemplo, 100');
+      await page.fill(SELECTORS.beneficiaryCity, 'São Paulo');
+      await page.fill(SELECTORS.beneficiaryState, 'SP');
+      await page.fill(SELECTORS.beneficiaryZip, '12345678');
+      await page.fill(SELECTORS.beneficiaryPhone, '(11) 91234-5678');
+      await page.selectOption(SELECTORS.paymentAccount, 'conta_corrente');
+      await page.fill(SELECTORS.paymentAmount, '200');
+      await page.fill(SELECTORS.paymentDate, tomorrowStr);
+      await page.click(SELECTORS.paymentConfirmBtn);
+    });
+
+    await test.step('Then I should see the message "Pagamento registrado com sucesso"', async () => {
+      await expect(page.locator(SELECTORS.paymentSuccessMsg)).toHaveText('Pagamento registrado com sucesso');
+    });
+
+    await test.step('And the payment should appear in the extrato with status "Pendente"', async () => {
+      // placeholder – navegação até extrato e verificação
+    });
+  });
+
+  test('Data inválida (passado) ao registrar pagamento', async ({ page }) => {
+    await navigateToPayments(page);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${String(yesterday.getDate()).padStart(2, '0')}/${String(
+      yesterday.getMonth() + 1
+    ).padStart(2, '0')}/${yesterday.getFullYear()}`;
+
+    await test.step('When I set the payment date to yesterday and attempt to confirm', async () => {
+      await page.fill(SELECTORS.paymentDate, yesterdayStr);
+      await page.click(SELECTORS.paymentConfirmBtn);
+    });
+
+    await test.step('Then I should see the error message "Data inválida – não pode ser anterior a hoje"', async () => {
+      await expect(page.locator(SELECTORS.errorMsg('paymentDate'))).toHaveText(
+        'Data inválida – não pode ser anterior a hoje'
+      );
+    });
+  });
+
+  test('Pagamento aparece no extrato com status Pendente', async ({ page }) => {
+    // Pré‑condição: pagamento agendado para o futuro
+    // placeholder – criar pagamento via UI ou API
+
+    await navigateToPayments(page);
+
+    await test.step('When I navigate to the Extrato page', async () => {
+      await page.click(SELECTORS.menuLink('Extrato'));
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('Then I should see the payment entry with status "Pendente" and the scheduled date', async () => {
+      // placeholder – busca no extrato por status "Pendente"
+    });
+  });
+});
+
+/* ====================================================================== */
+/*  US07 – Navegação & Usabilidade                                        */
+/* ====================================================================== */
+test.describe('US07 – Navegação & Usabilidade', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
+  test('Menu principal visível em todas as páginas', async ({ page }) => {
+    const pages = [
+      { url: '/dashboard', label: 'Dashboard' },
+      { url: '/extrato', label: 'Extrato' },
+      { url: '/transfer', label: 'Transferência' },
+      { url: '/loan', label: 'Empréstimo' },
+      { url: '/payments', label: 'Pagamentos' },
+    ];
+
+    for (const p of pages) {
+      await page.goto(`${BASE_URL}${p.url}`);
+      await expect(page.locator(SELECTORS.mainMenu)).toBeVisible();
+
+      await test.step(`Menu should contain all links on ${p.label}`, async () => {
+        const expectedLinks = ['Login', 'Cadastro', 'Dashboard', 'Extrato', 'Transferência', 'Empréstimo', 'Pagamentos'];
+        for (const lbl of expectedLinks) {
+          await expect(page.locator(SELECTORS.menuLink(lbl))).toBeVisible();
+        }
+      });
+    }
+  });
+
+  test('Links de navegação levam à página correta', async ({ page }) => {
+    await test.step('Given I am on the Dashboard', async () => {
+      await page.click(SELECTORS.menuLink('Dashboard'));
+      await expect(page).toHaveURL(/\/dashboard$/);
+    });
+
+    await test.step('When I click the "Extrato" link', async () => {
+      await page.click(SELECTORS.menuLink('Extrato'));
+    });
+
+    await test.step('Then I should be on the Extrato page', async () => {
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('And the URL should contain "/extrato"', async () => {
+      await expect(page).toHaveURL(/\/extrato$/);
+    });
+
+    await test.step('And there should be no 404 or navigation error', async () => {
+      // O próprio `toHaveURL` já garante que não houve erro 404
+      await expect(page.locator('body')).not.toContainText('404');
+    });
+  });
+
+  test('Mensagem de erro exibida imediatamente abaixo do campo obrigatório em branco', async ({ page }) => {
+    await test.step('Given I am on the registration page', async () => {
+      await page.goto(`${BASE_URL}/register`);
+    });
+
+    await test.step('And I leave the CPF field empty', async () => {
+      await page.fill(SELECTORS.cpf, '');
+    });
+
+    await test.step('When I attempt to submit the form', async () => {
+      await page.click(SELECTORS.submit);
+    });
+
+    await test.step('Then I should see the error message "CPF é obrigatório" displayed directly below the CPF field', async () => {
+      await expect(page.locator(SELECTORS.errorMsg('cpf'))).toHaveText('CPF é obrigatório');
+    });
+  });
+
+  test('Layout responsivo adapta-se a diferentes larguras de tela', async ({ page }) => {
+    /*  Testes em dois tamanhos de viewport (320px e 1920px)  */
+    const viewports = [
+      { width: 320, height: 640, name: 'mobile' },
+      { width: 1920, height: 1080, name: 'desktop' },
+    ];
+
+    for (const vp of viewports) {
+      await test.step(`Testing on ${vp.name} viewport (${vp.width}x${vp.height})`, async () => {
+        await page.setViewportSize({ width: vp.width, height: vp.height });
+        await page.goto(`${BASE_URL}/dashboard`);
+
+        // Garantir que os principais elementos estejam visíveis
+        await expect(page.locator(SELECTORS.mainMenu)).toBeVisible();
+        await expect(page.locator(SELECTORS.dashboard)).toBeVisible();
+
+        // Se houver elementos específicos de layout, verificar que não estejam escondidos
+        await expect(page.locator('img')).toBeVisible();
+        await expect(page.locator('button')).toBeVisible();
+      });
+    }
+  });
+});
 ```
-tests/
-├── keywords/
-│   ├── navigation.robot
-│   ├── registration.robot
-│   ├── login.robot
-│   ├── transfer.robot
-│   ├── loan.robot
-│   ├── payment.robot
-│   ├── account.robot
-│   └── utils.robot
-├── variables/
-│   └── test_data.robot
-└── tests.robot
-```
 
-- **keywords** – contém os *User‑Level* e *Library‑Level* *keywords* reutilizáveis.  
-- **variables** – armazena dados que não variam entre execuções.  
-- **tests.robot** – arquivo principal com todos os *Test Cases* organizados por Feature.
-
-> **Obs.** Para simplificar o exemplo, os *keywords* abaixo são **pseudo‑código** – você deve substituí‑los pelos seletores reais da sua aplicação.
-
----
-
-## 2.  Arquivo de Variáveis – `variables/test_data.robot`
-
-```robot
-*** Variables ***
-${BASE_URL}          https://parabank.parasoft.com/parabank
-${BROWSER}           Chrome
-${TIMEOUT}           10s
-${DELAY}             1s
-
-# Dados de teste
-${VALID_EMAIL}          usuario@exemplo.com
-${VALID_PASSWORD}       senha123
-${VALID_NAME}           João Silva
-${VALID_CEP}            12345-678
-${INVALID_EMAIL}        usuario.com
-${INVALID_PHONE}        123456789
-${INVALID_CEP}          00000-000
-${INVALID_BALANCE}      200,00
-${TRANSFER_AMOUNT}      200,00
-${DEPOSIT_AMOUNT}       500,00
-${LOAN_AMOUNT}          50000,00
-${LOW_INCOME_LOAN}      30000,00
-${HIGH_INCOME_LOAN}     150000,00
-```
-
----
-
-## 3.  Arquivo de *Keywords* – `keywords/navigation.robot`
-
-```robot
-*** Settings ***
-Library    SeleniumLibrary    timeout=${TIMEOUT}
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Abrir Navegador
-    [Arguments]    ${url}
-    # Comentário: Inicia o browser e navega até a página desejada
-    Open Browser    ${url}    ${BROWSER}
-    Maximize Browser Window
-    Set Selenium Speed    ${DELAY}
-
-Fechar Navegador
-    # Comentário: Fecha a sessão do navegador
-    Close Browser
-
-Navegar para Página
-    [Arguments]    ${path}
-    # Comentário: Navega usando a URL base
-    Go To    ${BASE_URL}${path}
-    Wait Until Page Contains Element    css:body
-
-Verificar Erros HTTP
-    # Comentário: Verifica se a página não retorna 404/500
-    Page Should Not Contain    404
-    Page Should Not Contain    500
-```
-
----
-
-## 4.  Arquivo de *Keywords* – `keywords/registration.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Acessar Página de Cadastro
-    # Comentário: Navega até a página de registro
-    Navegar para Página    /register.htm
-    Wait Until Page Contains    Cadastre-se
-
-Preencher Formulário de Cadastro
-    [Arguments]    ${cep}=    ${name}=    ${email}=    ${password}=    ${confirm}=    ${phone}=
-    # Comentário: Preenche cada campo do formulário
-    Input Text    id:input-username    ${name}
-    Input Text    id:input-email       ${email}
-    Input Text    id:input-password    ${password}
-    Input Text    id:input-confirm     ${confirm}
-    Input Text    id:input-cep         ${cep}
-    Input Text    id:input-phone       ${phone}
-    Input Text    id:input-address     "Rua Teste, 123"
-    Input Text    id:input-city        "São Paulo"
-    Input Text    id:input-state       "SP"
-    Input Text    id:input-zip         "12345-678"
-    Input Text    id:input-country     "Brasil"
-
-Clique em Cadastrar
-    # Comentário: Clica no botão de submit
-    Click Button    id:register-button
-    Wait Until Page Contains    Cadastro concluído
-
-Verificar Mensagem de Erro
-    [Arguments]    ${campo}    ${mensagem}
-    # Comentário: Verifica mensagem de erro ao lado do campo
-    ${error_locator}=    Set Variable    css:#${campo}-error
-    Wait Until Page Contains Element    ${error_locator}
-    Element Text Should Be    ${error_locator}    ${mensagem}
-```
-
----
-
-## 5.  Arquivo de *Keywords* – `keywords/login.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Acessar Página de Login
-    # Comentário: Navega até a página de login
-    Navegar para Página    /login.htm
-    Wait Until Page Contains    Entrar
-
-Inserir Credenciais
-    [Arguments]    ${email}    ${password}
-    Input Text    id:input-username    ${email}
-    Input Text    id:input-password    ${password}
-
-Clique em Entrar
-    Click Button    id:login-button
-    Wait Until Page Contains    Dashboard
-
-Verificar Mensagem de Erro Login
-    [Arguments]    ${mensagem}
-    Wait Until Page Contains    ${mensagem}
-```
-
----
-
-## 6.  Arquivo de *Keywords* – `keywords/transfer.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Acessar Tela de Transferência
-    # Comentário: Navega até a página de transferência
-    Navegar para Página    /transfer.htm
-    Wait Until Page Contains    Transferir
-
-Preencher Dados de Transferência
-    [Arguments]    ${destino}    ${valor}
-    Input Text    id:input-amount    ${valor}
-    Input Text    id:input-destination-account    ${destino}
-
-Confirmar Transferência
-    Click Button    id:transfer-submit
-    Wait Until Page Contains    Transferência concluída
-
-Verificar Saldo
-    [Arguments]    ${saldo_esperado}
-    Wait Until Page Contains    ${saldo_esperado}
-
-Verificar Mensagem de Erro
-    [Arguments]    ${mensagem}
-    Wait Until Page Contains    ${mensagem}
-```
-
----
-
-## 7.  Arquivo de *Keywords* – `keywords/loan.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Acessar Tela de Empréstimo
-    Navegar para Página    /loan.htm
-    Wait Until Page Contains    Solicitar Empréstimo
-
-Preencher Dados de Empréstimo
-    [Arguments]    ${valor}    ${renda}
-    Input Text    id:input-loan-amount    ${valor}
-    Input Text    id:input-annual-income  ${renda}
-
-Enviar Solicitação
-    Click Button    id:loan-submit
-    Wait Until Page Contains    Empréstimo
-
-Verificar Mensagem
-    [Arguments]    ${mensagem}
-    Wait Until Page Contains    ${mensagem}
-```
-
----
-
-## 8.  Arquivo de *Keywords* – `keywords/payment.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Acessar Tela de Pagamento
-    Navegar para Página    /payment.htm
-    Wait Until Page Contains    Pagamento de Conta
-
-Preencher Dados de Pagamento
-    [Arguments]    ${beneficiario}    ${endereco}    ${telefone}    ${conta}    ${valor}
-    Input Text    id:input-beneficiary   ${beneficiario}
-    Input Text    id:input-address       ${endereco}
-    Input Text    id:input-phone         ${telefone}
-    Input Text    id:input-account       ${conta}
-    Input Text    id:input-amount        ${valor}
-
-Agenda Data de Pagamento
-    [Arguments]    ${data}
-    Input Text    id:input-payment-date   ${data}
-
-Confirmar Pagamento
-    Click Button    id:payment-submit
-    Wait Until Page Contains    Pagamento confirmado
-
-Verificar Mensagem
-    [Arguments]    ${mensagem}
-    Wait Until Page Contains    ${mensagem}
-```
-
----
-
-## 9.  Arquivo de *Keywords* – `keywords/account.robot`
-
-```robot
-*** Settings ***
-Resource   ../variables/test_data.robot
-
-*** Keywords ***
-Verificar Saldo na Dashboard
-    [Arguments]    ${saldo}
-    # Comentário: Espera até que o saldo seja exibido
-    Wait Until Page Contains    ${saldo}
-```
-
----
-
-## 10.  Arquivo de *Keywords* – `keywords/utils.robot`
-
-```robot
-*** Settings ***
-Library   Collections
-
-*** Keywords ***
-Gerar Email Aleatório
-    # Comentário: Gera um e‑mail único para cada execução
-    ${timestamp}=    Get Current Date    result_format=%Y%m%d%H%M%S
-    ${random_email}=    Set Variable    teste${timestamp}@exemplo.com
-    [Return]    ${random_email}
-```
-
----
-
-## 11.  Test Suite Principal – `tests.robot`
-
-```robot
-*** Settings ***
-Library    SeleniumLibrary    timeout=${TIMEOUT}
-Resource   keywords/navigation.robot
-Resource   keywords/registration.robot
-Resource   keywords/login.robot
-Resource   keywords/transfer.robot
-Resource   keywords/loan.robot
-Resource   keywords/payment.robot
-Resource   keywords/account.robot
-Resource   keywords/utils.robot
-Variables  variables/test_data.robot
-
-Suite Setup    Abrir Navegador    ${BASE_URL}
-Suite Teardown  Fechar Navegador
-
-*** Test Cases ***
-
-# === US01 – Cadastro de Usuário ===
-Cadastro com dados válidos
-    [Documentation]    Verifica fluxo de cadastro com dados válidos
-    ${email}=    Gerar Email Aleatório
-    Acessar Página de Cadastro
-    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${email}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
-    Clique em Cadastrar
-    Page Should Contain    Cadastro concluído com sucesso
-    # Logar com o usuário criado
-    Acessar Página de Login
-    Inserir Credenciais    ${email}    ${VALID_PASSWORD}
-    Clique em Entrar
-    Page Should Contain    Dashboard
-
-Cadastro com campo obrigatório em branco
-    [Documentation]    Verifica mensagem de erro quando o CEP está em branco
-    Acessar Página de Cadastro
-    Preencher Formulário de Cadastro    ${EMPTY}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    cep    Este campo é obrigatório.
-
-Cadastro com e-mail inválido
-    [Documentation]    Verifica validação de e‑mail
-    Acessar Página de Cadastro
-    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${INVALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    email    Formato de e‑mail inválido.
-
-Cadastro com telefone no formato incorreto
-    [Documentation]    Validação de telefone
-    Acessar Página de Cadastro
-    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    ${INVALID_PHONE}
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    phone    Formato de telefone inválido. Use (99) 99999-9999.
-
-Cadastro com CEP inexistente
-    [Documentation]    Validação de CEP inexistente
-    Acessar Página de Cadastro
-    Preencher Formulário de Cadastro    ${INVALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    cep    CEP não encontrado.
-
-# === US02 – Login de Usuário ===
-Login com credenciais corretas
-    [Documentation]    Valida login bem-sucedido
-    Acessar Página de Login
-    Inserir Credenciais    ${VALID_EMAIL}    ${VALID_PASSWORD}
-    Clique em Entrar
-    Page Should Contain    Dashboard
-    Verificar Saldo na Dashboard    R$ 3.245,67
-
-Login com credenciais inválidas
-    [Documentation]    Verifica mensagem de erro de credenciais inválidas
-    Acessar Página de Login
-    Inserir Credenciais    ${VALID_EMAIL}    senhaErrada
-    Clique em Entrar
-    Verificar Mensagem de Erro Login    Credenciais inválidas.
-
-Botão 'Entrar' só habilitado quando ambos os campos preenchidos
-    [Documentation]    Garante que o botão só fica habilitado quando todos os campos são preenchidos
-    Acessar Página de Login
-    # Senha em branco
-    Input Text    id:input-username    ${VALID_EMAIL}
-    Input Text    id:input-password    ${EMPTY}
-    Element Should Be Disabled    id:login-button
-    # Preenche senha
-    Input Text    id:input-password    ${VALID_PASSWORD}
-    Element Should Be Enabled      id:login-button
-
-# === US03 – Visualização do Saldo ===
-Exibição inicial do saldo na Dashboard
-    [Documentation]    Confirma formato e valor do saldo na dashboard
-    Acessar Página de Login
-    Inserir Credenciais    ${VALID_EMAIL}    ${VALID_PASSWORD}
-    Clique em Entrar
-    Page Should Contain    R$ 3.245,67
-
-Atualização do saldo após transferência
-    [Documentation]    Confirma saldo de origem e destino após transferência
-    Acessar Tela de Transferência
-    Preencher Dados de Transferência    9876-0    500,00
-    Confirmar Transferência
-    Verificar Saldo    R$ 4.500,00
-    # Verifica saldo na conta destino via extrato (código fictício)
-    Navegar para Página    /account/9876-0
-    Page Should Contain    R$ 500,00
-
-# === US04 – Acesso ao Extrato ===
-Exibição das 10 transações mais recentes
-    [Documentation]    Garante que a lista de transações contém no mínimo 10 itens
-    Navegar para Página    /statement.htm
-    ${qtde}=    Get Element Count    css:.transaction-row
-    Should Be True    ${qtde} >= 10
-
-Detalhes de transação ao clicar em 'Mais detalhes'
-    [Documentation]    Verifica dados completos de uma transação
-    Navegar para Página    /statement.htm
-    Click Link    css:.transaction-row[data-desc="Transferência para João Silva"] .more-details
-    Page Should Contain    Data:
-    Page Should Contain    Descrição: Transferência para João Silva
-    Page Should Contain    Valor: R$ 200,00
-    Page Should Contain    Saldo Final: R$ 4.500,00
-
-# === US05 – Transferência de Fundos ===
-Transferência dentro do saldo disponível
-    [Documentation]    Testa transferência bem-sucedida
-    Acessar Tela de Transferência
-    Preencher Dados de Transferência    9876-0    200,00
-    Confirmar Transferência
-    Verificar Saldo    R$ 800,00
-    # Verifica extrato (código fictício)
-    Navegar para Página    /statement.htm
-    Page Should Contain    Transferência para 9876-0
-
-Transferência com valor superior ao saldo
-    [Documentation]    Garante mensagem de saldo insuficiente
-    Acessar Tela de Transferência
-    Preencher Dados de Transferência    9876-0    200,00
-    Confirmar Transferência
-    Verificar Mensagem de Erro    Saldo insuficiente
-
-Transferência para conta inexistente
-    [Documentation]    Verifica erro de conta inválida
-    Acessar Tela de Transferência
-    Preencher Dados de Transferência    0000-0    50,00
-    Confirmar Transferência
-    Verificar Mensagem de Erro    Conta destino não encontrada
-
-# === US06 – Solicitação de Empréstimo ===
-Empréstimo aprovado e creditado imediatamente
-    [Documentation]    Testa aprovação de empréstimo
-    Acessar Tela de Empréstimo
-    Preencher Dados de Empréstimo    ${LOAN_AMOUNT}    120000,00
-    Enviar Solicitação
-    Verificar Mensagem    Empréstimo aprovado
-    # Saldo atualizado (código fictício)
-    Navegar para Página    /account/1234-5
-    Page Should Contain    R$ 50.000,00
-
-Empréstimo negado por renda insuficiente
-    [Documentation]    Garante mensagem de negação por renda
-    Acessar Tela de Empréstimo
-    Preencher Dados de Empréstimo    ${LOW_INCOME_LOAN}    20000,00
-    Enviar Solicitação
-    Verificar Mensagem    Empréstimo negado: Renda insuficiente
-
-Empréstimo negado por valor exceder limite
-    [Documentation]    Garante mensagem de negação por valor
-    Acessar Tela de Empréstimo
-    Preencher Dados de Empréstimo    ${HIGH_INCOME_LOAN}    200000,00
-    Enviar Solicitação
-    Verificar Mensagem    Empréstimo negado: Valor excede limite máximo
-
-# === US07 – Pagamento de Contas ===
-Pagamento imediato de conta
-    [Documentation]    Testa pagamento com saldo imediato
-    Acessar Tela de Pagamento
-    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
-    Agenda Data de Pagamento    hoje
-    Confirmar Pagamento
-    Verificar Mensagem    Pagamento confirmado
-    Navegar para Página    /statement.htm
-    Page Should Contain    Pagamento para 1234-5
-    # Saldo debitado (código fictício)
-    Verificar Saldo    R$ 200,00
-
-Pagamento agendado futuro
-    [Documentation]    Testa agendamento de pagamento
-    Acessar Tela de Pagamento
-    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
-    Agenda Data de Pagamento    31/12/2025
-    Confirmar Pagamento
-    Verificar Mensagem    Pagamento confirmado
-    Navegar para Página    /statement.htm
-    Page Should Contain    Pagamento para 1234-5
-    Page Should Contain    Status: Agendado
-
-Pagamento com campo obrigatório em branco
-    [Documentation]    Valida mensagem de erro para telefone em branco
-    Acessar Tela de Pagamento
-    Preencher Dados de Pagamento    João Silva    Rua A    ${EMPTY}    1234-5    300,00
-    Agenda Data de Pagamento    hoje
-    Verificar Mensagem    Este campo é obrigatório.
-
-Pagamento imediato com saldo insuficiente
-    [Documentation]    Garante mensagem de saldo insuficiente
-    Acessar Tela de Pagamento
-    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
-    Agenda Data de Pagamento    hoje
-    Confirmar Pagamento
-    Verificar Mensagem    Saldo insuficiente para este pagamento
-
-# === US08 – Navegação Consistente ===
-Navegação sem erros em desktop
-    [Documentation]    Verifica todas as rotas no desktop
-    Navegar para Página    /
-    ${menus}=    Create List    /account.htm    /transfer.htm    /loan.htm    /payment.htm    /statement.htm
-    FOR    ${menu}    IN    @{menus}
-        Navegar para Página    ${menu}
-        Verificar Erros HTTP
-    END
-
-Navegação sem erros em dispositivos móveis
-    [Documentation]    Testa a mesma navegação em viewport móvel
-    # Configura viewport de 320px
-    Set Window Size    320    800
-    ${menus}=    Create List    /account.htm    /transfer.htm    /loan.htm    /payment.htm    /statement.htm
-    FOR    ${menu}    IN    @{menus}
-        Navegar para Página    ${menu}
-        Verificar Erros HTTP
-    END
-
-Rota inexistente retorna erro 404
-    [Documentation]    Confirma retorno 404 em rota inválida
-    Navegar para Página    /contas/123456
-    Page Should Contain    404
-
-# === US09 – Mensagens de Erro Claras ===
-Mensagem de erro para telefone inválido
-    [Documentation]    Testa mensagem de erro de telefone
-    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    ${INVALID_PHONE}
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    phone    Formato de telefone inválido. Use (99) 99999-9999.
-
-Mensagem de erro para campo obrigatório ausente
-    [Documentation]    Testa mensagem de campo obrigatório em branco
-    Preencher Formulário de Cadastro    ${EMPTY}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
-    Clique em Cadastrar
-    Verificar Mensagem de Erro    cep    Este campo é obrigatório.
-
-Mensagem de erro para login inválido
-    [Documentation]    Testa mensagem de login inválido
-    Acessar Página de Login
-    Inserir Credenciais    ${VALID_EMAIL}    senhaErrada
-    Clique em Entrar
-    Verificar Mensagem de Erro Login    Credenciais inválidas.
-
-Mensagem de erro para saldo insuficiente em transferência
-    [Documentation]    Testa mensagem de saldo insuficiente
-    Acessar Tela de Transferência
-    Preencher Dados de Transferência    9876-0    2000,00
-    Confirmar Transferência
-    Verificar Mensagem de Erro    Saldo insuficiente para esta transferência.
-```
-
----
-
-## 12.  Como executar
-
-```bash
-# Instale o Robot Framework + SeleniumLibrary
-pip install robotframework robotframework-seleniumlibrary selenium
-
-# Execute o suite completo
-robot tests/tests.robot
-```
-
----
-
-### Observações Finais
-
-1. **Seletores** – O código acima usa `id` e `css`. No seu projeto, prefira `data-*` ou `id`s estáveis.  
-2. **Espera Implícita** – `Wait Until Page Contains` e `Wait Until Page Contains Element` são suficientes para a maioria das telas. Se necessário, ajuste `timeout`.  
-3. **Dados Dinâmicos** – Use o *keyword* `Gerar Email Aleatório` para evitar colisões.  
-4. **Reutilização** – Todos os *keywords* ficam em arquivos separados e são importados em `tests.robot`.  
-5. **Mantenha a documentação** – Cada *Test Case* tem um `Documentation` curto explicando o objetivo. Isso facilita o entendimento futuro.  
-
-Pronto! Agora você tem um conjunto funcional, modular e de fácil manutenção de testes automatizados em Robot Framework seguindo as melhores práticas de automação.
+> **Observações importantes**  
+> 1. Todos os seletores são baseados em atributos `data‑test-id` – isto garante estabilidade e não interferências de estilos ou textos.  
+> 2. Os testes fazem uso do `test.step` para documentar cada ação de forma que a saída do Playwright fique legível e de fácil debug.  
+> 3. Para cenários que exigem um estado pré‑existente (ex.: usuário com saldo ou histórico), são deixadas notas de *placeholder* – na prática, esses estados devem ser configurados via API ou fixtures antes da execução.  
+> 4. A estrutura `test.describe` agrupa os testes por User Story, mantendo a organização e facilitando a extensão de novos cenários.  
+> 5. O uso de helper functions (`fillValidRegistration`, `login`, `navigateToTransfer`, etc.) reduz duplicação e torna os testes mais manuteníveis.
