@@ -1,0 +1,35 @@
+name: Orquestrador CI/CD
+
+on:
+  workflow_dispatch:
+    inputs:
+      criacao-user-stories:
+        description: "Criar user stories?"
+        type: boolean
+        required: true
+        default: true
+      criacao-bdd:
+        description: "Criação dos BDDs?"
+        type: boolean
+        required: true
+        default: false
+      criacao-testes:
+        description: "Criar testes?"
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  user-stories:
+    if: ${{ inputs.criacao-user-stories }}
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-user-stories.yaml@main
+
+  bdd:
+    if: ${{ inputs.criacao-bdd }}
+    needs: user-stories
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-bdd.yml@main
+
+  testes:
+    if: ${{ inputs.criacao-testes }}
+    needs: bdd
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yml@main
