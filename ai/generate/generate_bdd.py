@@ -21,18 +21,11 @@ Siga estas diretrizes:
 - Assegure-se de que os cenários cubram as principais variações e regras de negócio descritas.
 
 Retorne o resultado no seguinte padrão:
-[
-  {{
-    "titulo": "Título da User Story",
-    "cenario_bdd": [
-      {{
-        "nome": "Nome descritivo do cenário",
-        "tipo": "positivo" ou "negativo",
-        "gherkin": "Feature: ...\\nScenario: ...\\nGiven ...\\nWhen ...\\nThen ..."
-      }}
-    ]
-  }}
-]
+    titulo: Título da User Story,
+    cenario_bdd:
+        nome: Nome descritivo do cenário,
+        tipo: positivo ou negativo,
+        gherkin: "Feature: ...\\nScenario: ...\\nGiven ...\\nWhen ...\\nThen ..."
 
 User Stories fornecidas:
 {stories}
