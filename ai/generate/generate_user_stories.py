@@ -32,6 +32,7 @@ Cada User Story deve:
 - Ser **realista**, **testável** e **relacionada às features** descritas nos critérios de aceite.
 - Garantir **coerência entre as histórias** e **não sobreposição** de escopo.
 - Priorizar clareza e valor para o usuário final.
+- Coloque uma rastreabilidade de user stories, exemplo: (US01)
 
 Critérios fornecidos:
 {all_contents}
