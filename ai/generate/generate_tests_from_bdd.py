@@ -28,7 +28,7 @@ def generate_tests_from_bdd():
     tests_code = response.choices[0].message.content
  
     os.makedirs("ai/tests", exist_ok=True)
-    with open("ai/tests/test_generated.ts", "w", encoding="utf-8") as f:
+    with open("ai/tests/test_generated_{prompt_tipo}.ts", "w", encoding="utf-8") as f:
         f.write(tests_code)
  
  
