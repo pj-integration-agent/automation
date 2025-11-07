@@ -8,23 +8,26 @@ def generate_tests_from_bdd():
         bdd_content = f.read()
  
     prompt = f"""
-  Você é um especialista em automação de testes utilizando Playwright.
+Você é um engenheiro de automação de testes sênior, especialista em Playwright com TypeScript/JavaScript.
 
-Converta o seguinte arquivo BDD (Gherkin) em código de teste automatizado funcional, incluindo:
+Com base no seguinte arquivo BDD (formato Gherkin), converta-o em **código de teste automatizado funcional**, seguindo as **melhores práticas de automação**.
 
-Estrutura de testes com Playwright e TypeScript/JavaScript.
+Diretrizes obrigatórias:
+- Utilize a **estrutura do Playwright Test Runner** (`@playwright/test`).
+- Implemente os **cenários Given/When/Then** como testes organizados e legíveis.
+- Utilize **TypeScript (preferencial)** ou **JavaScript** conforme a convenção do projeto.
+- Inclua:
+  - Declaração de imports necessários.
+  - Uso correto do `test.describe`, `test.beforeEach`, e `test` para os cenários.
+  - **Seletores claros e estáveis**, com boas práticas de localização de elementos.
+  - **Tratamento de esperas e erros** com `await expect()` e `page.waitFor...` adequados.
+  - **Comentários explicativos** antes de cada passo descrevendo a intenção e a lógica.
+- Mantenha a **estrutura modular e reutilizável**, facilitando manutenção futura.
 
-Definição clara de cenários, passos e seletores.
+Arquivo BDD fornecido:
+{bdd_content}
+"""
 
-Boas práticas de automação (esperas, organização de código, tratamento de erros).
-
-Comentários explicativos sobre cada passo do teste.
-
-Forneça o código completo pronto para execução no Playwright Test Runner.
-
-    BDD:
-    {bdd_content}
-    """
  
     response = client.chat.completions.create(
         model="openai/gpt-oss-20b",
