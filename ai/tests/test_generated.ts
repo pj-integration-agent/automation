@@ -1,800 +1,1074 @@
-## Playwright Test Runner – Full BDD‑to‑Code Conversion  
-*(TypeScript + Page Object Model – ready to drop into a fresh `playwright` project)*  
+## 📦 Estrutura de Projeto
 
-> **Assumptions**  
-> * `playwright.config.ts` already defines a `baseURL` (e.g. `https://app.exemplo.com`) and the default test timeout.  
-> * The UI follows the selectors that we define in the **Page Objects** section.  
-> * The API layer is mocked where needed (e.g. waiting 5 min for a loan decision).  
-> * All tests are isolated – each one starts from a clean state (no logged‑in user, fresh DB).  
+```
+.
+├── tests
+│   ├── registration.spec.ts
+│   ├── login.spec.ts
+│   ├── balance.spec.ts
+│   ├── statement.spec.ts
+│   ├── transfer.spec.ts
+│   ├── loan.spec.ts
+│   ├── bill-payment.spec.ts
+│   └── navigation.spec.ts
+├── pages
+│   ├── login-page.ts
+│   ├── register-page.ts
+│   ├── home-page.ts
+│   ├── statement-page.ts
+│   ├── transfer-page.ts
+│   ├── loan-page.ts
+│   └── bill-payment-page.ts
+├── utils
+│   └── helpers.ts
+├── playwright.config.ts
+└── package.json
+```
+
+> **Obs.**  
+> – Os *selectors* usados abaixo são **exemplos**; ajuste‑os conforme o HTML da sua aplicação.  
+> – O código utiliza **TypeScript** e o *Playwright Test Runner*.
 
 ---
 
-## 1. Directory structure
+## 🔧 1. `playwright.config.ts`
 
-```
-e2e/
- ├─ pageObjects/
- │    ├─ basePage.ts
- │    ├─ registerPage.ts
- │    ├─ loginPage.ts
- │    ├─ dashboardPage.ts
- │    ├─ transferPage.ts
- │    ├─ loanPage.ts
- │    ├─ paymentPage.ts
- │    ├─ historyPage.ts
- │    └─ utils.ts
- └─ tests/
-      ├─ us01-registration.spec.ts
-      ├─ us02-login.spec.ts
-      ├─ us03-saldo.spec.ts
-      ├─ us04-transaction-lookup.spec.ts
-      ├─ us05-transfer.spec.ts
-      ├─ us06-loan.spec.ts
-      ├─ us07-payment.spec.ts
-      ├─ us08-navigation.spec.ts
-      ├─ us09-error-messages.spec.ts
-      ├─ us10-history.spec.ts
-      ├─ us11-scheduled-payment.spec.ts
-      └─ us12-responsive.spec.ts
-```
+```ts
+// playwright.config.ts
+import { defineConfig, devices } from '@playwright/test';
 
-> **Why split the tests?**  
-> * Easier to locate failures.  
-> * Enables parallel execution (`test.describe.parallel`).  
-> * Keeps each file < 500 lines (a Playwright “rule of thumb”).
+export default defineConfig({
+  timeout: 30_000,                     // 30s por teste
+  retries: 1,                          // 1 retry em caso de falha inesperada
+  use: {
+    baseURL: 'https://app.seubanco.com', // Altere para sua URL
+    headless: true,
+    viewport: { width: 1280, height: 720 },
+    ignoreHTTPSErrors: true,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Adicione Firefox/Chromium/… se quiser
+  ],
+  testDir: './tests',
+});
+```
 
 ---
 
-## 2. Page Object files
-
-### 2.1 `utils.ts`
+## 📄 2. `utils/helpers.ts`
 
 ```ts
-// e2e/pageObjects/utils.ts
-export const randomEmail = () => `user_${Date.now()}@exemplo.com`;
-export const formatCurrency = (value: number) => `R$ ${value.toFixed(2).replace('.', ',')}`;
+// utils/helpers.ts
+export const generateRandomEmail = (): string =>
+  `user_${Date.now()}_${Math.random().toString(36).substring(2, 8)}@demo.com`;
 
-/**
- * Simple helper that waits for a selector and asserts visibility.
- * @param page Playwright Page
- * @param selector CSS or text selector
- */
-export async function expectVisible(page, selector: string) {
-  await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
-  await expect(page.locator(selector)).toBeVisible();
-}
+export const formatCurrency = (value: number): string =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  }).format(value);
 ```
 
-### 2.2 `basePage.ts`
+---
+
+## 📦 3. Page Objects
+
+> Cada *page object* encapsula os **seletores** e os **métodos** que representam a UI da página.
+
+### 3.1 `pages/login-page.ts`
 
 ```ts
-// e2e/pageObjects/basePage.ts
-import { Page } from '@playwright/test';
+// pages/login-page.ts
+import { Page, expect } from '@playwright/test';
+import { formatCurrency } from '../utils/helpers';
 
-export class BasePage {
-  readonly page: Page;
-  constructor(page: Page) {
-    this.page = page;
+export class LoginPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/login');
   }
 
-  async navigateTo(path: string) {
-    await this.page.goto(path);
-    await this.page.waitForLoadState('networkidle');
+  async login(email: string, password: string) {
+    await this.page.fill('[data-testid="email-input"]', email);
+    await this.page.fill('[data-testid="password-input"]', password);
+    await this.page.click('[data-testid="login-button"]');
   }
 
-  async click(selector: string) {
-    await this.page.click(selector);
+  async getErrorMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="error-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="error-message"]').innerText();
   }
 
-  async fill(selector: string, value: string) {
-    await this.page.fill(selector, value);
-  }
-
-  async getText(selector: string) {
-    return await this.page.textContent(selector);
-  }
-
-  async waitForText(selector: string, text: string) {
-    await this.page.waitForFunction(
-      (sel, txt) => document.querySelector(sel)?.textContent?.trim() === txt,
-      selector,
-      text,
-      { timeout: 5000 }
-    );
+  async getUserName(): Promise<string> {
+    await expect(this.page.locator('[data-testid="user-name"]')).toBeVisible();
+    return this.page.locator('[data-testid="user-name"]').innerText();
   }
 }
 ```
 
-### 2.3 `registerPage.ts`
+### 3.2 `pages/register-page.ts`
 
 ```ts
-// e2e/pageObjects/registerPage.ts
-import { BasePage } from './basePage';
+// pages/register-page.ts
+import { Page, expect } from '@playwright/test';
 
-export class RegisterPage extends BasePage {
-  // selectors
-  readonly email = '#email';
-  readonly password = '#password';
-  readonly confirmPassword = '#confirmPassword';
-  readonly fullName = '#fullName';
-  readonly cep = '#cep';
-  readonly submitBtn = '#register-submit';
+export class RegisterPage {
+  constructor(private page: Page) {}
 
-  // actions
-  async fillMandatoryFields(details: {
+  async goto() {
+    await this.page.goto('/register');
+  }
+
+  async fillForm({
+    name,
+    email,
+    cpf,
+    phone,
+    password,
+  }: {
+    name?: string;
     email?: string;
+    cpf?: string;
+    phone?: string;
     password?: string;
-    confirmPassword?: string;
-    fullName?: string;
-    cep?: string;
   }) {
-    if (details.email) await this.fill(this.email, details.email);
-    if (details.password) await this.fill(this.password, details.password);
-    if (details.confirmPassword) await this.fill(this.confirmPassword, details.confirmPassword);
-    if (details.fullName) await this.fill(this.fullName, details.fullName);
-    if (details.cep) await this.fill(this.cep, details.cep);
+    if (name !== undefined) await this.page.fill('[data-testid="name-input"]', name);
+    if (email !== undefined) await this.page.fill('[data-testid="email-input"]', email);
+    if (cpf !== undefined) await this.page.fill('[data-testid="cpf-input"]', cpf);
+    if (phone !== undefined) await this.page.fill('[data-testid="phone-input"]', phone);
+    if (password !== undefined) await this.page.fill('[data-testid="password-input"]', password);
   }
 
   async submit() {
-    await this.click(this.submitBtn);
+    await this.page.click('[data-testid="register-button"]');
   }
 
-  async getMessage() {
-    return await this.getText('.toast-message');
+  async getSuccessMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="success-message"]').innerText();
+  }
+
+  async getErrorMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="error-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="error-message"]').innerText();
   }
 }
 ```
 
-> **Tip** – If a field is required, we simply omit it to trigger the UI validation.
+### 3.3 `pages/home-page.ts`
 
-The rest of the page objects (`loginPage.ts`, `dashboardPage.ts`, `transferPage.ts`, `loanPage.ts`, `paymentPage.ts`, `historyPage.ts`) follow the same pattern: declare selectors as constants, expose actions, and provide small helpers for common checks (e.g. `isLoggedIn`, `getBalanceText`, `openTransferForm`, …).  
-> For brevity, only the **RegisterPage** is fully expanded here; all other files are structured the same way.
+```ts
+// pages/home-page.ts
+import { Page, expect } from '@playwright/test';
+
+export class HomePage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/');
+  }
+
+  async getBalanceText(): Promise<string> {
+    await expect(this.page.locator('[data-testid="balance"]')).toBeVisible();
+    return this.page.locator('[data-testid="balance"]').innerText();
+  }
+
+  async clickTransferButton() {
+    await this.page.click('[data-testid="transfer-button"]');
+  }
+
+  async clickLoanButton() {
+    await this.page.click('[data-testid="loan-button"]');
+  }
+
+  async clickBillPaymentButton() {
+    await this.page.click('[data-testid="bill-payment-button"]');
+  }
+
+  async clickStatementButton() {
+    await this.page.click('[data-testid="statement-button"]');
+  }
+
+  async reload() {
+    await this.page.reload();
+  }
+}
+```
+
+### 3.4 `pages/statement-page.ts`
+
+```ts
+// pages/statement-page.ts
+import { Page, expect } from '@playwright/test';
+
+export class StatementPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/statement');
+  }
+
+  async getTransactions(): Promise<string[]> {
+    await expect(this.page.locator('[data-testid="transaction-row"]')).toBeVisible();
+    const rows = await this.page.locator('[data-testid="transaction-row"]').all();
+    const texts = [];
+    for (const row of rows) {
+      texts.push(await row.innerText());
+    }
+    return texts;
+  }
+
+  async clickShowMore() {
+    await this.page.click('[data-testid="show-more-button"]');
+  }
+
+  async hasNoTransactionsMessage(): Promise<boolean> {
+    const locator = this.page.locator('[data-testid="no-transactions-message"]');
+    return (await locator.count()) > 0;
+  }
+}
+```
+
+### 3.5 `pages/transfer-page.ts`
+
+```ts
+// pages/transfer-page.ts
+import { Page, expect } from '@playwright/test';
+
+export class TransferPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/transfer');
+  }
+
+  async selectOriginAccount(accountName: string) {
+    await this.page.selectOption('[data-testid="origin-account-select"]', { label: accountName });
+  }
+
+  async selectDestinationAccount(accountName: string) {
+    await this.page.selectOption('[data-testid="destination-account-select"]', { label: accountName });
+  }
+
+  async setAmount(amount: string) {
+    await this.page.fill('[data-testid="amount-input"]', amount);
+  }
+
+  async confirm() {
+    await this.page.click('[data-testid="confirm-transfer-button"]');
+  }
+
+  async getSuccessMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="transfer-success-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="transfer-success-message"]').innerText();
+  }
+
+  async getErrorMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="transfer-error-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="transfer-error-message"]').innerText();
+  }
+}
+```
+
+### 3.6 `pages/loan-page.ts`
+
+```ts
+// pages/loan-page.ts
+import { Page, expect } from '@playwright/test';
+
+export class LoanPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/loan');
+  }
+
+  async setAmount(amount: string) {
+    await this.page.fill('[data-testid="loan-amount-input"]', amount);
+  }
+
+  async setAnnualIncome(income: string) {
+    await this.page.fill('[data-testid="annual-income-input"]', income);
+  }
+
+  async submit() {
+    await this.page.click('[data-testid="apply-loan-button"]');
+  }
+
+  async getModalMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="loan-modal-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="loan-modal-message"]').innerText();
+  }
+
+  async getErrorMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="loan-error-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="loan-error-message"]').innerText();
+  }
+}
+```
+
+### 3.7 `pages/bill-payment-page.ts`
+
+```ts
+// pages/bill-payment-page.ts
+import { Page, expect } from '@playwright/test';
+
+export class BillPaymentPage {
+  constructor(private page: Page) {}
+
+  async goto() {
+    await this.page.goto('/bill-payment');
+  }
+
+  async setBeneficiary(beneficiary: string) {
+    await this.page.fill('[data-testid="beneficiary-input"]', beneficiary);
+  }
+
+  async setAmount(amount: string) {
+    await this.page.fill('[data-testid="payment-amount-input"]', amount);
+  }
+
+  async setDate(date: string) {
+    // Data no formato YYYY-MM-DD
+    await this.page.fill('[data-testid="payment-date-input"]', date);
+  }
+
+  async confirm() {
+    await this.page.click('[data-testid="confirm-payment-button"]');
+  }
+
+  async getSuccessMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="payment-success-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="payment-success-message"]').innerText();
+  }
+
+  async getErrorMessage(): Promise<string> {
+    await expect(this.page.locator('[data-testid="payment-error-message"]')).toBeVisible();
+    return this.page.locator('[data-testid="payment-error-message"]').innerText();
+  }
+}
+```
 
 ---
 
-## 3. Test files
+## 🧪 4. Testes
 
-Below we present **one representative test file per US**.  
-All tests use:
+> Cada *test* segue os passos do BDD e inclui **esperas** (`expect`) e **comentários** explicativos.
 
-* `test.describe.parallel()` – run in parallel threads.  
-* `expectVisible()` – guard against race conditions.  
-* Clear comments that mirror the Gherkin steps.
-
-> **NOTE** – The actual selectors (`#email`, `.toast-message`, etc.) must match your real app.  
-> If your UI uses data‑test attributes (recommended), swap them in the page objects.
-
-### 3.1 US01 – Registro de nova conta
+### 4.1 `tests/registration.spec.ts`
 
 ```ts
-// e2e/tests/us01-registration.spec.ts
+// tests/registration.spec.ts
 import { test, expect } from '@playwright/test';
-import { RegisterPage } from '../pageObjects/registerPage';
-import { randomEmail, formatCurrency } from '../pageObjects/utils';
+import { RegisterPage } from '../pages/register-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
 
-test.describe.parallel('US01 – Registro de nova conta', () => {
+test.describe('US01 – Registro de conta', () => {
   test.beforeEach(async ({ page }) => {
-    // Start from the registration page
     await page.goto('/register');
   });
 
-  test('Registro bem-sucedido', async ({ page }) => {
-    // Given eu sou um novo cliente
+  test('Registro de conta com dados válidos', async ({ page }) => {
     const register = new RegisterPage(page);
+    const email = generateRandomEmail();
 
-    // When preencho todos os campos obrigatórios com dados válidos
-    await register.fillMandatoryFields({
-      email: randomEmail(),
-      password: 'Senha1234',
-      confirmPassword: 'Senha1234',
-      fullName: 'Fulano da Silva',
-      cep: '12345-678',
+    // Preenche todos os campos obrigatórios
+    await register.fillForm({
+      name: 'Fulano Silva',
+      email,
+      cpf: '12345678901',
+      phone: '11987654321',
+      password: 'Senha!123',
     });
 
-    // And envio o formulário
     await register.submit();
 
-    // Then recebo a mensagem "Cadastro concluído, verifique seu e‑mail"
-    await expectVisible(page, '.toast-message');
-    await expect(register.getMessage()).toBe('Cadastro concluído, verifique seu e‑mail');
-
-    // And posso fazer login com as credenciais recém‑criadas
-    // (login is tested in US02 – we just try a quick login here)
-    const loginPage = page.locator('#login-form');
-    await loginPage.fill('#email', register.email);
-    await loginPage.fill('#password', 'Senha1234');
-    await loginPage.click('#login-submit');
-
-    await expectVisible(page, '#dashboard'); // dashboard is our landing page
-    await expect(page.locator('.welcome-msg')).toContainText('Bem‑vindo');
+    // Verifica mensagem de sucesso e redirecionamento
+    await expect(page).toHaveURL('/login');
+    const successMsg = await register.getSuccessMessage();
+    expect(successMsg).toBe('Cadastro concluído com sucesso');
   });
 
-  test('Erro de e‑mail inválido', async ({ page }) => {
+  test('Erro ao omitir campo obrigatório (CPF)', async ({ page }) => {
     const register = new RegisterPage(page);
-    await register.fillMandatoryFields({
-      email: 'usuario@exemplo',          // invalid e‑mail
-      password: 'Senha1234',
-      confirmPassword: 'Senha1234',
-      fullName: 'Fulano da Silva',
-      cep: '12345-678',
+    const email = generateRandomEmail();
+
+    // Preenche todos os campos exceto CPF
+    await register.fillForm({
+      name: 'Ana Santos',
+      email,
+      phone: '11987654321',
+      password: 'Senha!123',
     });
+
     await register.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(register.getMessage()).toBe('E‑mail inválido');
-    // Registro não criado: we can attempt to log in and should fail
-    await page.goto('/login');
-    await page.fill('#email', 'usuario@exemplo');
-    await page.fill('#password', 'Senha1234');
-    await page.click('#login-submit');
-    await expectVisible(page, '.toast-error');
+
+    // Espera a mensagem de erro específica
+    const errorMsg = await register.getErrorMessage();
+    expect(errorMsg).toBe('CPF é obrigatório');
   });
 
-  test('Campo obrigatório ausente – CEP', async ({ page }) => {
+  test('Erro de formato de telefone (texto alfabético)', async ({ page }) => {
     const register = new RegisterPage(page);
-    await register.fillMandatoryFields({
-      email: randomEmail(),
-      password: 'Senha1234',
-      confirmPassword: 'Senha1234',
-      fullName: 'Fulano da Silva',
-      // CEP omitted
+    const email = generateRandomEmail();
+
+    await register.fillForm({
+      name: 'Carlos Pereira',
+      email,
+      cpf: '12345678901',
+      phone: 'telefone123',
+      password: 'Senha!123',
     });
+
     await register.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(register.getMessage()).toBe('CEP obrigatório');
+
+    const errorMsg = await register.getErrorMessage();
+    expect(errorMsg).toBe('Telefone inválido, apenas números são permitidos');
   });
 
-  test('E‑mail já cadastrado', async ({ page }) => {
-    const existingEmail = 'usuario@exemplo.com';
-    // Pre‑condition: ensure a user with this e‑mail exists
-    // In a real test you would hit the API or use a DB fixture
-    // Here we just register once for illustration
-    const registerOnce = new RegisterPage(page);
-    await registerOnce.fillMandatoryFields({
+  test('Registro com e‑mail já cadastrado', async ({ page }) => {
+    const register = new RegisterPage(page);
+    const existingEmail = 'usuario@exemplo.com'; // email que já está no BD
+
+    await register.fillForm({
+      name: 'João da Silva',
       email: existingEmail,
-      password: 'Senha1234',
-      confirmPassword: 'Senha1234',
-      fullName: 'Fulano da Silva',
-      cep: '12345-678',
+      cpf: '12345678901',
+      phone: '11987654321',
+      password: 'Senha!123',
     });
-    await registerOnce.submit();
-    await expectVisible(page, '.toast-message');
 
-    // Try registering again with the same e‑mail
+    await register.submit();
+
+    const errorMsg = await register.getErrorMessage();
+    expect(errorMsg).toBe('E‑mail já cadastrado');
+  });
+});
+```
+
+---
+
+### 4.2 `tests/login.spec.ts`
+
+```ts
+// tests/login.spec.ts
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../pages/login-page';
+import { RegisterPage } from '../pages/register-page';
+import { generateRandomEmail } from '../utils/helpers';
+
+test.describe('US02 – Login', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/login');
+  });
+
+  // Helpers: cria um usuário de teste antes de cada caso de login bem‑sucedido
+  const createUser = async (page) => {
+    const register = new RegisterPage(page);
+    const email = generateRandomEmail();
+    await register.goto();
+    await register.fillForm({
+      name: 'Test User',
+      email,
+      cpf: '12345678901',
+      phone: '11987654321',
+      password: 'Senha!123',
+    });
+    await register.submit();
+    return { email, password: 'Senha!123' };
+  };
+
+  test('Login bem-sucedido', async ({ page }) => {
+    const { email, password } = await createUser(page);
+
+    const login = new LoginPage(page);
+    await login.login(email, password);
+
+    // Espera o redirecionamento e a exibição do nome do usuário
+    await expect(page).toHaveURL('/');
+    const userName = await login.getUserName();
+    expect(userName).toContain('Test User'); // Ajuste conforme o texto exibido
+  });
+
+  test('Falha de login por e‑mail inexistente', async ({ page }) => {
+    const login = new LoginPage(page);
+    await login.login('nonexistent@demo.com', 'Senha!123');
+    const errorMsg = await login.getErrorMessage();
+    expect(errorMsg).toBe('E‑mail ou senha inválidos');
+  });
+
+  test('Falha de login por senha incorreta', async ({ page }) => {
+    // Primeiro cria usuário
+    const { email } = await createUser(page);
+
+    const login = new LoginPage(page);
+    await login.login(email, 'SenhaIncorreta!'); // senha errada
+    const errorMsg = await login.getErrorMessage();
+    expect(errorMsg).toBe('E‑mail ou senha inválidos');
+  });
+
+  test('Erro ao deixar campo de e‑mail vazio', async ({ page }) => {
+    const login = new LoginPage(page);
+    await login.page.fill('[data-testid="password-input"]', 'Senha!123');
+    await login.page.click('[data-testid="login-button"]');
+
+    const errorMsg = await login.getErrorMessage();
+    expect(errorMsg).toBe('E‑mail é obrigatório');
+  });
+});
+```
+
+---
+
+### 4.3 `tests/balance.spec.ts`
+
+```ts
+// tests/balance.spec.ts
+import { test, expect } from '@playwright/test';
+import { HomePage } from '../pages/home-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
+
+test.describe('US03 – Exibir saldo', () => {
+  async function loginAsTestUser(page) {
+    const register = new LoginPage(page); // reutiliza a mesma classe
+    const email = generateRandomEmail();
+    const password = 'Senha!123';
+
+    // Cria usuário
     await page.goto('/register');
-    await registerOnce.fillMandatoryFields({
-      email: existingEmail,
-      password: 'Senha1234',
-      confirmPassword: 'Senha1234',
-      fullName: 'Fulano da Silva',
-      cep: '12345-678',
-    });
-    await registerOnce.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(registerOnce.getMessage()).toBe('E‑mail já cadastrado');
-  });
-});
-```
+    await page.fill('[data-testid="name-input"]', 'Saldo Teste');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="cpf-input"]', '12345678901');
+    await page.fill('[data-testid="phone-input"]', '11987654321');
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="register-button"]');
 
----
-
-### 3.2 US02 – Login do cliente
-
-```ts
-// e2e/tests/us02-login.spec.ts
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pageObjects/loginPage'; // assume it exists
-
-test.describe.parallel('US02 – Login do cliente', () => {
-  const validEmail = 'usuario@exemplo.com';
-  const validPassword = 'Senha1234';
-
-  test.beforeEach(async ({ page }) => {
-    // Register a user first (or call API)
-    // For brevity we skip the creation step
+    // Faz login
     await page.goto('/login');
-  });
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="login-button"]');
+  }
 
-  test('Login bem‑sucedido', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.fill(validEmail, validPassword);
-    await login.submit();
-    await expectVisible(page, '#dashboard');
-    await expect(page.locator('.welcome-msg')).toContainText('Bem‑vindo');
-  });
-
-  test('Credenciais inválidas', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.fill(validEmail, 'senhaerrada');
-    await login.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(page.locator('.toast-error')).toContainText('Credenciais inválidas. Tente novamente.');
-    await expect(page).toHaveURL('/login'); // still on login page
-  });
-
-  test('Exibição da senha', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.fill(validEmail, validPassword);
-    const showIcon = page.locator('#password-show'); // icon with data-test="show"
-    const hideIcon = page.locator('#password-hide'); // icon with data-test="hide"
-
-    await showIcon.click();
-    await expect(page.locator('#password')).toHaveAttribute('type', 'text');
-
-    await hideIcon.click();
-    await expect(page.locator('#password')).toHaveAttribute('type', 'password');
-  });
-});
-```
-
-> **Tip** – The `LoginPage` can expose `fill(email, password)` and `submit()` just like the `RegisterPage`.
-
----
-
-### 3.3 US03 – Visualização do saldo
-
-```ts
-// e2e/tests/us03-saldo.spec.ts
-import { test, expect } from '@playwright/test';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-
-test.describe.parallel('US03 – Visualização do saldo', () => {
   test.beforeEach(async ({ page }) => {
-    // Assume the user is already logged in for these tests
-    await page.goto('/dashboard');
+    await loginAsTestUser(page);
   });
 
-  test('Saldo inicial exibido corretamente', async ({ page }) => {
-    const dashboard = new DashboardPage(page);
-    const balanceText = await dashboard.getBalanceText(); // e.g. "R$ 1.234,56"
+  test('Exibir saldo formatado corretamente', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
 
-    // Validate format
-    const regex = /^R\$\s\d{1,3}\.\d{3},\d{2}$/;
-    expect(balanceText).toMatch(regex);
-
-    // Validate non‑negative
-    const numericValue = parseFloat(balanceText.replace(/[^\d,]/g, '').replace(',', '.'));
-    expect(numericValue).toBeGreaterThanOrEqual(0);
+    const balanceText = await home.getBalanceText();
+    // Exemplo: "R$ 1.234,56"
+    expect(balanceText).toMatch(/^R\$\s?\d{1,3}(?:\.\d{3})*,\d{2}$/);
   });
 
-  test('Saldo atualizado após transferência', async ({ page }) => {
-    const dashboard = new DashboardPage(page);
-    const initialBalance = await dashboard.getBalanceText(); // assume "R$ 1.000,00"
-    await dashboard.openTransferPage();
+  test('Atualização automática do saldo após transferência', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
 
-    const transfer = new TransferPage(page);
-    await transfer.fillTransferForm({
-      amount: 200,
-      recipientAccount: 'B',
-      description: 'Transferência teste',
+    // Saldo inicial
+    const initialBalance = await home.getBalanceText();
+
+    // Faz uma transferência
+    await home.clickTransferButton();
+    const transferPage = new (await import('../pages/transfer-page')).TransferPage(page);
+    await transferPage.selectOriginAccount('Conta Corrente');
+    await transferPage.selectDestinationAccount('Conta Poupança');
+    await transferPage.setAmount('500');
+    await transferPage.confirm();
+
+    // Confirma que a transferência foi concluída
+    const transferSuccess = await transferPage.getSuccessMessage();
+    expect(transferSuccess).toBe('Transferência concluída');
+
+    // Recarrega a página inicial
+    await home.reload();
+
+    const newBalance = await home.getBalanceText();
+
+    // Simples verificação de subtração (não valida o valor exato, apenas mudança)
+    expect(newBalance).not.toBe(initialBalance);
+  });
+
+  test('Falha no carregamento do saldo', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+
+    // Simula falha via mock de API (exemplo, depende da sua aplicação)
+    await page.route('**/api/balance', async route => {
+      await route.fulfill({
+        status: 500,
+        body: JSON.stringify({ error: 'service unavailable' }),
+      });
     });
-    await transfer.confirm();
 
-    const updatedBalance = await dashboard.getBalanceText();
-    const init = parseFloat(initialBalance.replace(/[^\d,]/g, '').replace(',', '.'));
-    const updated = parseFloat(updatedBalance.replace(/[^\d,]/g, '').replace(',', '.'));
-    expect(updated).toBe(init - 200);
+    // Tenta obter o saldo (a página tenta, falha e mostra mensagem)
+    const errorBanner = page.locator('[data-testid="balance-error-banner"]');
+    await expect(errorBanner).toBeVisible();
+    const bannerText = await errorBanner.innerText();
+    expect(bannerText).toBe('Não foi possível carregar o saldo. Tente novamente.');
   });
 });
 ```
 
-> **Note** – `DashboardPage#getBalanceText()` simply reads the text of the balance element.
-
 ---
 
-### 3.4 US04 – Extrato de transações
+### 4.4 `tests/statement.spec.ts`
 
 ```ts
-// e2e/tests/us04-transaction-lookup.spec.ts
+// tests/statement.spec.ts
 import { test, expect } from '@playwright/test';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-import { TransactionPage } from '../pageObjects/transactionPage';
+import { HomePage } from '../pages/home-page';
+import { StatementPage } from '../pages/statement-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
 
-test.describe.parallel('US04 – Extrato de transações', () => {
+test.describe('US04 – Extrato de transações', () => {
+  async function loginAsTestUser(page) {
+    const email = generateRandomEmail();
+    const password = 'Senha!123';
+
+    // Registro rápido
+    await page.goto('/register');
+    await page.fill('[data-testid="name-input"]', 'Transação Teste');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="cpf-input"]', '12345678901');
+    await page.fill('[data-testid="phone-input"]', '11987654321');
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="register-button"]');
+
+    // Login
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="login-button"]');
+  }
+
   test.beforeEach(async ({ page }) => {
-    await page.goto('/dashboard');
-    // Create dummy transactions via API or UI – omitted for brevity
+    await loginAsTestUser(page);
   });
 
-  test('Extrato exibe 10 transações recentes', async ({ page }) => {
-    const dashboard = new DashboardPage(page);
-    await dashboard.openTransactionPage();
+  test('Exibir as 10 transações mais recentes', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
 
-    const transactionPage = new TransactionPage(page);
-    await expect(transactionPage.getRows()).toHaveLength(10);
+    await home.clickStatementButton();
+    const statement = new StatementPage(page);
+    const transactions = await statement.getTransactions();
 
-    await transactionPage.rows.forEach(async row => {
-      await expect(row).toContainText(/\d{2}\/\d{2}\/\d{4}/); // date
-      await expect(row).toContainText(/[A-Za-z]/);           // description
-      await expect(row).toContainText(/(Transferência|Pagamento|Empréstimo)/); // type
-      await expect(row).toContainText(/R\$\s\d{1,3}\.\d{3},\d{2}/); // value
-    });
-  });
-
-  test('Extrato exibe menos de 10 se houver menos registros', async ({ page }) => {
-    // Assuming only 5 transactions exist
-    const dashboard = new DashboardPage(page);
-    await dashboard.openTransactionPage();
-
-    const transactionPage = new TransactionPage(page);
-    await expect(transactionPage.getRows()).toHaveLength(5);
-
-    // Validate descending order: newest at the top
-    const dates = await transactionPage.rows.map(row => row.locator('.date').textContent());
-    const sorted = [...dates].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-    expect(dates).toEqual(sorted);
-  });
-});
-```
-
----
-
-### 3.5 US05 – Transferência de fundos
-
-```ts
-// e2e/tests/us05-transfer.spec.ts
-import { test, expect } from '@playwright/test';
-import { TransferPage } from '../pageObjects/transferPage';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-
-test.describe.parallel('US05 – Transferência de fundos', () => {
-  test.beforeEach(async ({ page }) => {
-    // Create accounts A & B with API or UI
-    await page.goto('/dashboard');
-  });
-
-  test('Transferência bem‑sucedida', async ({ page }) => {
-    const transfer = new TransferPage(page);
-    await transfer.fillTransferForm({
-      amount: 300,
-      recipientAccount: 'B',
-      description: 'Transferência de teste',
-    });
-    await transfer.confirm();
-
-    const dashboard = new DashboardPage(page);
-    // Validate balances
-    const balanceA = await dashboard.getBalanceText('A');
-    const balanceB = await dashboard.getBalanceText('B');
-    // parse and compare – omitted for brevity
-
-    // Validate transaction history entries
-    const history = new HistoryPage(page);
-    await history.open();
-    const transferEntry = await history.findEntry('Transferência', 300, 'B');
-    expect(transferEntry).toBeTruthy();
-  });
-
-  test('Transferência bloqueada por saldo insuficiente', async ({ page }) => {
-    const transfer = new TransferPage(page);
-    await transfer.fillTransferForm({
-      amount: 200,
-      recipientAccount: 'B',
-      description: 'Transferência de teste',
-    });
-    await transfer.confirm();
-    await expectVisible(page, '.toast-error');
-    await expect(page.locator('.toast-error')).toContainText('Saldo insuficiente');
-  });
-});
-```
-
----
-
-### 3.6 US06 – Solicitação de empréstimo
-
-```ts
-// e2e/tests/us06-loan.spec.ts
-import { test, expect, chromium } from '@playwright/test';
-import { LoanPage } from '../pageObjects/loanPage';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-
-test.describe.parallel('US06 – Solicitação de empréstimo', () => {
-  test('Solicitação enviada', async ({ page }) => {
-    const loan = new LoanPage(page);
-    await loan.fillForm({
-      amount: 10000,
-      annualIncome: 60000,
-    });
-    await loan.submit();
-    await expectVisible(page, '.toast-message');
-    await expect(page.locator('.toast-message')).toContainText('Solicitação enviada. Aguarde avaliação.');
-    // Verify entry in "Meus Empréstimos"
-    const dashboard = new DashboardPage(page);
-    await dashboard.openLoans();
-    const row = await dashboard.findLoanRow(10000);
-    expect(row).toBeTruthy();
-  });
-
-  test('Resultado aprovado após 5 minutos', async ({ page, request }) => {
-    // Mock the loan decision endpoint to return “Aprovado” after 5 mins
-    await request.post('/api/loan/decision', { data: { status: 'Aprovado' } });
-
-    // Wait 5 mins – in real test we would use `page.waitForTimeout(300000)`  
-    // For CI, we stub the server response instead
-    const loan = new LoanPage(page);
-    await loan.waitForResult('Aprovado', 5 * 60 * 1000);
-    await expect(page.locator('.loan-status')).toContainText('Aprovado');
-    // Verify entry in “Meus Empréstimos”
-  });
-
-  test('Resultado negado após 5 minutos', async ({ page, request }) => {
-    await request.post('/api/loan/decision', { data: { status: 'Negado' } });
-    const loan = new LoanPage(page);
-    await loan.waitForResult('Negado', 5 * 60 * 1000);
-    await expect(page.locator('.loan-status')).toContainText('Negado');
-  });
-
-  test('Campo obrigatório ausente', async ({ page }) => {
-    const loan = new LoanPage(page);
-    await loan.fillForm({
-      amount: 0, // empty field
-      annualIncome: 60000,
-    });
-    await loan.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(page.locator('.toast-error')).toContainText('Valor do empréstimo obrigatório');
-  });
-});
-```
-
-> **Implementation note** – `LoanPage#waitForResult` simply polls the UI for a status change or waits on a mocked endpoint.
-
----
-
-### 3.7 US07 – Pagamento de contas
-
-```ts
-// e2e/tests/us07-payment.spec.ts
-import { test, expect } from '@playwright/test';
-import { PaymentPage } from '../pageObjects/paymentPage';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-
-test.describe.parallel('US07 – Pagamento de contas', () => {
-  test('Pagamento agendado com sucesso', async ({ page }) => {
-    const payment = new PaymentPage(page);
-    await payment.fillForm({
-      beneficiary: 'Luz',
-      amount: 150,
-      dueDate: '2025-12-25',
-      // ...other required fields
-    });
-    await payment.submit();
-    await expectVisible(page, '.toast-message');
-    await expect(page.locator('.toast-message')).toContainText('Pagamento agendado para 25/12/2025');
-
-    // Verify history
-    const history = new DashboardPage(page);
-    await history.openHistory();
-    const entry = await history.findEntry('Pagamento', 150, 'Luz', '2025-12-25');
-    expect(entry).toBeTruthy();
-  });
-
-  test('Erro de CEP inválido', async ({ page }) => {
-    const payment = new PaymentPage(page);
-    await payment.fillForm({
-      beneficiary: 'Luz',
-      amount: 150,
-      dueDate: '2025-12-25',
-      cep: '12345', // invalid
-    });
-    await payment.submit();
-    await expectVisible(page, '.toast-error');
-    await expect(page.locator('.toast-error')).toContainText('CEP inválido');
-  });
-
-  test('Pagamento futuro não processado na data atual', async ({ page }) => {
-    // Assume we have a scheduled payment for 2025‑12‑30
-    await page.goto('/dashboard');
-    await page.evaluate(() => {
-      // Mock server: payment status remains "Agendado" until the due date
-    });
-
-    // Simulate date 01/12/2025
-    await page.context().addInitScript(() => {
-      Date = class extends Date {
-        constructor(...args) {
-          super(...args);
-          if (!args.length) return new Date('2025-12-01T00:00:00');
-          return super(...args);
-        }
-      };
-    });
-
-    await page.reload();
-    const status = await page.locator('#payment-status').textContent();
-    expect(status).toBe('Agendado');
-    // No debit on the account – check balance unchanged
-  });
-});
-```
-
----
-
-### 3.8 US08 – Navegação sem erros
-
-```ts
-// e2e/tests/us08-navigation.spec.ts
-import { test, expect } from '@playwright/test';
-import { DashboardPage } from '../pageObjects/dashboardPage';
-
-test.describe.parallel('US08 – Navegação sem erros', () => {
-  test('Todas as páginas carregam sem erro 404', async ({ page }) => {
-    await page.goto('/dashboard');
-
-    const navLinks = await page.locator('nav a').all();
-    for (const link of navLinks) {
-      const url = await link.getAttribute('href');
-      await link.click();
-      await expect(page).not.toHaveURL(/\/404/);
-      await expect(page.locator('.breadcrumb')).toContainText('Dashboard'); // breadcrumb always points to Dashboard
-      await page.goBack(); // return to dashboard
+    expect(transactions.length).toBeLessThanOrEqual(10);
+    // Verifica ordem decrescente (data mais recente primeiro)
+    const dates = transactions.map(t => new Date(t.split(' - ')[0])); // ajuste caso o formato seja diferente
+    for (let i = 1; i < dates.length; i++) {
+      expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
     }
   });
-});
-```
 
----
+  test('Carregar mais transações ao clicar em "Mostrar mais"', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    await home.clickStatementButton();
 
-### 3.9 US09 – Mensagens de erro claras
+    const statement = new StatementPage(page);
+    const initialCount = (await statement.getTransactions()).length;
 
-```ts
-// e2e/tests/us09-error-messages.spec.ts
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pageObjects/loginPage';
+    await statement.clickShowMore();
 
-test.describe.parallel('US09 – Mensagens de erro claras', () => {
-  test('Mensagem de erro de login clara', async ({ page }) => {
-    const login = new LoginPage(page);
-    await login.fill('usuario@exemplo.com', 'senhaerrada');
-    await login.submit();
-    const errorMsg = await login.getErrorMessage();
-    expect(errorMsg).toBe('Credenciais inválidas. Tente novamente.');
-    expect(errorMsg).not.toMatch(/stack trace|error/i); // no technical details
+    const afterCount = (await statement.getTransactions()).length;
+    expect(afterCount).toBeGreaterThan(initialCount);
+    expect(afterCount).toBe(initialCount + 10);
   });
 
-  test('Mensagem de e‑mail já cadastrado sem stack trace', async ({ page }) => {
-    const register = new RegisterPage(page);
-    await register.fillMandatoryFields({ email: 'usuario@exemplo.com', /* … */});
-    await register.submit();
-    const errorMsg = await register.getMessage();
-    expect(errorMsg).toBe('E‑mail já cadastrado');
-    expect(errorMsg).not.toMatch(/trace|stack/i);
-  });
-});
-```
+  test('Nenhuma transação encontrada', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    await home.clickStatementButton();
 
----
+    const statement = new StatementPage(page);
+    // Simula ausência de transações via mock
+    await page.route('**/api/transactions', route => route.fulfill({
+      status: 200,
+      body: JSON.stringify({ transactions: [] }),
+    }));
 
-### 3.10 US10 – Registro no histórico de transações
-
-```ts
-// e2e/tests/us10-history.spec.ts
-import { test, expect } from '@playwright/test';
-import { HistoryPage } from '../pageObjects/historyPage';
-
-test.describe.parallel('US10 – Registro no histórico de transações', () => {
-  test('Transferência registrada no histórico', async ({ page }) => {
-    // Perform transfer via API or UI
-    await page.goto('/dashboard');
-
-    const history = new HistoryPage(page);
-    await history.open();
-
-    const transfer = await history.findEntry('Transferência', 200, 'B');
-    expect(transfer).toBeTruthy();
-    expect(transfer).toHaveText(/Conta B/); // description contains destination
-  });
-
-  test('Pagamento registrado no histórico', async ({ page }) => {
-    // Perform payment
-    await page.goto('/dashboard');
-
-    const history = new HistoryPage(page);
-    await history.open();
-
-    const payment = await history.findEntry('Pagamento', 150, 'Luz');
-    expect(payment).toBeTruthy();
-    expect(payment).toHaveText(/Luz/); // beneficiary
-  });
-
-  test('Empréstimo registrado no histórico', async ({ page }) => {
-    // After loan approval
-    await page.goto('/dashboard');
-
-    const history = new HistoryPage(page);
-    await history.open();
-
-    const loan = await history.findEntry('Empréstimo', 5000, null, 'Aprovado');
-    expect(loan).toBeTruthy();
+    const noMsg = await statement.hasNoTransactionsMessage();
+    expect(noMsg).toBeTruthy();
   });
 });
 ```
 
 ---
 
-### 3.11 US11 – Pagamentos futuros respeitam data agendada
+### 4.5 `tests/transfer.spec.ts`
 
 ```ts
-// e2e/tests/us11-scheduled-payment.spec.ts
+// tests/transfer.spec.ts
 import { test, expect } from '@playwright/test';
-import { PaymentPage } from '../pageObjects/paymentPage';
-import { DashboardPage } from '../pageObjects/dashboardPage';
+import { TransferPage } from '../pages/transfer-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
 
-test.describe.parallel('US11 – Pagamentos futuros respeitam data agendada', () => {
-  test('Pagamento futuro respeita a data de agendamento', async ({ page }) => {
-    // Schedule payment for 2026‑01‑15
-    const payment = new PaymentPage(page);
-    await payment.fillForm({
-      beneficiary: 'Água',
-      amount: 100,
-      dueDate: '2026-01-15',
+test.describe('US05 – Transferência de fundos', () => {
+  async function loginAsTestUser(page) {
+    const email = generateRandomEmail();
+    const password = 'Senha!123';
+
+    // Registro
+    await page.goto('/register');
+    await page.fill('[data-testid="name-input"]', 'Transferencia Teste');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="cpf-input"]', '12345678901');
+    await page.fill('[data-testid="phone-input"]', '11987654321');
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="register-button"]');
+
+    // Login
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="login-button"]');
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsTestUser(page);
+  });
+
+  test('Transferência bem-sucedida entre contas', async ({ page }) => {
+    const transfer = new TransferPage(page);
+    await transfer.goto();
+
+    await transfer.selectOriginAccount('Conta Corrente');
+    await transfer.selectDestinationAccount('Conta Poupança');
+    await transfer.setAmount('300');
+    await transfer.confirm();
+
+    const msg = await transfer.getSuccessMessage();
+    expect(msg).toBe('Transferência concluída');
+
+    // Os saldos podem ser verificados no HomePage (p.ex. via API mock ou DOM)
+  });
+
+  test('Falha por saldo insuficiente', async ({ page }) => {
+    // Supondo que saldo atual seja R$5.000,00
+    const transfer = new TransferPage(page);
+    await transfer.goto();
+
+    await transfer.selectOriginAccount('Conta Corrente');
+    await transfer.selectDestinationAccount('Conta Poupança');
+    await transfer.setAmount('10000'); // 10.000
+    await transfer.confirm();
+
+    const errMsg = await transfer.getErrorMessage();
+    expect(errMsg).toBe('Saldo insuficiente');
+  });
+
+  test('Erro ao inserir valor negativo ou zero', async ({ page }) => {
+    const transfer = new TransferPage(page);
+    await transfer.goto();
+
+    await transfer.setAmount('-50');
+    await transfer.confirm();
+
+    const errMsg = await transfer.getErrorMessage();
+    expect(errMsg).toBe('Valor inválido, deve ser positivo');
+  });
+});
+```
+
+---
+
+### 4.6 `tests/loan.spec.ts`
+
+```ts
+// tests/loan.spec.ts
+import { test, expect } from '@playwright/test';
+import { LoanPage } from '../pages/loan-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
+
+test.describe('US06 – Solicitação de empréstimo', () => {
+  async function loginAsTestUser(page) {
+    const email = generateRandomEmail();
+    const password = 'Senha!123';
+
+    await page.goto('/register');
+    await page.fill('[data-testid="name-input"]', 'Empréstimo Teste');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="cpf-input"]', '12345678901');
+    await page.fill('[data-testid="phone-input"]', '11987654321');
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="register-button"]');
+
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="login-button"]');
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsTestUser(page);
+  });
+
+  test('Empréstimo aprovado', async ({ page }) => {
+    const loan = new LoanPage(page);
+    await loan.goto();
+
+    await loan.setAmount('50000');
+    await loan.setAnnualIncome('200000');
+    await loan.submit();
+
+    const msg = await loan.getModalMessage();
+    expect(msg).toBe('Seu empréstimo foi aprovado');
+  });
+
+  test('Empréstimo negado por valor máximo excedido', async ({ page }) => {
+    const loan = new LoanPage(page);
+    await loan.goto();
+
+    await loan.setAmount('250000'); // > 200k
+    await loan.setAnnualIncome('300000');
+    await loan.submit();
+
+    const err = await loan.getErrorMessage();
+    expect(err).toBe('Valor máximo de empréstimo é R$ 200.000,00');
+  });
+
+  test('Empréstimo negado por renda anual muito baixa', async ({ page }) => {
+    const loan = new LoanPage(page);
+    await loan.goto();
+
+    await loan.setAmount('50000');
+    await loan.setAnnualIncome('20000'); // muito baixo
+    await loan.submit();
+
+    const err = await loan.getErrorMessage();
+    expect(err).toBe('Seu empréstimo foi negado');
+    // Sugestão de revisão de renda pode ser verificada em outro elemento
+  });
+
+  test('Erro ao inserir valor não numérico', async ({ page }) => {
+    const loan = new LoanPage(page);
+    await loan.goto();
+
+    await loan.setAmount('abc');
+    await loan.setAnnualIncome('200000');
+    await loan.submit();
+
+    const err = await loan.getErrorMessage();
+    expect(err).toBe('Valor inválido, apenas números são permitidos');
+  });
+});
+```
+
+---
+
+### 4.7 `tests/bill-payment.spec.ts`
+
+```ts
+// tests/bill-payment.spec.ts
+import { test, expect } from '@playwright/test';
+import { BillPaymentPage } from '../pages/bill-payment-page';
+import { LoginPage } from '../pages/login-page';
+import { generateRandomEmail } from '../utils/helpers';
+import { formatCurrency } from '../utils/helpers';
+
+test.describe('US07 – Pagamento de conta', () => {
+  async function loginAsTestUser(page) {
+    const email = generateRandomEmail();
+    const password = 'Senha!123';
+
+    await page.goto('/register');
+    await page.fill('[data-testid="name-input"]', 'Pagamento Teste');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="cpf-input"]', '12345678901');
+    await page.fill('[data-testid="phone-input"]', '11987654321');
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="register-button"]');
+
+    await page.goto('/login');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', password);
+    await page.click('[data-testid="login-button"]');
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsTestUser(page);
+  });
+
+  test('Agendamento de pagamento futuro', async ({ page }) => {
+    const payment = new BillPaymentPage(page);
+    await payment.goto();
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 10);
+    const dateStr = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    await payment.setBeneficiary('Fornecedor X');
+    await payment.setAmount('1500');
+    await payment.setDate(dateStr);
+    await payment.confirm();
+
+    const msg = await payment.getSuccessMessage();
+    expect(msg).toBe('Pagamento agendado');
+
+    // Verifica se a transação aparece como "Pendente" no extrato
+    // (pode ser feita via API mock ou verificando um elemento no extrato)
+  });
+
+  test('Erro por data no passado', async ({ page }) => {
+    const payment = new BillPaymentPage(page);
+    await payment.goto();
+
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 1);
+    const dateStr = pastDate.toISOString().split('T')[0];
+
+    await payment.setBeneficiary('Fornecedor Y');
+    await payment.setAmount('500');
+    await payment.setDate(dateStr);
+    await payment.confirm();
+
+    const err = await payment.getErrorMessage();
+    expect(err).toBe('Data inválida');
+  });
+
+  test('Erro por valor negativo', async ({ page }) => {
+    const payment = new BillPaymentPage(page);
+    await payment.goto();
+
+    await payment.setBeneficiary('Fornecedor Z');
+    await payment.setAmount('-100');
+    await payment.setDate(new Date().toISOString().split('T')[0]);
+    await payment.confirm();
+
+    const err = await payment.getErrorMessage();
+    expect(err).toBe('Valor inválido, deve ser positivo');
+  });
+
+  test('Erro ao omitir campo obrigatório (Beneficiário)', async ({ page }) => {
+    const payment = new BillPaymentPage(page);
+    await payment.goto();
+
+    await payment.setAmount('200');
+    await payment.setDate(new Date().toISOString().split('T')[0]);
+    // Beneficiário deixado em branco
+    await payment.confirm();
+
+    const err = await payment.getErrorMessage();
+    expect(err).toBe('Beneficiário é obrigatório');
+  });
+});
+```
+
+---
+
+### 4.8 `tests/navigation.spec.ts`
+
+```ts
+// tests/navigation.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('US08 – Navegação e Consistência de página', () => {
+  const pagesToTest = [
+    { url: '/', name: 'Home' },
+    { url: '/login', name: 'Login' },
+    { url: '/register', name: 'Register' },
+    { url: '/transfer', name: 'Transfer' },
+    { url: '/loan', name: 'Loan' },
+    { url: '/bill-payment', name: 'Bill Payment' },
+    { url: '/statement', name: 'Statement' },
+  ];
+
+  test('Todas as páginas carregam sem erros 404', async ({ page }) => {
+    for (const p of pagesToTest) {
+      await page.goto(p.url);
+      await expect(page).not.toHaveURL(/.*\.404/); // Não redireciona para 404
+      // Verifica se há banner de erro
+      const banner = page.locator('[data-testid="error-banner"]');
+      await expect(banner).not.toBeVisible();
+    }
+  });
+
+  test('Link inválido gera erro 404', async ({ page }) => {
+    // Clica em um link que não existe (exemplo: /nonexistent)
+    await page.goto('/');
+    await page.click('text=Nonexistent'); // assume que há um link de texto
+    await page.waitForLoadState('networkidle');
+
+    await expect(page).toHaveURL(/.*\/nonexistent/);
+    const errorBanner = page.locator('[data-testid="error-banner"]');
+    await expect(errorBanner).toBeVisible();
+    const bannerText = await errorBanner.innerText();
+    expect(bannerText).toContain('404');
+  });
+
+  test('Banner vermelho de erro inesperado aparece', async ({ page }) => {
+    // Simula exceção do servidor usando mock
+    await page.route('**/api/*', async route => {
+      if (route.request().url().includes('/home')) {
+        await route.fulfill({
+          status: 500,
+          body: JSON.stringify({ error: 'internal error' }),
+        });
+      } else {
+        await route.fallback();
+      }
     });
-    await payment.submit();
 
-    // Mock system date to 2026‑01‑15
-    await page.context().addInitScript(() => {
-      Date = class extends Date {
-        constructor(...args) {
-          if (!args.length) return new Date('2026-01-15T00:00:00');
-          return super(...args);
-        }
-      };
-    });
-
-    await page.reload();
-    // The system should process payment automatically
-    const dashboard = new DashboardPage(page);
-    const balance = await dashboard.getBalanceText();
-    // Validate balance decreased by payment amount – omitted
+    await page.goto('/');
+    const banner = page.locator('[data-testid="server-error-banner"]');
+    await expect(banner).toBeVisible();
+    const text = await banner.innerText();
+    expect(text).toBe('Erro inesperado. Tente novamente');
   });
 });
 ```
 
 ---
 
-### 3.12 US12 – Layout responsivo em dispositivos móveis
+## 📌 5. Dicas de Boas Práticas
 
-```ts
-// e2e/tests/us12-responsive.spec.ts
-import { test, expect } from '@playwright/test';
-import { RegisterPage } from '../pageObjects/registerPage';
-
-test.describe.parallel('US12 – Layout responsivo em dispositivos móveis', () => {
-  test('Interface se adapta ao viewport de 480px', async ({ page }) => {
-    await page.setViewportSize({ width: 480, height: 800 });
-
-    // The main menu should become a hamburger icon
-    const hamburger = page.locator('#hamburger-menu');
-    await expectVisible(page, '#hamburger-menu');
-    await hamburger.click();
-
-    // Form fields should have width >= 80% of viewport
-    const emailField = page.locator('#email');
-    const fieldWidth = await emailField.evaluate(el => el.getBoundingClientRect().width);
-    expect(fieldWidth).toBeGreaterThanOrEqual(0.8 * 480);
-
-    // Buttons should have touch area >= 48×48px
-    const submitBtn = page.locator('#register-submit');
-    const rect = await submitBtn.evaluate(el => el.getBoundingClientRect());
-    expect(rect.width).toBeGreaterThanOrEqual(48);
-    expect(rect.height).toBeGreaterThanOrEqual(48);
-  });
-});
-```
+| Prática | Por que é importante | Como implementamos |
+|---------|---------------------|---------------------|
+| **Page Objects** | Isolamento de lógica de UI; facilita manutenção | Cada página tem sua própria classe com métodos claros |
+| **Selectors legíveis** | Reduz o risco de breakage quando a UI muda | Usamos `data-testid` (ou `aria-label`) – deve existir nos componentes |
+| **Esperas explícitas** | Evita flakiness | `await expect(locator).toBeVisible()` antes de interagir |
+| **Reutilização de código** | Menos duplicação | Funções auxiliares para login/registro, `generateRandomEmail()` |
+| **Mock de API** | Teste em ambiente controlado | `page.route` para simular falhas de serviço |
+| **Mensagens de erro verificadas** | Confirma comportamento de validação | `expect(errorMsg).toBe('...')` |
+| **Testes isolados** | Facilita diagnóstico | Cada teste começa com um usuário limpo |
 
 ---
 
-## 4. Final remarks
+## 🚀 6. Execução
 
-* **Selectors** – Prefer `data-test` or `data-testid` attributes; they’re stable and do not change with styling changes.  
-* **Waiting** – Never use `page.waitForTimeout`. Prefer `waitForSelector`, `waitForResponse`, or `page.waitForFunction`.  
-* **Error handling** – All assertions are wrapped in `expect()` – failures give a clear snapshot.  
-* **Parallelism** – Each `test.describe.parallel` ensures tests run concurrently, drastically cutting CI time.  
-* **Data isolation** – For real projects you would hook into the backend (e.g. API calls, DB cleanup scripts) in `beforeAll`/`afterAll`.
+```bash
+# 1. Instale as dependências
+npm install --save-dev @playwright/test
 
-> **To run**  
-> ```bash
-> npx playwright test
-> ```  
+# 2. Instale os browsers do Playwright
+npx playwright install
 
-All files above are ready to be copied into a `playwright` project; adjust the CSS selectors to match your UI and you’re set. Happy testing!
+# 3. Rode os testes
+npx playwright test
+```
+
+Os resultados aparecerão no console e no relatório gerado automaticamente pelo Playwright.
+
+--- 
+
+> **Próximos passos**  
+> - Adicionar fixtures para login/registro, evitando repetir código em todos os testes.  
+> - Utilizar `test.describe.configure({ mode: 'serial' })` para testes que dependem de estado compartilhado.  
+> - Gerar relatórios HTML avançados (`npx playwright show-report`).  
+
+Boa sorte com seus testes automatizados! 🚀
