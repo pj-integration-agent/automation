@@ -5,7 +5,7 @@ on:
     inputs:
 
       tipo-prompt:
-        description: "Qual prompt deseja usar? (ex: robot ou playwrigth)"
+        description: "Qual prompt deseja usar?"
         required: true
         type: choice
         options:
