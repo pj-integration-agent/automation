@@ -1,604 +1,568 @@
-```ts
-// tests/user.spec.ts
-//
-//  Playwright Test suite that covers all the user stories (US01‑US07) described
-//  in the original Gherkin file.  
-//  The code follows the Playwright Test Runner structure, uses TypeScript,
-//  keeps selectors stable, and includes explanatory comments for every step.
-//
-//  NOTE: This is a *sample* implementation.  In a real project you would
-//  replace the hard‑coded selectors and values with the actual ones used by
-//  your application and, if necessary, add API mocking or database
-//  manipulation to set up the required test data.
-
-import { test, expect, Page } from '@playwright/test';
-
-// -----------------------------------------------------------------------------
-// Global constants & helpers
-// -----------------------------------------------------------------------------
-const BASE_URL = 'https://app.example.com';
-
-const selectors = {
-  // Registration
-  regPage: '/register',
-  regEmail: '#reg-email',
-  regPassword: '#reg-password',
-  regCPF: '#reg-cpf',
-  regName: '#reg-name',
-  regRegisterBtn: '#reg-register',
-  regSuccessMsg: '.toast-success',
-  regErrorMsg: '.toast-error',
-
-  // Login
-  loginPage: '/login',
-  loginEmail: '#login-email',
-  loginPassword: '#login-password',
-  loginBtn: '#login-btn',
-  dashboardPage: '/dashboard',
-  myAccountPage: '/my-account',
-  loginSuccessMsg: '.toast-success',
-  loginErrorMsg: '.toast-error',
-
-  // Dashboard / Balance
-  balanceDisplay: '#account-balance',
-
-  // Transactions / Extract
-  extratoBtn: '#view-extrato',
-  transactionTable: '#transactions-table',
-  noTransactionMsg: '.no-transactions',
-
-  // Transfers
-  transferPage: '/transfer',
-  transferOrigin: '#origin-account',
-  transferDest: '#destination-account',
-  transferAmount: '#transfer-amount',
-  transferConfirmBtn: '#confirm-transfer',
-  transferSuccessMsg: '.toast-success',
-  transferErrorMsg: '.toast-error',
-
-  // Loan
-  loanPage: '/loan',
-  loanAmount: '#loan-amount',
-  loanRequestBtn: '#request-loan',
-  loanStatusMsg: '#loan-status',
-
-  // Payment
-  paymentPage: '/payment',
-  paymentAmount: '#payment-amount',
-  paymentDate: '#payment-date',
-  paymentScheduleBtn: '#schedule-payment',
-  paymentSuccessMsg: '.toast-success',
-  paymentErrorMsg: '.toast-error',
-  transactionHistory: '#transaction-history',
-
-  // Navigation
-  navTransfer: '#nav-transfer',
-  navAccount: '#nav-account',
-  navMenuActive: (id: string) => `#nav-${id}.active`,
-
-  // Misc
-  notFoundBanner: '#not-found-banner',
-};
-
-// Utility to register a user
-async function registerUser(page: Page, user: {
-  email: string,
-  password: string,
-  name?: string,
-  cpf?: string,
-}) {
-  await page.goto(BASE_URL + selectors.regPage);
-
-  if (user.name) await page.fill(selectors.regName, user.name);
-  if (user.email) await page.fill(selectors.regEmail, user.email);
-  if (user.password) await page.fill(selectors.regPassword, user.password);
-  if (user.cpf) await page.fill(selectors.regCPF, user.cpf);
-
-  await page.click(selectors.regRegisterBtn);
-}
-
-// Utility to log in
-async function loginUser(page: Page, email: string, password: string) {
-  await page.goto(BASE_URL + selectors.loginPage);
-
-  await page.fill(selectors.loginEmail, email);
-  await page.fill(selectors.loginPassword, password);
-  await page.click(selectors.loginBtn);
-}
-
-// -----------------------------------------------------------------------------
-// US01 – Cadastro de Usuário
-// -----------------------------------------------------------------------------
-test.describe('US01 – Cadastro de Usuário', () => {
-
-  test('Registro bem‑sucedido com dados válidos', async ({ page }) => {
-    /* Given o usuário acessa a página de cadastro */
-    await page.goto(BASE_URL + selectors.regPage);
-
-    /* When ele preenche todos os campos obrigatórios com dados válidos */
-    const user = {
-      email: 'john.doe@example.com',
-      password: 'StrongP@ssw0rd',
-      name: 'John Doe',
-      cpf: '12345678900', // válido
-    };
-    await registerUser(page, user);
-
-    /* Then o sistema exibe a mensagem “Cadastro concluído com sucesso” */
-    await expect(page.locator(selectors.regSuccessMsg))
-      .toHaveText('Cadastro concluído com sucesso');
-
-    /* And o usuário recebe um e‑mail de confirmação – (mocked in tests) */
-    // In a real test you would verify the email in a mock inbox.
-
-    /* And a conta fica habilitada para login */
-    await expect(page.getByText('Login')).toBeVisible();
-  });
-
-  test('Falha de cadastro quando e‑mail ausente', async ({ page }) => {
-    /* Given o usuário acessa a página de cadastro */
-    await page.goto(BASE_URL + selectors.regPage);
-
-    /* When ele preenche todos os campos obrigatórios exceto o e‑mail */
-    const user = {
-      email: '', // missing
-      password: 'StrongP@ssw0rd',
-      name: 'Jane Doe',
-      cpf: '12345678900',
-    };
-    await registerUser(page, user);
-
-    /* Then o sistema exibe a mensagem “E‑mail é obrigatório” */
-    await expect(page.locator(selectors.regErrorMsg))
-      .toHaveText('E‑mail é obrigatório');
-  });
-
-  test('Falha de cadastro com CPF inválido', async ({ page }) => {
-    /* Given o usuário acessa a página de cadastro */
-    await page.goto(BASE_URL + selectors.regPage);
-
-    /* When ele preenche todos os campos obrigatórios com CPF no formato 12345678901 */
-    const user = {
-      email: 'bob@example.com',
-      password: 'StrongP@ssw0rd',
-      name: 'Bob Smith',
-      cpf: '12345678901', // inválido
-    };
-    await registerUser(page, user);
-
-    /* Then o sistema exibe a mensagem “CPF inválido” */
-    await expect(page.locator(selectors.regErrorMsg))
-      .toHaveText('CPF inválido');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US02 – Login
-// -----------------------------------------------------------------------------
-test.describe('US02 – Login', () => {
-
-  // For simplicity we register a user before each test that requires login
-  const testUser = {
-    email: 'login.user@example.com',
-    password: 'LoginP@ss123',
-    name: 'Login User',
-    cpf: '98765432100',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    // Ensure the user exists – in a real test you might hit an API or
-    // use a fixture. Here we just register them.
-    await registerUser(page, testUser);
-  });
-
-  test('Login bem‑sucedido com e‑mail válido', async ({ page }) => {
-    /* Given o usuário está na tela de login */
-    await page.goto(BASE_URL + selectors.loginPage);
-
-    /* When ele digita seu e‑mail registrado e a senha correta */
-    await page.fill(selectors.loginEmail, testUser.email);
-    await page.fill(selectors.loginPassword, testUser.password);
-
-    /* And clica no botão “Entrar” */
-    await page.click(selectors.loginBtn);
-
-    /* Then o usuário é redirecionado para “Minha Conta" */
-    await expect(page).toHaveURL(BASE_URL + selectors.myAccountPage);
-
-    /* And a sessão é iniciada – confirm by checking for a logout button */
-    await expect(page.locator('#logout-btn')).toBeVisible();
-  });
-
-  test('Falha de login com senha incorreta', async ({ page }) => {
-    /* Given o usuário está na tela de login */
-    await page.goto(BASE_URL + selectors.loginPage);
-
-    /* When ele digita seu e‑mail registrado e uma senha errada */
-    await page.fill(selectors.loginEmail, testUser.email);
-    await page.fill(selectors.loginPassword, 'WrongPassword!');
-
-    /* And clica no botão “Entrar” */
-    await page.click(selectors.loginBtn);
-
-    /* Then o sistema exibe a mensagem “Usuário ou senha inválidos” */
-    await expect(page.locator(selectors.loginErrorMsg))
-      .toHaveText('Usuário ou senha inválidos');
-  });
-
-  test('Falha de login com e‑mail inválido', async ({ page }) => {
-    /* Given o usuário está na tela de login */
-    await page.goto(BASE_URL + selectors.loginPage);
-
-    /* When ele digita “usuario@” como e‑mail e qualquer senha */
-    await page.fill(selectors.loginEmail, 'usuario@');
-    await page.fill(selectors.loginPassword, 'AnyPassword123');
-
-    /* And clica no botão “Entrar” */
-    await page.click(selectors.loginBtn);
-
-    /* Then o sistema exibe a mensagem “Formato de e‑mail inválido” */
-    await expect(page.locator(selectors.loginErrorMsg))
-      .toHaveText('Formato de e‑mail inválido');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US03 – Visualizar Saldo e Extrato
-// -----------------------------------------------------------------------------
-test.describe('US03 – Visualizar Saldo e Extrato', () => {
-
-  const testUser = {
-    email: 'balance.user@example.com',
-    password: 'BalanceP@ss',
-    name: 'Balance User',
-    cpf: '11122233344',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    await registerUser(page, testUser);
-    await loginUser(page, testUser.email, testUser.password);
-  });
-
-  test('Dashboard exibe saldo correto', async ({ page }) => {
-    /* Given o usuário está autenticado e no dashboard */
-    // Login already performed in beforeEach
-
-    /* Then o saldo exibido corresponde ao saldo da conta */
-    const balanceText = await page.locator(selectors.balanceDisplay).textContent();
-    const balance = parseFloat(balanceText?.replace(/[^\d,]/g, '')?.replace(',', '.') || '0');
-
-    // In a real test we would know the expected balance; here we just assert > 0
-    expect(balance).toBeGreaterThan(0);
-  });
-
-  test('Extrato exibe últimas 10 transações em ordem decrescente', async ({ page }) => {
-    /* Given o usuário está autenticado */
-    // Already logged in
-
-    /* When ele clica em “Extrato” */
-    await page.click(selectors.extratoBtn);
-
-    /* Then a lista mostra as 10 transações mais recentes, ordenadas pela data decrescente */
-    const rows = await page.locator(`${selectors.transactionTable} tr`).all();
-    expect(rows.length).toBeGreaterThanOrEqual(10);
-
-    const dates: Date[] = [];
-    for (const row of rows.slice(0, 10)) {
-      const dateText = await row.locator('.date').textContent();
-      dates.push(new Date(dateText ?? ''));
-    }
-
-    // Check descending order
-    for (let i = 0; i < dates.length - 1; i++) {
-      expect(dates[i].getTime()).toBeGreaterThanOrEqual(dates[i + 1].getTime());
-    }
-  });
-
-  test('Extrato exibe mensagem quando não há transações', async ({ page }) => {
-    /* Given o usuário tem saldo mas nenhuma transação */
-    // This would normally require resetting the transaction list via an API
-    // Here we just assume it's empty.
-
-    /* When ele clica em “Extrato” */
-    await page.click(selectors.extratoBtn);
-
-    /* Then o sistema exibe a mensagem “Nenhuma transação registrada” */
-    await expect(page.locator(selectors.noTransactionMsg))
-      .toHaveText('Nenhuma transação registrada');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US04 – Transferência de Fundos
-// -----------------------------------------------------------------------------
-test.describe('US04 – Transferência de Fundos', () => {
-
-  const testUser = {
-    email: 'transfer.user@example.com',
-    password: 'TransferP@ss',
-    name: 'Transfer User',
-    cpf: '55566677788',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    await registerUser(page, testUser);
-    await loginUser(page, testUser.email, testUser.password);
-  });
-
-  test('Transferência bem-sucedida dentro do saldo', async ({ page }) => {
-    /* Given o usuário tem saldo de R$1.000 na conta corrente */
-    // Assume the user has this balance
-
-    /* When ele seleciona a conta corrente como origem */
-    await page.click(selectors.transferPage);
-    await page.selectOption(selectors.transferOrigin, 'current');
-
-    /* And seleciona a conta poupança como destino */
-    await page.selectOption(selectors.transferDest, 'savings');
-
-    /* And insere o valor de R$200 */
-    await page.fill(selectors.transferAmount, '200');
-
-    /* And confirma a transferência */
-    await page.click(selectors.transferConfirmBtn);
-
-    /* Then a conta corrente é debitada em R$200 */
-    await expect(page.locator('#current-balance')).toHaveText('800'); // 1000 - 200
-
-    /* And a conta poupança é creditada em R$200 */
-    await expect(page.locator('#savings-balance')).toHaveText('200'); // 0 + 200
-
-    /* And a transação aparece no extrato de ambas as contas */
-    await page.click(selectors.extratoBtn);
-    await expect(page.locator(selectors.transactionTable)).toContainText('Transferência para poupança - R$200');
-    // In a real test you would verify both accounts' histories separately.
-  });
-
-  test('Transferência falha por saldo insuficiente', async ({ page }) => {
-    /* Given o usuário tem saldo de R$500 na conta corrente */
-    // Assume balance is 500
-
-    /* When ele tenta transferir R$600 para outra conta */
-    await page.click(selectors.transferPage);
-    await page.selectOption(selectors.transferOrigin, 'current');
-    await page.selectOption(selectors.transferDest, 'savings');
-    await page.fill(selectors.transferAmount, '600');
-
-    /* Then o sistema exibe a mensagem “Valor excede saldo” */
-    await page.click(selectors.transferConfirmBtn);
-    await expect(page.locator(selectors.transferErrorMsg))
-      .toHaveText('Valor excede saldo');
-  });
-
-  test('Transferência falha devido a erro de rede', async ({ page, context }) => {
-    /* Given o usuário tem saldo de R$1.000 na conta corrente */
-    // Assume balance is 1000
-
-    /* When a conexão cai durante a transferência */
-    await page.click(selectors.transferPage);
-    await page.selectOption(selectors.transferOrigin, 'current');
-    await page.selectOption(selectors.transferDest, 'savings');
-    await page.fill(selectors.transferAmount, '200');
-
-    // Simulate network failure for the transfer request
-    await context.route('**/api/transfer', route => route.abort());
-
-    /* Then nenhuma conta é alterada */
-    await page.click(selectors.transferConfirmBtn);
-    await expect(page.locator(selectors.transferErrorMsg))
-      .toHaveText('Transferência não concluída, tente novamente');
-
-    // Verify balances unchanged – would need API call or UI read
-    await expect(page.locator('#current-balance')).toHaveText('1000');
-    await expect(page.locator('#savings-balance')).toHaveText('0');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US05 – Solicitação de Empréstimo
-// -----------------------------------------------------------------------------
-test.describe('US05 – Solicitação de Empréstimo', () => {
-
-  const testUser = {
-    email: 'loan.user@example.com',
-    password: 'LoanP@ss',
-    name: 'Loan User',
-    cpf: '99988877766',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    await registerUser(page, testUser);
-    await loginUser(page, testUser.email, testUser.password);
-  });
-
-  test('Empréstimo aprovado quando renda adequada', async ({ page }) => {
-    /* Given o usuário tem renda anual de R$30.000 */
-    // In real life set via profile page or API; here we assume.
-
-    /* When ele solicita R$20.000 */
-    await page.goto(BASE_URL + selectors.loanPage);
-    await page.fill(selectors.loanAmount, '20000');
-
-    /* And clica em “Solicitar” */
-    await page.click(selectors.loanRequestBtn);
-
-    /* Then o sistema exibe “Empréstimo aprovado” */
-    await expect(page.locator(selectors.loanStatusMsg))
-      .toHaveText('Empréstimo aprovado');
-  });
-
-  test('Empréstimo negado por renda insuficiente', async ({ page }) => {
-    /* Given o usuário tem renda anual de R$15.000 */
-    // Assume.
-
-    await page.goto(BASE_URL + selectors.loanPage);
-    await page.fill(selectors.loanAmount, '20000');
-    await page.click(selectors.loanRequestBtn);
-
-    /* Then o sistema exibe “Empréstimo negado – renda insuficiente” */
-    await expect(page.locator(selectors.loanStatusMsg))
-      .toHaveText('Empréstimo negado – renda insuficiente');
-  });
-
-  test('Empréstimo rejeitado por valor superior ao limite', async ({ page }) => {
-    /* Given o usuário tem renda anual de R$60.000 */
-    // Assume.
-
-    await page.goto(BASE_URL + selectors.loanPage);
-    await page.fill(selectors.loanAmount, '60000');
-    await page.click(selectors.loanRequestBtn);
-
-    /* Then o sistema exibe “Dados inválidos” */
-    await expect(page.locator(selectors.loanStatusMsg))
-      .toHaveText('Dados inválidos');
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US06 – Pagamento de Contas
-// -----------------------------------------------------------------------------
-test.describe('US06 – Pagamento de Contas', () => {
-
-  const testUser = {
-    email: 'payment.user@example.com',
-    password: 'PaymentP@ss',
-    name: 'Payment User',
-    cpf: '22233344455',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    await registerUser(page, testUser);
-    await loginUser(page, testUser.email, testUser.password);
-  });
-
-  test('Pagamento agendado com saldo futuro suficiente', async ({ page }) => {
-    /* Given o usuário tem saldo de R$1.000 */
-    // Assume balance is 1000
-
-    /* When ele agenda pagamento de R$200 para 30 dias à frente */
-    await page.goto(BASE_URL + selectors.paymentPage);
-    await page.fill(selectors.paymentAmount, '200');
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 30);
-    await page.fill(selectors.paymentDate, futureDate.toISOString().split('T')[0]);
-
-    /* And confirma */
-    await page.click(selectors.paymentScheduleBtn);
-
-    /* Then o sistema exibe “Pagamento agendado com sucesso” */
-    await expect(page.locator(selectors.paymentSuccessMsg))
-      .toHaveText('Pagamento agendado com sucesso');
-
-    /* And uma transação com status “Agendado” aparece no histórico */
-    await page.click(selectors.transactionHistory);
-    await expect(page.locator(selectors.transactionTable)).toContainText('Pagamento – Agendado');
-  });
-
-  test('Falha ao agendar pagamento com data no passado', async ({ page }) => {
-    /* Given o usuário tenta agendar pagamento para 01/01/2023 */
-    await page.goto(BASE_URL + selectors.paymentPage);
-    await page.fill(selectors.paymentAmount, '200');
-    await page.fill(selectors.paymentDate, '2023-01-01');
-
-    /* When ele confirma */
-    await page.click(selectors.paymentScheduleBtn);
-
-    /* Then o sistema exibe “Data inválida” */
-    await expect(page.locator(selectors.paymentErrorMsg))
-      .toHaveText('Data inválida');
-  });
-
-  test('Pagamento permanece agendado por saldo insuficiente no dia de pagamento', async ({ page }) => {
-    /* Given o usuário tem saldo de R$150 hoje */
-    // Assume balance is 150
-
-    /* When ele agenda pagamento de R$200 para amanhã */
-    await page.goto(BASE_URL + selectors.paymentPage);
-    await page.fill(selectors.paymentAmount, '200');
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    await page.fill(selectors.paymentDate, tomorrow.toISOString().split('T')[0]);
-
-    /* And a conta não tem saldo no dia */
-    // This would normally be simulated via API; here we just skip
-
-    /* Then o pagamento permanece “Agendado” e o usuário recebe mensagem “Saldo insuficiente para pagamento” */
-    await page.click(selectors.paymentScheduleBtn);
-    await expect(page.locator(selectors.paymentSuccessMsg))
-      .toHaveText('Pagamento agendado com sucesso');
-
-    // On the scheduled date, the system would check balance and keep the status.
-    // In the test we just verify that the message appears at scheduling time.
-  });
-});
-
-// -----------------------------------------------------------------------------
-// US07 – Navegação e Usabilidade Geral
-// -----------------------------------------------------------------------------
-test.describe('US07 – Navegação e Usabilidade Geral', () => {
-
-  const testUser = {
-    email: 'nav.user@example.com',
-    password: 'NavP@ss',
-    name: 'Nav User',
-    cpf: '77788899900',
-  };
-
-  test.beforeEach(async ({ page }) => {
-    await registerUser(page, testUser);
-    await loginUser(page, testUser.email, testUser.password);
-  });
-
-  test('Todas as páginas carregam e navegação funciona', async ({ page }) => {
-    /* Given o usuário está autenticado */
-    // Already logged in
-
-    /* When ele clica em “Transferências” */
-    await page.click(selectors.navTransfer);
-
-    /* Then a página de transferências carrega sem erros */
-    await expect(page).toHaveURL(BASE_URL + selectors.transferPage);
-
-    /* And o menu permanece ativo */
-    await expect(page.locator(selectors.navMenuActive('transfer')))
-      .toBeVisible();
-  });
-
-  test('Acesso a página protegida sem autenticação redireciona ao login', async ({ page }) => {
-    /* Given o usuário não autenticado */
-    await page.goto(BASE_URL + selectors.myAccountPage);
-
-    /* When ele tenta acessar “Minha Conta” */
-    // Already attempted in previous line
-
-    /* Then ele é redirecionado ao login */
-    await expect(page).toHaveURL(BASE_URL + selectors.loginPage);
-  });
-
-  test('Página não encontrada exibe banner de erro', async ({ page }) => {
-    /* Given o usuário acessa URL inválida */
-    await page.goto(BASE_URL + '/this-page-does-not-exist');
-
-    /* When a página 404 é gerada */
-    // The navigation already happened
-
-    /* Then o banner exibe “Página não encontrada” */
-    await expect(page.locator(selectors.notFoundBanner))
-      .toHaveText('Página não encontrada');
-  });
-});
+## 1.  Estrutura de Pastas recomendada
+
+```
+tests/
+├── keywords/
+│   ├── navigation.robot
+│   ├── registration.robot
+│   ├── login.robot
+│   ├── transfer.robot
+│   ├── loan.robot
+│   ├── payment.robot
+│   ├── account.robot
+│   └── utils.robot
+├── variables/
+│   └── test_data.robot
+└── tests.robot
 ```
 
-**Explanation of the structure**
+- **keywords** – contém os *User‑Level* e *Library‑Level* *keywords* reutilizáveis.  
+- **variables** – armazena dados que não variam entre execuções.  
+- **tests.robot** – arquivo principal com todos os *Test Cases* organizados por Feature.
 
-1. **Imports & Constants** – All Playwright APIs and page‑specific constants are declared at the top for readability and easy maintenance.
-2. **Reusable helpers** – `registerUser` and `loginUser` encapsulate common flows, keeping the tests focused on the scenario logic.
-3. **`test.describe` blocks** – Each user story has its own describe, which groups its positive and negative scenarios.  
-4. **`test.beforeEach`** – Where a scenario needs an authenticated user, a `beforeEach` hook registers and logs in a test account.
-5. **Selectors** – Defined once in a `selectors` object. Use stable identifiers (`#id`, `.class`) and keep the naming consistent.
-6. **Steps with comments** – Every step of the Gherkin is translated into a block of code, preceded by a comment that explains its purpose.  
-7. **Assertions** – All expectations use Playwright’s `expect` API, ensuring that the test fails immediately when something is not as expected.
-8. **Network mocking** – The network‑failure test shows how to intercept and abort a request.  
-9. **Future extensions** – If the application grows, you can add new helper functions, extend the selectors, or swap the base URL without touching the individual tests.
+> **Obs.** Para simplificar o exemplo, os *keywords* abaixo são **pseudo‑código** – você deve substituí‑los pelos seletores reais da sua aplicação.
 
-This file can be dropped into a Playwright project (e.g. `tests/user.spec.ts`) and executed with `npx playwright test`.
+---
+
+## 2.  Arquivo de Variáveis – `variables/test_data.robot`
+
+```robot
+*** Variables ***
+${BASE_URL}          https://parabank.parasoft.com/parabank
+${BROWSER}           Chrome
+${TIMEOUT}           10s
+${DELAY}             1s
+
+# Dados de teste
+${VALID_EMAIL}          usuario@exemplo.com
+${VALID_PASSWORD}       senha123
+${VALID_NAME}           João Silva
+${VALID_CEP}            12345-678
+${INVALID_EMAIL}        usuario.com
+${INVALID_PHONE}        123456789
+${INVALID_CEP}          00000-000
+${INVALID_BALANCE}      200,00
+${TRANSFER_AMOUNT}      200,00
+${DEPOSIT_AMOUNT}       500,00
+${LOAN_AMOUNT}          50000,00
+${LOW_INCOME_LOAN}      30000,00
+${HIGH_INCOME_LOAN}     150000,00
+```
+
+---
+
+## 3.  Arquivo de *Keywords* – `keywords/navigation.robot`
+
+```robot
+*** Settings ***
+Library    SeleniumLibrary    timeout=${TIMEOUT}
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Abrir Navegador
+    [Arguments]    ${url}
+    # Comentário: Inicia o browser e navega até a página desejada
+    Open Browser    ${url}    ${BROWSER}
+    Maximize Browser Window
+    Set Selenium Speed    ${DELAY}
+
+Fechar Navegador
+    # Comentário: Fecha a sessão do navegador
+    Close Browser
+
+Navegar para Página
+    [Arguments]    ${path}
+    # Comentário: Navega usando a URL base
+    Go To    ${BASE_URL}${path}
+    Wait Until Page Contains Element    css:body
+
+Verificar Erros HTTP
+    # Comentário: Verifica se a página não retorna 404/500
+    Page Should Not Contain    404
+    Page Should Not Contain    500
+```
+
+---
+
+## 4.  Arquivo de *Keywords* – `keywords/registration.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Acessar Página de Cadastro
+    # Comentário: Navega até a página de registro
+    Navegar para Página    /register.htm
+    Wait Until Page Contains    Cadastre-se
+
+Preencher Formulário de Cadastro
+    [Arguments]    ${cep}=    ${name}=    ${email}=    ${password}=    ${confirm}=    ${phone}=
+    # Comentário: Preenche cada campo do formulário
+    Input Text    id:input-username    ${name}
+    Input Text    id:input-email       ${email}
+    Input Text    id:input-password    ${password}
+    Input Text    id:input-confirm     ${confirm}
+    Input Text    id:input-cep         ${cep}
+    Input Text    id:input-phone       ${phone}
+    Input Text    id:input-address     "Rua Teste, 123"
+    Input Text    id:input-city        "São Paulo"
+    Input Text    id:input-state       "SP"
+    Input Text    id:input-zip         "12345-678"
+    Input Text    id:input-country     "Brasil"
+
+Clique em Cadastrar
+    # Comentário: Clica no botão de submit
+    Click Button    id:register-button
+    Wait Until Page Contains    Cadastro concluído
+
+Verificar Mensagem de Erro
+    [Arguments]    ${campo}    ${mensagem}
+    # Comentário: Verifica mensagem de erro ao lado do campo
+    ${error_locator}=    Set Variable    css:#${campo}-error
+    Wait Until Page Contains Element    ${error_locator}
+    Element Text Should Be    ${error_locator}    ${mensagem}
+```
+
+---
+
+## 5.  Arquivo de *Keywords* – `keywords/login.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Acessar Página de Login
+    # Comentário: Navega até a página de login
+    Navegar para Página    /login.htm
+    Wait Until Page Contains    Entrar
+
+Inserir Credenciais
+    [Arguments]    ${email}    ${password}
+    Input Text    id:input-username    ${email}
+    Input Text    id:input-password    ${password}
+
+Clique em Entrar
+    Click Button    id:login-button
+    Wait Until Page Contains    Dashboard
+
+Verificar Mensagem de Erro Login
+    [Arguments]    ${mensagem}
+    Wait Until Page Contains    ${mensagem}
+```
+
+---
+
+## 6.  Arquivo de *Keywords* – `keywords/transfer.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Acessar Tela de Transferência
+    # Comentário: Navega até a página de transferência
+    Navegar para Página    /transfer.htm
+    Wait Until Page Contains    Transferir
+
+Preencher Dados de Transferência
+    [Arguments]    ${destino}    ${valor}
+    Input Text    id:input-amount    ${valor}
+    Input Text    id:input-destination-account    ${destino}
+
+Confirmar Transferência
+    Click Button    id:transfer-submit
+    Wait Until Page Contains    Transferência concluída
+
+Verificar Saldo
+    [Arguments]    ${saldo_esperado}
+    Wait Until Page Contains    ${saldo_esperado}
+
+Verificar Mensagem de Erro
+    [Arguments]    ${mensagem}
+    Wait Until Page Contains    ${mensagem}
+```
+
+---
+
+## 7.  Arquivo de *Keywords* – `keywords/loan.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Acessar Tela de Empréstimo
+    Navegar para Página    /loan.htm
+    Wait Until Page Contains    Solicitar Empréstimo
+
+Preencher Dados de Empréstimo
+    [Arguments]    ${valor}    ${renda}
+    Input Text    id:input-loan-amount    ${valor}
+    Input Text    id:input-annual-income  ${renda}
+
+Enviar Solicitação
+    Click Button    id:loan-submit
+    Wait Until Page Contains    Empréstimo
+
+Verificar Mensagem
+    [Arguments]    ${mensagem}
+    Wait Until Page Contains    ${mensagem}
+```
+
+---
+
+## 8.  Arquivo de *Keywords* – `keywords/payment.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Acessar Tela de Pagamento
+    Navegar para Página    /payment.htm
+    Wait Until Page Contains    Pagamento de Conta
+
+Preencher Dados de Pagamento
+    [Arguments]    ${beneficiario}    ${endereco}    ${telefone}    ${conta}    ${valor}
+    Input Text    id:input-beneficiary   ${beneficiario}
+    Input Text    id:input-address       ${endereco}
+    Input Text    id:input-phone         ${telefone}
+    Input Text    id:input-account       ${conta}
+    Input Text    id:input-amount        ${valor}
+
+Agenda Data de Pagamento
+    [Arguments]    ${data}
+    Input Text    id:input-payment-date   ${data}
+
+Confirmar Pagamento
+    Click Button    id:payment-submit
+    Wait Until Page Contains    Pagamento confirmado
+
+Verificar Mensagem
+    [Arguments]    ${mensagem}
+    Wait Until Page Contains    ${mensagem}
+```
+
+---
+
+## 9.  Arquivo de *Keywords* – `keywords/account.robot`
+
+```robot
+*** Settings ***
+Resource   ../variables/test_data.robot
+
+*** Keywords ***
+Verificar Saldo na Dashboard
+    [Arguments]    ${saldo}
+    # Comentário: Espera até que o saldo seja exibido
+    Wait Until Page Contains    ${saldo}
+```
+
+---
+
+## 10.  Arquivo de *Keywords* – `keywords/utils.robot`
+
+```robot
+*** Settings ***
+Library   Collections
+
+*** Keywords ***
+Gerar Email Aleatório
+    # Comentário: Gera um e‑mail único para cada execução
+    ${timestamp}=    Get Current Date    result_format=%Y%m%d%H%M%S
+    ${random_email}=    Set Variable    teste${timestamp}@exemplo.com
+    [Return]    ${random_email}
+```
+
+---
+
+## 11.  Test Suite Principal – `tests.robot`
+
+```robot
+*** Settings ***
+Library    SeleniumLibrary    timeout=${TIMEOUT}
+Resource   keywords/navigation.robot
+Resource   keywords/registration.robot
+Resource   keywords/login.robot
+Resource   keywords/transfer.robot
+Resource   keywords/loan.robot
+Resource   keywords/payment.robot
+Resource   keywords/account.robot
+Resource   keywords/utils.robot
+Variables  variables/test_data.robot
+
+Suite Setup    Abrir Navegador    ${BASE_URL}
+Suite Teardown  Fechar Navegador
+
+*** Test Cases ***
+
+# === US01 – Cadastro de Usuário ===
+Cadastro com dados válidos
+    [Documentation]    Verifica fluxo de cadastro com dados válidos
+    ${email}=    Gerar Email Aleatório
+    Acessar Página de Cadastro
+    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${email}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
+    Clique em Cadastrar
+    Page Should Contain    Cadastro concluído com sucesso
+    # Logar com o usuário criado
+    Acessar Página de Login
+    Inserir Credenciais    ${email}    ${VALID_PASSWORD}
+    Clique em Entrar
+    Page Should Contain    Dashboard
+
+Cadastro com campo obrigatório em branco
+    [Documentation]    Verifica mensagem de erro quando o CEP está em branco
+    Acessar Página de Cadastro
+    Preencher Formulário de Cadastro    ${EMPTY}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    cep    Este campo é obrigatório.
+
+Cadastro com e-mail inválido
+    [Documentation]    Verifica validação de e‑mail
+    Acessar Página de Cadastro
+    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${INVALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    email    Formato de e‑mail inválido.
+
+Cadastro com telefone no formato incorreto
+    [Documentation]    Validação de telefone
+    Acessar Página de Cadastro
+    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    ${INVALID_PHONE}
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    phone    Formato de telefone inválido. Use (99) 99999-9999.
+
+Cadastro com CEP inexistente
+    [Documentation]    Validação de CEP inexistente
+    Acessar Página de Cadastro
+    Preencher Formulário de Cadastro    ${INVALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    cep    CEP não encontrado.
+
+# === US02 – Login de Usuário ===
+Login com credenciais corretas
+    [Documentation]    Valida login bem-sucedido
+    Acessar Página de Login
+    Inserir Credenciais    ${VALID_EMAIL}    ${VALID_PASSWORD}
+    Clique em Entrar
+    Page Should Contain    Dashboard
+    Verificar Saldo na Dashboard    R$ 3.245,67
+
+Login com credenciais inválidas
+    [Documentation]    Verifica mensagem de erro de credenciais inválidas
+    Acessar Página de Login
+    Inserir Credenciais    ${VALID_EMAIL}    senhaErrada
+    Clique em Entrar
+    Verificar Mensagem de Erro Login    Credenciais inválidas.
+
+Botão 'Entrar' só habilitado quando ambos os campos preenchidos
+    [Documentation]    Garante que o botão só fica habilitado quando todos os campos são preenchidos
+    Acessar Página de Login
+    # Senha em branco
+    Input Text    id:input-username    ${VALID_EMAIL}
+    Input Text    id:input-password    ${EMPTY}
+    Element Should Be Disabled    id:login-button
+    # Preenche senha
+    Input Text    id:input-password    ${VALID_PASSWORD}
+    Element Should Be Enabled      id:login-button
+
+# === US03 – Visualização do Saldo ===
+Exibição inicial do saldo na Dashboard
+    [Documentation]    Confirma formato e valor do saldo na dashboard
+    Acessar Página de Login
+    Inserir Credenciais    ${VALID_EMAIL}    ${VALID_PASSWORD}
+    Clique em Entrar
+    Page Should Contain    R$ 3.245,67
+
+Atualização do saldo após transferência
+    [Documentation]    Confirma saldo de origem e destino após transferência
+    Acessar Tela de Transferência
+    Preencher Dados de Transferência    9876-0    500,00
+    Confirmar Transferência
+    Verificar Saldo    R$ 4.500,00
+    # Verifica saldo na conta destino via extrato (código fictício)
+    Navegar para Página    /account/9876-0
+    Page Should Contain    R$ 500,00
+
+# === US04 – Acesso ao Extrato ===
+Exibição das 10 transações mais recentes
+    [Documentation]    Garante que a lista de transações contém no mínimo 10 itens
+    Navegar para Página    /statement.htm
+    ${qtde}=    Get Element Count    css:.transaction-row
+    Should Be True    ${qtde} >= 10
+
+Detalhes de transação ao clicar em 'Mais detalhes'
+    [Documentation]    Verifica dados completos de uma transação
+    Navegar para Página    /statement.htm
+    Click Link    css:.transaction-row[data-desc="Transferência para João Silva"] .more-details
+    Page Should Contain    Data:
+    Page Should Contain    Descrição: Transferência para João Silva
+    Page Should Contain    Valor: R$ 200,00
+    Page Should Contain    Saldo Final: R$ 4.500,00
+
+# === US05 – Transferência de Fundos ===
+Transferência dentro do saldo disponível
+    [Documentation]    Testa transferência bem-sucedida
+    Acessar Tela de Transferência
+    Preencher Dados de Transferência    9876-0    200,00
+    Confirmar Transferência
+    Verificar Saldo    R$ 800,00
+    # Verifica extrato (código fictício)
+    Navegar para Página    /statement.htm
+    Page Should Contain    Transferência para 9876-0
+
+Transferência com valor superior ao saldo
+    [Documentation]    Garante mensagem de saldo insuficiente
+    Acessar Tela de Transferência
+    Preencher Dados de Transferência    9876-0    200,00
+    Confirmar Transferência
+    Verificar Mensagem de Erro    Saldo insuficiente
+
+Transferência para conta inexistente
+    [Documentation]    Verifica erro de conta inválida
+    Acessar Tela de Transferência
+    Preencher Dados de Transferência    0000-0    50,00
+    Confirmar Transferência
+    Verificar Mensagem de Erro    Conta destino não encontrada
+
+# === US06 – Solicitação de Empréstimo ===
+Empréstimo aprovado e creditado imediatamente
+    [Documentation]    Testa aprovação de empréstimo
+    Acessar Tela de Empréstimo
+    Preencher Dados de Empréstimo    ${LOAN_AMOUNT}    120000,00
+    Enviar Solicitação
+    Verificar Mensagem    Empréstimo aprovado
+    # Saldo atualizado (código fictício)
+    Navegar para Página    /account/1234-5
+    Page Should Contain    R$ 50.000,00
+
+Empréstimo negado por renda insuficiente
+    [Documentation]    Garante mensagem de negação por renda
+    Acessar Tela de Empréstimo
+    Preencher Dados de Empréstimo    ${LOW_INCOME_LOAN}    20000,00
+    Enviar Solicitação
+    Verificar Mensagem    Empréstimo negado: Renda insuficiente
+
+Empréstimo negado por valor exceder limite
+    [Documentation]    Garante mensagem de negação por valor
+    Acessar Tela de Empréstimo
+    Preencher Dados de Empréstimo    ${HIGH_INCOME_LOAN}    200000,00
+    Enviar Solicitação
+    Verificar Mensagem    Empréstimo negado: Valor excede limite máximo
+
+# === US07 – Pagamento de Contas ===
+Pagamento imediato de conta
+    [Documentation]    Testa pagamento com saldo imediato
+    Acessar Tela de Pagamento
+    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
+    Agenda Data de Pagamento    hoje
+    Confirmar Pagamento
+    Verificar Mensagem    Pagamento confirmado
+    Navegar para Página    /statement.htm
+    Page Should Contain    Pagamento para 1234-5
+    # Saldo debitado (código fictício)
+    Verificar Saldo    R$ 200,00
+
+Pagamento agendado futuro
+    [Documentation]    Testa agendamento de pagamento
+    Acessar Tela de Pagamento
+    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
+    Agenda Data de Pagamento    31/12/2025
+    Confirmar Pagamento
+    Verificar Mensagem    Pagamento confirmado
+    Navegar para Página    /statement.htm
+    Page Should Contain    Pagamento para 1234-5
+    Page Should Contain    Status: Agendado
+
+Pagamento com campo obrigatório em branco
+    [Documentation]    Valida mensagem de erro para telefone em branco
+    Acessar Tela de Pagamento
+    Preencher Dados de Pagamento    João Silva    Rua A    ${EMPTY}    1234-5    300,00
+    Agenda Data de Pagamento    hoje
+    Verificar Mensagem    Este campo é obrigatório.
+
+Pagamento imediato com saldo insuficiente
+    [Documentation]    Garante mensagem de saldo insuficiente
+    Acessar Tela de Pagamento
+    Preencher Dados de Pagamento    João Silva    Rua A    99999-9999    1234-5    300,00
+    Agenda Data de Pagamento    hoje
+    Confirmar Pagamento
+    Verificar Mensagem    Saldo insuficiente para este pagamento
+
+# === US08 – Navegação Consistente ===
+Navegação sem erros em desktop
+    [Documentation]    Verifica todas as rotas no desktop
+    Navegar para Página    /
+    ${menus}=    Create List    /account.htm    /transfer.htm    /loan.htm    /payment.htm    /statement.htm
+    FOR    ${menu}    IN    @{menus}
+        Navegar para Página    ${menu}
+        Verificar Erros HTTP
+    END
+
+Navegação sem erros em dispositivos móveis
+    [Documentation]    Testa a mesma navegação em viewport móvel
+    # Configura viewport de 320px
+    Set Window Size    320    800
+    ${menus}=    Create List    /account.htm    /transfer.htm    /loan.htm    /payment.htm    /statement.htm
+    FOR    ${menu}    IN    @{menus}
+        Navegar para Página    ${menu}
+        Verificar Erros HTTP
+    END
+
+Rota inexistente retorna erro 404
+    [Documentation]    Confirma retorno 404 em rota inválida
+    Navegar para Página    /contas/123456
+    Page Should Contain    404
+
+# === US09 – Mensagens de Erro Claras ===
+Mensagem de erro para telefone inválido
+    [Documentation]    Testa mensagem de erro de telefone
+    Preencher Formulário de Cadastro    ${VALID_CEP}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    ${INVALID_PHONE}
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    phone    Formato de telefone inválido. Use (99) 99999-9999.
+
+Mensagem de erro para campo obrigatório ausente
+    [Documentation]    Testa mensagem de campo obrigatório em branco
+    Preencher Formulário de Cadastro    ${EMPTY}    ${VALID_NAME}    ${VALID_EMAIL}    ${VALID_PASSWORD}    ${VALID_PASSWORD}    99999-9999
+    Clique em Cadastrar
+    Verificar Mensagem de Erro    cep    Este campo é obrigatório.
+
+Mensagem de erro para login inválido
+    [Documentation]    Testa mensagem de login inválido
+    Acessar Página de Login
+    Inserir Credenciais    ${VALID_EMAIL}    senhaErrada
+    Clique em Entrar
+    Verificar Mensagem de Erro Login    Credenciais inválidas.
+
+Mensagem de erro para saldo insuficiente em transferência
+    [Documentation]    Testa mensagem de saldo insuficiente
+    Acessar Tela de Transferência
+    Preencher Dados de Transferência    9876-0    2000,00
+    Confirmar Transferência
+    Verificar Mensagem de Erro    Saldo insuficiente para esta transferência.
+```
+
+---
+
+## 12.  Como executar
+
+```bash
+# Instale o Robot Framework + SeleniumLibrary
+pip install robotframework robotframework-seleniumlibrary selenium
+
+# Execute o suite completo
+robot tests/tests.robot
+```
+
+---
+
+### Observações Finais
+
+1. **Seletores** – O código acima usa `id` e `css`. No seu projeto, prefira `data-*` ou `id`s estáveis.  
+2. **Espera Implícita** – `Wait Until Page Contains` e `Wait Until Page Contains Element` são suficientes para a maioria das telas. Se necessário, ajuste `timeout`.  
+3. **Dados Dinâmicos** – Use o *keyword* `Gerar Email Aleatório` para evitar colisões.  
+4. **Reutilização** – Todos os *keywords* ficam em arquivos separados e são importados em `tests.robot`.  
+5. **Mantenha a documentação** – Cada *Test Case* tem um `Documentation` curto explicando o objetivo. Isso facilita o entendimento futuro.  
+
+Pronto! Agora você tem um conjunto funcional, modular e de fácil manutenção de testes automatizados em Robot Framework seguindo as melhores práticas de automação.
