@@ -1,19 +1,157 @@
-**User Stories – Sistema ParaBank**  
-*(Formato: “Como [tipo de usuário], eu quero [objetivo] para [benefício/valor de negócio]”.)*  
+**User Story 1 – Cadastro de Usuário**  
+*US01*  
+- **Como** cliente do ParaBank,  
+- **eu quero** criar uma nova conta no sistema preenchendo todos os campos obrigatórios,  
+- **para** ter acesso às funcionalidades bancárias online e poder efetuar login.  
 
-| Rastreabilidade | Story | Descrição | Critérios de Aceitação |
-|-----------------|-------|-----------|------------------------|
-| **US01** | Como **novo cliente**, eu quero me cadastrar no sistema para obter acesso a todos os serviços bancários | O usuário deve preencher um formulário contendo: nome completo, data de nascimento, endereço completo (rua, número, bairro, cidade, estado, CEP), telefone, e‑mail e senha. Após envio, o sistema valida todos os campos obrigatórios, exibe mensagens de erro para campos inválidos (CEP, e‑mail, telefone) e, caso o cadastro seja concluído com sucesso, envia uma mensagem de confirmação e torna o usuário elegível a fazer login. | 1. Todos os campos obrigatórios são obrigatórios. <br>2. Validação de formato: CEP (5‑4 dígitos), e‑mail (regex padrão), telefone (formato internacional). <br>3. Mensagens de erro específicas são exibidas ao lado do campo inválido. <br>4. Ao cadastrar com sucesso, aparece “Cadastro concluído. Você pode fazer login agora.” <br>5. O usuário recebe e‑mail de confirmação (opcional). |
-| **US02** | Como **cliente já cadastrado**, eu quero fazer login para acessar minha conta de forma segura | O usuário informa e‑mail e senha. Se as credenciais estiverem corretas, o sistema autentica, cria sessão e redireciona para a página inicial da conta. Se inválidas, exibe mensagem de erro clara. | 1. Interface de login com campos E‑mail e Senha. <br>2. Validação de credenciais contra banco de dados. <br>3. Mensagem “Credenciais inválidas. Verifique e tente novamente.” exibida em caso de erro. <br>4. Redirecionamento para “Dashboard” após login bem‑sucedido. <br>5. Sessão expira após 30 min de inatividade. |
-| **US03** | Como **cliente autenticado**, eu quero visualizar saldo e extrato para acompanhar minhas finanças | Na página inicial (Dashboard) é exibido o saldo atual em moeda local. Um botão “Ver Extrato” abre uma lista de transações recentes (últimos 30 dias) ordenadas cronologicamente, com data, descrição, valor e saldo pós‑transação. | 1. Saldo exibido em moeda e formato numérico com 2 casas decimais. <br>2. Saldo atualizado após cada operação (transferência, pagamento, empréstimo). <br>3. Lista de extrato mostra no mínimo 10 transações recentes. <br>4. Cada linha contém: data, descrição, tipo (Crédito/Débito), valor, saldo. <br>5. Paginação ou rolagem infinita caso haja mais de 10 transações. |
-| **US04** | Como **cliente autenticado**, eu quero transferir fundos para outra conta para gerenciar meu patrimônio | O usuário seleciona a conta de origem (pode ser a própria ou de co‑titular), escolhe a conta de destino (código IBAN ou número interno) e digita o valor a transferir. O sistema bloqueia transferências com valor superior ao saldo, confirma a transação, debita a origem, credita a destino e registra a operação no histórico de ambas as contas. | 1. Campos obrigatórios: origem, destino, valor. <br>2. Valor deve ser numérico, positivo, máximo 2 casas decimais. <br>3. Se valor > saldo disponível, exibe “Saldo insuficiente para esta transferência”. <br>4. Após confirmação, saldo de origem diminui e saldo de destino aumenta imediatamente. <br>5. Transação registrada em histórico com status “Transferência concluída”. <br>6. E‑mail de confirmação opcional. |
-| **US05** | Como **cliente autenticado**, eu quero solicitar empréstimo para financiar projetos pessoais | O usuário informa o valor desejado e a renda anual. O sistema verifica critérios de elegibilidade (ex.: renda > valor × 12) e retorna status “Aprovado” ou “Negado”. O resultado deve ser exibido claramente, com explicação de motivos em caso de negação. | 1. Campos obrigatórios: valor do empréstimo, renda anual. <br>2. Lógica de aprovação: renda anual >= 12 × valor (exemplo simplificado). <br>3. Exibição de status “Aprovado” com mensagem “Parabéns! Seu empréstimo de R$ X foi aprovado.” <br>4. Em caso de negação, mensagem “Negado – Renda insuficiente para o valor solicitado.” <br>5. Registro da solicitação no histórico de empréstimos. |
-| **US06** | Como **cliente autenticado**, eu quero registrar pagamento de contas para manter meus compromissos em dia | O usuário preenche: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino (número), valor, data de pagamento. O sistema valida campos obrigatórios, agenda a data (se futura) ou processa imediatamente (se hoje). O pagamento aparece no histórico de transações e é possível editar apenas antes da data de pagamento. | 1. Campos obrigatórios listados no requisito. <br>2. Data válida e não passada (caso agendamento). <br>3. Valor positivo, com 2 casas decimais. <br>4. Mensagem “Pagamento agendado” ou “Pagamento realizado” conforme data. <br>5. Pagamento aparece em histórico como “Pagamento – Beneficiário X – R$ Y”. <br>6. Caso seja hoje, débito é realizado imediatamente e saldo atualizado. |
-| **US07** | Como **qualquer usuário** (visitante ou autenticado), eu quero navegação consistente para reduzir a curva de aprendizado e evitar confusão | Todas as páginas carregam sem erro, menus e links são visíveis em todas as telas, mensagens de erro são claras e objetivas, e o layout segue padrão visual (header, footer, sidebar). | 1. Header contém logo, menu principal (Login, Cadastro, Dashboard). <br>2. Footer com links úteis (Contato, Políticas, FAQ). <br>3. Mensagens de erro (ex.: “Página não encontrada”) exibidas em modal ou banner. <br>4. Todas as páginas têm tempo de carregamento < 2 s em rede 3G. <br>5. Responsividade: layout adapta-se a dispositivos mobile, tablet e desktop. <br>6. Navegação entre páginas não gera erros 404 ou 500. |
+**Descrição**  
+O fluxo de registro deve coletar informações essenciais (nome, e‑mail, telefone, CEP, senha) e validar cada campo antes de permitir a submissão. Mensagens de erro claras devem orientar o usuário em caso de dados inválidos. Após o cadastro bem‑sucedido, o usuário deve receber uma confirmação por e‑mail e ter sua conta marcada como ativa.  
 
-> **Observações de Coerência**  
-> - Cada história cobre um único fluxo de negócio, sem sobreposição (ex.: US04 não inclui a verificação de saldo que já está em US03).  
-> - As histórias de erro estão incorporadas nos critérios de aceitação (ex.: US01, US02, US04, US06).  
-> - A história US07 garante que todas as outras histórias se beneficiem de navegação consistente, evitando redundância de testes de usabilidade.  
+**Critérios de Aceite**  
+1. Todos os campos obrigatórios (nome, e‑mail, telefone, CEP, senha, confirmação de senha) devem ser preenchidos para que o botão “Registrar” fique habilitado.  
+2. Os seguintes padrões de validação devem ser aplicados:  
+   - **E‑mail**: formato válido e inexistência em BD.  
+   - **Telefone**: 10 a 11 dígitos, apenas números.  
+   - **CEP**: 8 dígitos, apenas números.  
+3. Caso algum campo inválido seja detectado, uma mensagem de erro específica deve aparecer abaixo do campo.  
+4. Após submissão válida, o usuário recebe:  
+   - Mensagem “Cadastro realizado com sucesso”.  
+   - E‑mail de confirmação contendo link de ativação.  
+5. A conta criada deve ser marcada como “Ativa” no banco de dados, permitindo que o usuário faça login imediatamente (ou após confirmação, se for requerida).  
 
-Essas User Stories podem ser priorizadas em sprints de desenvolvimento, começando por cadastro, login e dashboard antes de avançar para transações e serviços adicionais.
+---
+
+**User Story 2 – Login**  
+*US02*  
+- **Como** cliente já registrado,  
+- **eu quero** autenticar-me usando e‑mail e senha,  
+- **para** acessar o painel pessoal e realizar operações bancárias.  
+
+**Descrição**  
+A tela de login deve validar credenciais contra a base de dados. Erros de autenticação são exibidos de maneira segura, sem revelar se o e‑mail ou a senha está errada. Após sucesso, o usuário é redirecionado para a página inicial da conta.  
+
+**Critérios de Aceite**  
+1. O campo “E‑mail” aceita apenas valores no formato e‑mail válido.  
+2. O campo “Senha” requer no mínimo 8 caracteres, com pelo menos uma letra maiúscula, uma minúscula e um dígito.  
+3. Se as credenciais forem inválidas, exibe: “E‑mail ou senha inválidos.”  
+4. O botão “Entrar” permanece desabilitado até que ambos campos sejam preenchidos corretamente.  
+5. Em login bem‑sucedido, o usuário é redirecionado para `/dashboard`.  
+
+---
+
+**User Story 3 – Visualização de Saldo**  
+*US03*  
+- **Como** cliente logado,  
+- **eu quero** ver o saldo atual da minha conta na página inicial,  
+- **para** saber o montante disponível antes de realizar qualquer operação.  
+
+**Descrição**  
+O saldo deve ser exibido em moeda local (R$) e atualizado instantaneamente após qualquer transação (transferência, pagamento, etc.).  
+
+**Critérios de Aceite**  
+1. O saldo aparece no cabeçalho da página `Dashboard` em formato “Saldo: R$ X.XXX,XX”.  
+2. O valor exibido corresponde à soma de: saldo inicial + depósitos - saques/transferências.  
+3. O saldo atualiza sem recarregar a página quando uma transação é concluída (Ajax/Fetch).  
+4. Se o saldo for zero, a mensagem “Seu saldo está em R$ 0,00” aparece.  
+
+---
+
+**User Story 4 – Consulta de Extrato**  
+*US04*  
+- **Como** cliente logado,  
+- **eu quero** visualizar meu extrato de transações em ordem cronológica,  
+- **para** acompanhar movimentações e identificar eventuais erros.  
+
+**Descrição**  
+A tela de extrato deve listar transações recentes (últimos 30 dias) com data, tipo (depósito, saque, transferência, pagamento), descrição, valor e saldo resultante.  
+
+**Critérios de Aceite**  
+1. O extrato exibe no máximo 30 linhas, ordenadas do mais recente ao mais antigo.  
+2. Cada linha contém:  
+   - Data (dd/mm/aaaa).  
+   - Tipo (ex.: Depósito, Saque, Transferência, Pagamento).  
+   - Descrição (conta destino ou beneficiário).  
+   - Valor (positivo para créditos, negativo para débitos).  
+   - Saldo após a transação.  
+3. Ao clicar em “Ver mais”, abre um modal com histórico completo.  
+4. Se nenhuma transação existir, exibe “Nenhuma transação encontrada nos últimos 30 dias”.  
+
+---
+
+**User Story 5 – Transferência de Fundos**  
+*US05*  
+- **Como** cliente logado,  
+- **eu quero** transferir dinheiro entre contas do mesmo usuário ou para contas externas,  
+- **para** movimentar recursos de forma rápida e segura.  
+
+**Descrição**  
+O usuário seleciona conta de origem, conta de destino (número ou CPF), e o valor a ser transferido. O sistema impede transferências que excedam o saldo disponível e registra a operação em ambas as contas.  
+
+**Critérios de Aceite**  
+1. O formulário tem campos obrigatórios: **Conta Origem**, **Conta Destino**, **Valor**.  
+2. O valor deve ser numérico positivo, com até 2 casas decimais, e menor ou igual ao saldo da conta origem.  
+3. Se o valor exceder o saldo, exibe “Saldo insuficiente para essa transferência”.  
+4. Ao confirmar, o sistema debitara a conta origem e creditara a conta destino imediatamente.  
+5. A transação é registrada no extrato de ambas as contas, aparecendo com tipo “Transferência”.  
+6. Uma mensagem de sucesso “Transferência concluída” é exibida, e o saldo atual da origem é atualizado.  
+
+---
+
+**User Story 6 – Solicitação de Empréstimo**  
+*US06*  
+- **Como** cliente logado,  
+- **eu quero** solicitar um empréstimo informando valor e renda anual,  
+- **para** obter crédito de acordo com minha capacidade de pagamento.  
+
+**Descrição**  
+O formulário aceita o valor do empréstimo (até R$ 200.000) e a renda anual (R$ 20.000 a R$ 1.000.000). O sistema avalia a solicitação e retorna “Aprovado” ou “Negado” com justificativa curta.  
+
+**Critérios de Aceite**  
+1. Campos obrigatórios: **Valor do Empréstimo**, **Renda Anual**.  
+2. O valor do empréstimo deve estar entre R$ 1.000 e R$ 200.000.  
+3. A renda anual deve estar entre R$ 20.000 e R$ 1.000.000.  
+4. Após envio, a interface mostra “Processando solicitação...”.  
+5. O resultado aparece em modal:  
+   - **Aprovado**: “Parabéns! Seu empréstimo de R$ X.XXX,XX foi aprovado.”  
+   - **Negado**: “Lamentamos, sua solicitação foi negada. Motivo: Renda insuficiente.”  
+6. A decisão não altera o saldo da conta.  
+
+---
+
+**User Story 7 – Pagamento de Contas**  
+*US07*  
+- **Como** cliente logado,  
+- **eu quero** registrar um pagamento de conta (ex.: luz, água, internet) informando beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data,  
+- **para** pagar contas de forma prática e ter o registro no histórico.  
+
+**Descrição**  
+O pagamento pode ser agendado para data futura. Ao confirmar, o valor é debitado na data escolhida e registrado no extrato.  
+
+**Critérios de Aceite**  
+1. Campos obrigatórios: **Beneficiário**, **Endereço**, **Cidade**, **Estado**, **CEP**, **Telefone**, **Conta de Destino**, **Valor**, **Data de Pagamento**.  
+2. CEP aceita 8 dígitos; telefone aceita 10 ou 11 dígitos; data deve ser no futuro ou no dia atual.  
+3. O sistema reserva o valor na conta de origem na data de pagamento e atualiza o saldo imediatamente na data de agendamento.  
+4. Ao confirmar, exibe “Pagamento programado para DD/MM/AAAA”.  
+5. A transação aparece no extrato com tipo “Pagamento”.  
+
+---
+
+**User Story 8 – Navegação e Usabilidade Consistentes**  
+*US08*  
+- **Como** cliente logado,  
+- **eu quero** que todas as páginas carreguem sem erros de navegação, exibam mensagens claras e tenham menus consistentes,  
+- **para** ter uma experiência de uso intuitiva e sem frustrações.  
+
+**Descrição**  
+A estrutura de navegação deve incluir logo, menu principal (Dashboard, Transferir, Empréstimo, Pagamentos, Configurações), e links de “Sair”. Mensagens de erro padrão devem usar cor vermelha e textos explicativos.  
+
+**Critérios de Aceite**  
+1. Todas as páginas têm cabeçalho com logo e menu de navegação.  
+2. O menu está disponível em todas as páginas e possui links ativos corretos.  
+3. Navegar entre páginas não gera erro 404 nem falhas de carregamento.  
+4. Mensagens de erro (ex.: “Campo obrigatório”, “Saldo insuficiente”) aparecem em vermelho e desaparecem após 5 s ou ao corrigir o erro.  
+5. O layout responde a dispositivos móveis (mobile‑first) e mantém consistência visual.  
+
+---  
+
+Esses 8 User Stories cobrem integralmente os requisitos do documento, mantendo cada história focada, testável e livre de sobreposição de escopo.
