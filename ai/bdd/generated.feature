@@ -1,174 +1,151 @@
-**US01 – Cadastro de Usuário**  
-```
-titulo: US01 – Cadastro de Usuário
-cenario_bdd:
-    nome: Registro bem‑sucedido com dados válidos
-    tipo: positivo
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Registro bem-sucedido com dados válidos\n  Given o usuário acessa a página de cadastro\n  When ele preenche todos os campos obrigatórios com dados válidos\n  And clica no botão “Registrar”\n  Then o sistema exibe a mensagem “Cadastro concluído com sucesso”\n  And o usuário recebe um e‑mail de confirmação\n  And a conta fica habilitada para login"
-```
+**titulo: US01 – Cadastro de Usuário**  
+**cenario_bdd:**  
+  - nome: Cadastro com dados válidos  
+    tipo: positivo  
+    gherkin: "Feature: Cadastro de Usuário\nScenario: Cadastro com dados válidos\n  Given o usuário acessa a página de cadastro\n  When preenche todos os campos obrigatórios com dados válidos\n  And clica em 'Cadastrar'\n  Then exibe mensagem 'Cadastro concluído com sucesso'\n  And permite login com as credenciais criadas"  
 
-```
-titulo: US01 – Cadastro de Usuário
-cenario_bdd:
-    nome: Falha de cadastro quando e‑mail ausente
-    tipo: negativo
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Falha de cadastro quando e‑mail ausente\n  Given o usuário acessa a página de cadastro\n  When ele preenche todos os campos obrigatórios exceto o e‑mail\n  And clica no botão “Registrar”\n  Then o sistema exibe a mensagem “E‑mail é obrigatório”"
-```
+  - nome: Cadastro com campo obrigatório em branco  
+    tipo: negativo  
+    gherkin: "Feature: Cadastro de Usuário\nScenario: Cadastro com campo obrigatório em branco\n  Given o usuário acessa a página de cadastro\n  When preenche todos os campos obrigatórios exceto 'CEP'\n  And clica em 'Cadastrar'\n  Then exibe mensagem de erro 'Este campo é obrigatório.' ao lado do campo 'CEP'"  
 
-```
-titulo: US01 – Cadastro de Usuário
-cenario_bdd:
-    nome: Falha de cadastro com CPF inválido
-    tipo: negativo
-    gherkin: "Feature: Cadastro de Usuário\nScenario: Falha de cadastro com CPF inválido\n  Given o usuário acessa a página de cadastro\n  When ele preenche todos os campos obrigatórios com CPF no formato 12345678901\n  And clica no botão “Registrar”\n  Then o sistema exibe a mensagem “CPF inválido”"
-```
+  - nome: Cadastro com e‑mail inválido  
+    tipo: negativo  
+    gherkin: "Feature: Cadastro de Usuário\nScenario: Cadastro com e‑mail inválido\n  Given o usuário acessa a página de cadastro\n  When preenche todos os campos obrigatórios com e‑mail 'usuario.com'\n  And clica em 'Cadastrar'\n  Then exibe mensagem de erro 'Formato de e‑mail inválido.' ao lado do campo 'Email'"  
 
-**US02 – Login**  
-```
-titulo: US02 – Login
-cenario_bdd:
-    nome: Login bem‑sucedido com e‑mail válido
-    tipo: positivo
-    gherkin: "Feature: Login\nScenario: Login bem-sucedido com e‑mail válido\n  Given o usuário está na tela de login\n  When ele digita seu e‑mail registrado e a senha correta\n  And clica no botão “Entrar”\n  Then o usuário é redirecionado para “Minha Conta\"\n  And a sessão é iniciada"
-```
+  - nome: Cadastro com telefone no formato incorreto  
+    tipo: negativo  
+    gherkin: "Feature: Cadastro de Usuário\nScenario: Cadastro com telefone no formato incorreto\n  Given o usuário acessa a página de cadastro\n  When preenche todos os campos obrigatórios com telefone '123456789'\n  And clica em 'Cadastrar'\n  Then exibe mensagem de erro 'Formato de telefone inválido. Use (99) 99999-9999.' ao lado do campo 'Telefone'"  
 
-```
-titulo: US02 – Login
-cenario_bdd:
-    nome: Falha de login com senha incorreta
-    tipo: negativo
-    gherkin: "Feature: Login\nScenario: Falha de login com senha incorreta\n  Given o usuário está na tela de login\n  When ele digita seu e‑mail registrado e uma senha errada\n  And clica no botão “Entrar”\n  Then o sistema exibe a mensagem “Usuário ou senha inválidos”"
-```
+  - nome: Cadastro com CEP inexistente  
+    tipo: negativo  
+    gherkin: "Feature: Cadastro de Usuário\nScenario: Cadastro com CEP inexistente\n  Given o usuário acessa a página de cadastro\n  When preenche todos os campos obrigatórios com CEP '00000-000'\n  And clica em 'Cadastrar'\n  Then exibe mensagem de erro 'CEP não encontrado.' ao lado do campo 'CEP'"
 
-```
-titulo: US02 – Login
-cenario_bdd:
-    nome: Falha de login com e‑mail inválido
-    tipo: negativo
-    gherkin: "Feature: Login\nScenario: Falha de login com e‑mail inválido\n  Given o usuário está na tela de login\n  When ele digita “usuario@” como e‑mail e qualquer senha\n  And clica no botão “Entrar”\n  Then o sistema exibe a mensagem “Formato de e‑mail inválido”"
-```
+---
 
-**US03 – Visualizar Saldo e Extrato**  
-```
-titulo: US03 – Visualizar Saldo e Extrato
-cenario_bdd:
-    nome: Dashboard exibe saldo correto
-    tipo: positivo
-    gherkin: "Feature: Visualizar Saldo e Extrato\nScenario: Dashboard exibe saldo correto\n  Given o usuário está autenticado e no dashboard\n  Then o saldo exibido corresponde ao saldo da conta"
-```
+**titulo: US02 – Login de Usuário**  
+**cenario_bdd:**  
+  - nome: Login com credenciais corretas  
+    tipo: positivo  
+    gherkin: "Feature: Login de Usuário\nScenario: Login com credenciais corretas\n  Given o usuário está na página de login\n  When insere e‑mail e senha corretos\n  And clica em 'Entrar'\n  Then redireciona para a Dashboard\n  And exibe saldo atual"  
 
-```
-titulo: US03 – Visualizar Saldo e Extrato
-cenario_bdd:
-    nome: Extrato exibe últimas 10 transações em ordem decrescente
-    tipo: positivo
-    gherkin: "Feature: Visualizar Saldo e Extrato\nScenario: Extrato exibe últimas 10 transações em ordem decrescente\n  Given o usuário está autenticado\n  When ele clica em “Extrato”\n  Then a lista mostra as 10 transações mais recentes, ordenadas pela data decrescente"
-```
+  - nome: Login com credenciais inválidas  
+    tipo: negativo  
+    gherkin: "Feature: Login de Usuário\nScenario: Login com credenciais inválidas\n  Given o usuário está na página de login\n  When insere e‑mail 'usuario@exemplo.com' e senha 'senhaErrada'\n  And clica em 'Entrar'\n  Then exibe mensagem 'Credenciais inválidas. Verifique e tente novamente.'"  
 
-```
-titulo: US03 – Visualizar Saldo e Extrato
-cenario_bdd:
-    nome: Extrato exibe mensagem quando não há transações
-    tipo: negativo
-    gherkin: "Feature: Visualizar Saldo e Extrato\nScenario: Extrato exibe mensagem quando não há transações\n  Given o usuário tem saldo mas nenhuma transação\n  When ele clica em “Extrato”\n  Then o sistema exibe a mensagem “Nenhuma transação registrada”"
-```
+  - nome: Botão 'Entrar' só habilitado quando ambos os campos preenchidos  
+    tipo: negativo  
+    gherkin: "Feature: Login de Usuário\nScenario: Botão 'Entrar' habilitado apenas com ambos campos preenchidos\n  Given o usuário está na página de login\n  When deixa o campo 'Senha' em branco\n  Then o botão 'Entrar' permanece desativado\n  When preenche a senha\n  Then o botão 'Entrar' fica habilitado"
 
-**US04 – Transferência de Fundos**  
-```
-titulo: US04 – Transferência de Fundos
-cenario_bdd:
-    nome: Transferência bem-sucedida dentro do saldo
-    tipo: positivo
-    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência bem-sucedida dentro do saldo\n  Given o usuário tem saldo de R$1.000 na conta corrente\n  When ele seleciona a conta corrente como origem\n  And seleciona a conta poupança como destino\n  And insere o valor de R$200\n  And confirma a transferência\n  Then a conta corrente é debitada em R$200\n  And a conta poupança é creditada em R$200\n  And a transação aparece no extrato de ambas as contas"
-```
+---
 
-```
-titulo: US04 – Transferência de Fundos
-cenario_bdd:
-    nome: Transferência falha por saldo insuficiente
-    tipo: negativo
-    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência falha por saldo insuficiente\n  Given o usuário tem saldo de R$500 na conta corrente\n  When ele tenta transferir R$600 para outra conta\n  Then o sistema exibe a mensagem “Valor excede saldo”"
-```
+**titulo: US03 – Visualização do Saldo**  
+**cenario_bdd:**  
+  - nome: Exibição inicial do saldo na Dashboard  
+    tipo: positivo  
+    gherkin: "Feature: Visualização do Saldo\nScenario: Exibição inicial do saldo na Dashboard\n  Given o usuário está autenticado e na Dashboard\n  Then exibe saldo no formato monetário 'R$ 3.245,67' que corresponde ao saldo armazenado"  
 
-```
-titulo: US04 – Transferência de Fundos
-cenario_bdd:
-    nome: Transferência falha devido a erro de rede
-    tipo: negativo
-    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência falha devido a erro de rede\n  Given o usuário tem saldo de R$1.000 na conta corrente\n  When a conexão cai durante a transferência\n  Then nenhuma conta é alterada\n  And o usuário recebe a mensagem “Transferência não concluída, tente novamente”"
-```
+  - nome: Atualização do saldo após transferência  
+    tipo: positivo  
+    gherkin: "Feature: Visualização do Saldo\nScenario: Atualização do saldo após transferência\n  Given o usuário está na Dashboard com saldo 'R$ 5.000,00'\n  When realiza transferência de 'R$ 500,00' para conta '1234-5'\n  Then saldo atual na origem diminui para 'R$ 4.500,00'\n  And saldo na conta destino aumenta em 'R$ 500,00'"
 
-**US05 – Solicitação de Empréstimo**  
-```
-titulo: US05 – Solicitação de Empréstimo
-cenario_bdd:
-    nome: Empréstimo aprovado quando renda adequada
-    tipo: positivo
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Empréstimo aprovado quando renda adequada\n  Given o usuário tem renda anual de R$30.000\n  When ele solicita R$20.000\n  And clica em “Solicitar”\n  Then o sistema exibe “Empréstimo aprovado”"
-```
+---
 
-```
-titulo: US05 – Solicitação de Empréstimo
-cenario_bdd:
-    nome: Empréstimo negado por renda insuficiente
-    tipo: negativo
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Empréstimo negado por renda insuficiente\n  Given o usuário tem renda anual de R$15.000\n  When ele solicita R$20.000\n  Then o sistema exibe “Empréstimo negado – renda insuficiente”"
-```
+**titulo: US04 – Acesso ao Extrato**  
+**cenario_bdd:**  
+  - nome: Exibição das 10 transações mais recentes  
+    tipo: positivo  
+    gherkin: "Feature: Acesso ao Extrato\nScenario: Exibição das 10 transações mais recentes\n  Given o usuário está na página de Extrato\n  Then exibe pelo menos 10 transações ordenadas por data decrescente"  
 
-```
-titulo: US05 – Solicitação de Empréstimo
-cenario_bdd:
-    nome: Empréstimo rejeitado por valor superior ao limite
-    tipo: negativo
-    gherkin: "Feature: Solicitação de Empréstimo\nScenario: Empréstimo rejeitado por valor superior ao limite\n  Given o usuário tem renda anual de R$60.000\n  When ele solicita R$60.000\n  Then o sistema exibe “Dados inválidos”"
-```
+  - nome: Detalhes de transação ao clicar em 'Mais detalhes'  
+    tipo: positivo  
+    gherkin: "Feature: Acesso ao Extrato\nScenario: Exibir detalhes completos de uma transação\n  Given o usuário vê uma lista de transações\n  When clica em 'Mais detalhes' na linha da transação 'Transferência para João Silva'\n  Then exibe histórico completo incluindo data, descrição, valor e saldo final"
 
-**US06 – Pagamento de Contas**  
-```
-titulo: US06 – Pagamento de Contas
-cenario_bdd:
-    nome: Pagamento agendado com saldo futuro suficiente
-    tipo: positivo
-    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento agendado com saldo futuro suficiente\n  Given o usuário tem saldo de R$1.000\n  When ele agenda pagamento de R$200 para 30 dias à frente\n  And confirma\n  Then o sistema exibe “Pagamento agendado com sucesso”\n  And uma transação com status “Agendado” aparece no histórico"
-```
+---
 
-```
-titulo: US06 – Pagamento de Contas
-cenario_bdd:
-    nome: Falha ao agendar pagamento com data no passado
-    tipo: negativo
-    gherkin: "Feature: Pagamento de Contas\nScenario: Falha ao agendar pagamento com data no passado\n  Given o usuário tenta agendar pagamento para 01/01/2023\n  When ele confirma\n  Then o sistema exibe “Data inválida”"
-```
+**titulo: US05 – Transferência de Fundos**  
+**cenario_bdd:**  
+  - nome: Transferência dentro do saldo disponível  
+    tipo: positivo  
+    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência dentro do saldo disponível\n  Given o usuário está na tela de Transferência\n  And possui saldo de 'R$ 1.000,00'\n  When escolhe conta de origem própria, conta destino '9876-0', valor 'R$ 200,00'\n  And confirma a transferência\n  Then origem é debitada em 'R$ 200,00' e destino creditado em 'R$ 200,00'\n  And transação aparece no extrato de ambas as contas"  
 
-```
-titulo: US06 – Pagamento de Contas
-cenario_bdd:
-    nome: Pagamento permanece agendado por saldo insuficiente no dia de pagamento
-    tipo: negativo
-    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento permanece agendado por saldo insuficiente no dia de pagamento\n  Given o usuário tem saldo de R$150 hoje\n  When ele agenda pagamento de R$200 para amanhã\n  And a conta não tem saldo no dia\n  Then o pagamento permanece “Agendado” e o usuário recebe mensagem “Saldo insuficiente para pagamento”"
-```
+  - nome: Transferência com valor superior ao saldo  
+    tipo: negativo  
+    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência com valor superior ao saldo\n  Given o usuário está na tela de Transferência\n  And possui saldo de 'R$ 150,00'\n  When tenta transferir 'R$ 200,00'\n  Then exibe mensagem 'Saldo insuficiente' e cancela a transferência"  
 
-**US07 – Navegação e Usabilidade Geral**  
-```
-titulo: US07 – Navegação e Usabilidade Geral
-cenario_bdd:
-    nome: Todas as páginas carregam e navegação funciona
-    tipo: positivo
-    gherkin: "Feature: Navegação e Usabilidade Geral\nScenario: Todas as páginas carregam e navegação funciona\n  Given o usuário está autenticado\n  When ele clica em “Transferências”\n  Then a página de transferências carrega sem erros\n  And o menu permanece ativo"
-```
+  - nome: Transferência para conta inexistente  
+    tipo: negativo  
+    gherkin: "Feature: Transferência de Fundos\nScenario: Transferência para conta inexistente\n  Given o usuário está na tela de Transferência\n  When preenche número de conta destino '0000-0' que não existe\n  Then exibe mensagem 'Conta destino não encontrada'"
 
-```
-titulo: US07 – Navegação e Usabilidade Geral
-cenario_bdd:
-    nome: Acesso a página protegida sem autenticação redireciona ao login
-    tipo: negativo
-    gherkin: "Feature: Navegação e Usabilidade Geral\nScenario: Acesso a página protegida sem autenticação redireciona ao login\n  Given o usuário não autenticado\n  When ele tenta acessar “Minha Conta”\n  Then ele é redirecionado ao login"
-```
+---
 
-```
-titulo: US07 – Navegação e Usabilidade Geral
-cenario_bdd:
-    nome: Página não encontrada exibe banner de erro
-    tipo: negativo
-    gherkin: "Feature: Navegação e Usabilidade Geral\nScenario: Página não encontrada exibe banner de erro\n  Given o usuário acessa URL inválida\n  When a página 404 é gerada\n  Then o banner exibe “Página não encontrada”"
-```
+**titulo: US06 – Solicitação de Empréstimo**  
+**cenario_bdd:**  
+  - nome: Empréstimo aprovado e creditado imediatamente  
+    tipo: positivo  
+    gherkin: "Feature: Empréstimo\nScenario: Empréstimo aprovado e creditado\n  Given o usuário está na tela de Empréstimo\n  When preenche valor 'R$ 50.000,00' e renda anual 'R$ 120.000,00'\n  And submete a solicitação\n  Then exibe mensagem 'Empréstimo aprovado'\n  And crédito 'R$ 50.000,00' é adicionado ao saldo imediatamente"  
+
+  - nome: Empréstimo negado por renda insuficiente  
+    tipo: negativo  
+    gherkin: "Feature: Empréstimo\nScenario: Empréstimo negado por renda insuficiente\n  Given o usuário está na tela de Empréstimo\n  When preenche valor 'R$ 30.000,00' e renda anual 'R$ 20.000,00'\n  And submete a solicitação\n  Then exibe mensagem 'Empréstimo negado: Renda insuficiente'"  
+
+  - nome: Empréstimo negado por valor exceder limite  
+    tipo: negativo  
+    gherkin: "Feature: Empréstimo\nScenario: Empréstimo negado por valor exceder limite\n  Given o usuário está na tela de Empréstimo\n  When preenche valor 'R$ 150.000,00'\n  And renda anual 'R$ 200.000,00'\n  And submete a solicitação\n  Then exibe mensagem 'Empréstimo negado: Valor excede limite máximo'"  
+
+---
+
+**titulo: US07 – Pagamento de Contas**  
+**cenario_bdd:**  
+  - nome: Pagamento imediato de conta  
+    tipo: positivo  
+    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento imediato de conta\n  Given o usuário está na tela de Pagamento\n  And possui saldo suficiente\n  When preenche beneficiário, endereço, telefone, conta destino e valor 'R$ 300,00'\n  And agenda data de pagamento 'hoje'\n  And confirma o pagamento\n  Then exibe confirmação\n  And transação aparece no extrato na data de hoje\n  And saldo é debitado imediatamente"  
+
+  - nome: Pagamento agendado futuro  
+    tipo: positivo  
+    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento agendado futuro\n  Given o usuário está na tela de Pagamento\n  And possui saldo suficiente\n  When preenche beneficiário, endereço, telefone, conta destino e valor 'R$ 300,00'\n  And agenda data de pagamento '31/12/2025'\n  And confirma o pagamento\n  Then exibe confirmação\n  And transação aparece no extrato com status 'Agendado'\n  And saldo não é alterado até a data programada"  
+
+  - nome: Pagamento com campo obrigatório em branco  
+    tipo: negativo  
+    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento com campo obrigatório em branco\n  Given o usuário está na tela de Pagamento\n  When preenche todos os campos exceto 'Telefone'\n  And agenda data de pagamento 'hoje'\n  Then exibe mensagem 'Este campo é obrigatório.' ao lado de 'Telefone'"  
+
+  - nome: Pagamento imediato com saldo insuficiente  
+    tipo: negativo  
+    gherkin: "Feature: Pagamento de Contas\nScenario: Pagamento imediato com saldo insuficiente\n  Given o usuário está na tela de Pagamento\n  And possui saldo 'R$ 200,00'\n  When tenta pagar 'R$ 300,00'\n  Then exibe mensagem 'Saldo insuficiente para este pagamento'"
+
+---
+
+**titulo: US08 – Navegação Consistente**  
+**cenario_bdd:**  
+  - nome: Navegação sem erros em desktop  
+    tipo: positivo  
+    gherkin: "Feature: Navegação Consistente\nScenario: Navegação sem erros em desktop\n  Given o usuário abre o ParaBank em um navegador desktop\n  When navega por todos os menus (Conta, Transferir, Empréstimo, Pagamentos, Extrato)\n  Then todas as rotas carregam sem erros 404 ou 500"  
+
+  - nome: Navegação sem erros em dispositivos móveis  
+    tipo: positivo  
+    gherkin: "Feature: Navegação Consistente\nScenario: Navegação sem erros em dispositivos móveis\n  Given o usuário abre o ParaBank em um dispositivo de largura mínima 320 px\n  When navega pelos mesmos menus\n  Then todas as rotas carregam sem erros 404 ou 500"  
+
+  - nome: Rota inexistente retorna erro 404  
+    tipo: negativo  
+    gherkin: "Feature: Navegação Consistente\nScenario: Rota inexistente retorna erro 404\n  Given o usuário tenta acessar a rota '/contas/123456'\n  Then recebe página de erro 404"
+
+---
+
+**titulo: US09 – Mensagens de Erro Claras**  
+**cenario_bdd:**  
+  - nome: Mensagem de erro para telefone inválido  
+    tipo: negativo  
+    gherkin: "Feature: Mensagens de Erro\nScenario: Erro de telefone inválido\n  Given o usuário preenche telefone com '123456'\n  Then exibe mensagem de erro 'Formato de telefone inválido. Use (99) 99999-9999.'"  
+
+  - nome: Mensagem de erro para campo obrigatório ausente  
+    tipo: negativo  
+    gherkin: "Feature: Mensagens de Erro\nScenario: Erro de campo obrigatório ausente\n  Given o usuário deixa campo 'CEP' em branco\n  Then exibe mensagem 'Este campo é obrigatório.'"  
+
+  - nome: Mensagem de erro para login inválido  
+    tipo: negativo  
+    gherkin: "Feature: Mensagens de Erro\nScenario: Erro de login inválido\n  Given o usuário digita credenciais inválidas\n  When clica em 'Entrar'\n  Then exibe mensagem 'Credenciais inválidas.'"  
+
+  - nome: Mensagem de erro para saldo insuficiente em transferência  
+    tipo: negativo  
+    gherkin: "Feature: Mensagens de Erro\nScenario: Erro de saldo insuficiente em transferência\n  Given o usuário tenta transferir um valor maior que o saldo disponível\n  Then exibe mensagem 'Saldo insuficiente para esta transferência.'"  
+
+---
