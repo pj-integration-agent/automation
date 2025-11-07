@@ -52,3 +52,5 @@ jobs:
     needs: bdd
     uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yaml@main
     secrets: inherit
+    with:
+      tipo-prompt: ${{ inputs.tipo-prompt }}
