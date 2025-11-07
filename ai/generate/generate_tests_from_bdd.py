@@ -2,11 +2,11 @@ import os
 from groq import Groq
  
 def generate_tests_from_bdd():
- #  GROQ
-    # client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+  # GROQ
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
  # GEMINI
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    # genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
     prompt_tipo = os.getenv("PROMPT_TIPO", "default").lower()
     prompt_path = f"ai/prompts/{prompt_tipo}.txt"
@@ -25,14 +25,14 @@ def generate_tests_from_bdd():
 
 
 # GROQ
-    # response = client.chat.completions.create(
-    #     model="openai/gpt-oss-20b",
-    #     messages=[{"role": "user", "content": prompt}]
-    # )
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[{"role": "user", "content": prompt}]
+    )
 
 # GEMINI
-   model = genai.GenerativeModel("gemini-1.5-pro")
-    response = model.generate_content(prompt)
+   # model = genai.GenerativeModel("gemini-1.5-pro")
+   #  response = model.generate_content(prompt)
  
     tests_code = response.choices[0].message.content
  
