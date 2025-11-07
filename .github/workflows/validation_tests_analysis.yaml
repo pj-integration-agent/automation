@@ -2,9 +2,6 @@ name: Execucao de testes
 run-name: Running - Execução de testes
  
 on:
-  push:
-    branches: 
-      - main
   workflow_dispatch:
 
 permissions:
