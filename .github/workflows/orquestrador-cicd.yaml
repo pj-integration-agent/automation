@@ -29,12 +29,14 @@ jobs:
     uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-user-stories.yaml@main
     secrets: inherit
 
-  # bdd:
-  #   if: ${{ inputs.criacao-bdd }}
-  #   needs: user-stories
-  #   uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-bdd.yml@main
+  bdd:
+    if: ${{ inputs.criacao-bdd }}
+    needs: user-stories
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-bdd.yaml@main
+    secrets: inherit
 
-  # testes:
-  #   if: ${{ inputs.criacao-testes }}
-  #   needs: bdd
-  #   uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yml@main
+  testes:
+    if: ${{ inputs.criacao-testes }}
+    needs: bdd
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-testes.yaml@main
+    secrets: inherit
