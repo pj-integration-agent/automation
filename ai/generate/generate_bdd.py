@@ -8,13 +8,36 @@ def generate_bdd_from_user_stories():
         stories = f.read()
  
     prompt = f"""
-    Você é um especialista em BDD.
-    Com base nos seguintes histórias de usuários, gere cenários no formato Gherkin (Given, When, Then), 
-    foque em criar cenários tanto em casos positivos, quanto em casos negativos.
- 
-    Critérios:
-    {stories}
-    """
+Você é um especialista em BDD (Behavior Driven Development) e qualidade de software.
+
+Com base nas seguintes User Stories, gere **cenários de teste completos** utilizando a **sintaxe Gherkin (Given, When, Then)**.
+
+Siga estas diretrizes:
+- Crie **cenários positivos** (fluxos esperados) e **cenários negativos** (erros, validações e exceções).
+- Cada cenário deve ser **claro, conciso e testável**, refletindo fielmente os critérios de aceite da história.
+- Evite redundâncias entre cenários.
+- Utilize uma linguagem natural e objetiva, mantendo a estrutura formal do Gherkin.
+- Cada User Story deve conter **vários cenários relevantes**, se aplicável.
+- Assegure-se de que os cenários cubram as principais variações e regras de negócio descritas.
+
+Retorne o resultado no seguinte padrão:
+[
+  {{
+    "titulo": "Título da User Story",
+    "cenario_bdd": [
+      {{
+        "nome": "Nome descritivo do cenário",
+        "tipo": "positivo" ou "negativo",
+        "gherkin": "Feature: ...\\nScenario: ...\\nGiven ...\\nWhen ...\\nThen ..."
+      }}
+    ]
+  }}
+]
+
+User Stories fornecidas:
+{stories}
+"""
+
  
     response = client.chat.completions.create(
         model="openai/gpt-oss-20b",
