@@ -22,14 +22,21 @@ def generate_user_stories_from_criterios():
     #                 all_contents += f"\n---\nArquivo binário: {filename}\n(Base64 codificado)\n{content}\n"
 
     prompt = f"""
-    Você é um especialista em criação de user stories.
-    Com base nos seguintes critérios de aceite (em texto ou base64), gere histórias de usuários
-    consistentes que ajudem a identificar as necessidades do usuário e tratar todas as Features da melhor forma.
+Você é um especialista em análise de requisitos e criação de User Stories ágeis.
 
-    Critérios:
+Com base nos seguintes critérios de aceite (em texto ou base64), gere um conjunto de User Stories completas, claras e consistentes.  
+Cada User Story deve:
+- Ser escrita no formato: “Como [tipo de usuário], eu quero [objetivo] para [benefício/valor de negócio]”.
+- Conter uma **descrição detalhada** da funcionalidade ou necessidade.
+- Incluir **critérios de aceite objetivos**.
+- Ser **realista**, **testável** e **relacionada às features** descritas nos critérios de aceite.
+- Garantir **coerência entre as histórias** e **não sobreposição** de escopo.
+- Priorizar clareza e valor para o usuário final.
 
-    {all_contents}
-    """
+Critérios fornecidos:
+{all_contents}
+"""
+
 
     response = client.chat.completions.create(
         model="openai/gpt-oss-20b",
