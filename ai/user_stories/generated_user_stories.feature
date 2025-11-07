@@ -1,26 +1,87 @@
-**User Stories (ParaBank – Sistema de Demonstração Bancária)**  
-
-*(Formato: “Como [tipo de usuário], eu quero [objetivo] para [benefício/valor de negócio]” – com descrição detalhada, critérios de aceite objetivos e rastreabilidade)*  
-
-| US | User Story | Descrição | Critérios de Aceite |
-|----|------------|-----------|---------------------|
-| **US01** | **Como cliente bancário, eu quero me registrar no ParaBank para que eu possa criar uma conta e ter acesso aos serviços bancários.** | A tela de cadastro deve exigir o preenchimento de todos os campos obrigatórios (nome, sobrenome, CPF, data de nascimento, e‑mail, telefone, CEP, endereço, cidade, estado, senha). O sistema deve validar cada campo em tempo real e exibir mensagens de erro específicas quando houver dados inválidos. Após cadastro bem‑sucedido, o usuário recebe um e‑mail de confirmação e a possibilidade de fazer login. | 1. Todos os campos obrigatórios são preenchidos – a tela de confirmação não é exibida e a mensagem “Cadastro concluído!” aparece. <br>2. Campos com formato inválido (telefone, CEP, e‑mail) disparam mensagens de erro específicas (“Telefone inválido”, “CEP inválido”, “E‑mail inválido”). <br>3. Após cadastro, o usuário é redirecionado para a tela de login. <br>4. E‑mail de confirmação contém o link “Ativar conta” e o usuário não pode fazer login antes de ativar. |
-| **US02** | **Como cliente bancário, eu quero ter a opção de recuperar minha senha para que eu possa voltar a acessar minha conta se a perder.** | Na tela de login, um link “Esqueci minha senha” leva o usuário a um fluxo de recuperação. O usuário informa o e‑mail cadastrado, recebe um link temporário, e pode criar uma nova senha. | 1. Na tela de login, ao clicar em “Esqueci minha senha”, abre a tela de recuperação. <br>2. O usuário insere um e‑mail existente – o sistema envia um link de redefinição. <br>3. O link tem validade de 15 min e permite criar uma nova senha válida. <br>4. Após redefinir, o usuário consegue fazer login com a nova senha. |
-| **US03** | **Como cliente bancário, eu quero fazer login com credenciais válidas para ter acesso à minha conta.** | O usuário digita e‑mail e senha; o sistema autentica e redireciona para a página inicial da conta. Em caso de falha, exibe mensagem de erro clara. | 1. Credenciais válidas – o usuário é redirecionado para “Dashboard” (saldo e extrato). <br>2. Credenciais inválidas (senha errada ou e‑mail não cadastrado) – mensagem “Credenciais inválidas. Tente novamente.” <br>3. Conta bloqueada após 5 tentativas – mensagem “Conta bloqueada. Entre em contato com o suporte.” |
-| **US04** | **Como cliente bancário, eu quero visualizar meu saldo atualizado para saber quanto tenho disponível em tempo real.** | A tela inicial da conta exibe o saldo corrente, atualizando automaticamente após qualquer operação (depósito, retirada, transferência). | 1. Ao carregar a página inicial, o saldo exibido corresponde ao saldo real na base de dados. <br>2. Após concluir uma transferência, o saldo reflete imediatamente o débito/ crédito em ambas as contas. <br>3. O saldo não pode ser negativo; o sistema bloqueia transações que excedam o limite. |
-| **US05** | **Como cliente bancário, eu quero visualizar meu extrato em ordem cronológica para acompanhar minhas transações recentes.** | A tela de extrato lista as últimas 20 transações, com data, descrição, valor (positivo/negativo) e saldo pós‑transação. | 1. O extrato mostra as 20 transações mais recentes em ordem decrescente de data/hora. <br>2. Cada linha contém: data (dd/mm/aaaa), descrição, valor (R$ ±), saldo após a transação. <br>3. Se houver mais que 20 transações, um botão “Ver mais” permite carregar as próximas 20. |
-| **US06** | **Como cliente bancário, eu quero transferir fundos entre minhas contas para gerenciar meus recursos.** | O usuário seleciona a conta de origem, conta de destino (pode ser interna ou externa), insere o valor e confirma. O sistema valida saldo, atualiza ambas as contas e registra a transação em ambos os extratos. | 1. A lista de contas de origem e destino inclui apenas contas do usuário (para transferência interna) e contas externas cadastradas. <br>2. O campo “valor” aceita números positivos até dois decimais. <br>3. Se o valor exceder o saldo da origem, a transferência é bloqueada e exibe mensagem “Saldo insuficiente”. <br>4. Após confirmação, o saldo da origem diminui, o saldo da destino aumenta e a transação aparece no extrato de ambos os usuários. |
-| **US07** | **Como cliente bancário, eu quero receber feedback sobre a aprovação de meu pedido de empréstimo para saber se posso utilizá‑lo.** | O usuário informa valor desejado e renda anual; o sistema calcula e devolve status (Aprovado/Negado). A resposta inclui motivo de negação quando aplicável. | 1. Ao submeter o formulário, o sistema retorna “Aprovado” ou “Negado” em mensagem destacada. <br>2. Se “Negado”, a mensagem inclui “Renda insuficiente” ou “Score de crédito baixo” (exemplo). <br>3. O status fica visível no histórico de empréstimos do usuário. |
-| **US08** | **Como cliente bancário, eu quero registrar pagamentos de contas com agendamento de data futura para gerenciar compromissos financeiros.** | O usuário preenche beneficiário, endereço, cidade, estado, CEP, telefone, conta destino, valor e data de pagamento. O pagamento fica agendado e aparece no extrato na data correta. | 1. Todos os campos obrigatórios são validados em tempo real. <br>2. A data de pagamento não pode ser anterior à data atual. <br>3. Ao salvar, o sistema exibe “Pagamento agendado para dd/mm/aaaa”. <br>4. Na data agendada, a transação é debitada automaticamente e aparece no extrato. |
-| **US09** | **Como cliente bancário, eu quero que todas as páginas carreguem sem erros de navegação para que a experiência seja fluida.** | Cada página possui menu principal, footer e links internos. O sistema deve evitar erros 404 e garantir consistência de layout. | 1. Navegar entre todas as páginas não gera erro 404 nem mensagens de “Página não encontrada”. <br>2. O menu “Contas”, “Transferências”, “Empréstimos”, “Pagamentos”, “Extrato” está presente em todas as páginas. <br>3. O layout (cabeçalho, rodapé, cores) permanece consistente. |
-| **US10** | **Como cliente bancário, eu quero que todas as mensagens de erro sejam claras e objetivas para que eu entenda o problema imediatamente.** | Mensagens de erro aparecem em destaque próximo ao campo afetado ou na parte superior da tela. | 1. Erro de campo inválido exibe mensagem curta (“Telefone inválido – ex.: (11) 91234-5678”). <br>2. Erro de login exibe “Credenciais inválidas. Tente novamente.” <br>3. Erro de saldo insuficiente exibe “Saldo insuficiente – saldo atual: R$ xxx,xx”. |
-| **US11** | **Como cliente bancário, eu quero ter links e menus consistentes em todas as páginas para que eu possa navegar de forma intuitiva.** | O menu principal contém as mesmas opções em todas as páginas e o usuário pode voltar para a tela inicial a partir de qualquer tela. | 1. Cada página apresenta o mesmo menu principal. <br>2. O link “Início” leva sempre ao Dashboard. <br>3. O rodapé contém links “Termos”, “Privacidade”, “Ajuda”. |
-| **US12** | **Como cliente bancário, eu quero que a aplicação forneça confirmações visuais de operações bem‑sucedidas para garantir que minhas ações foram concluídas.** | Após qualquer operação (cadastro, login, transferência, pagamento, empréstimo) o sistema exibe banner de confirmação que desaparece após 3 s ou pode ser fechado manualmente. | 1. Após cadastro, mensagem “Cadastro concluído com sucesso!” aparece. <br>2. Após transferência, banner “Transferência concluída: R$ xxx,xx transferido para conta YYY”. <br>3. Após pagamento, banner “Pagamento agendado com sucesso”. <br>4. O banner desaparece automaticamente em 3 s ou ao clicar em “x”. |
+**US01 – Registro de Usuário**  
+Como **novo usuário**, eu quero registrar minha conta para poder acessar os serviços bancários online.  
+**Descrição**: O sistema deve disponibilizar um formulário de cadastro contendo todos os campos obrigatórios (nome completo, CPF, data de nascimento, endereço, telefone, CEP, e‑mail e senha). Cada campo deve ser validado de acordo com seus formatos específicos (ex.: telefone no padrão “(xx) xxxxx‑xxxx”, CEP no padrão “xxxxx‑xxx”, e‑mail com sintaxe válida). Quando o usuário submeter o formulário, o sistema deve confirmar o cadastro com uma mensagem de sucesso e tornar a conta imediatamente ativa para login.  
+**Critérios de Aceite**  
+- [ ] Todos os campos obrigatórios são obrigatórios e bloqueiam o envio se vazios.  
+- [ ] Campos “telefone”, “CEP” e “e‑mail” exibem mensagem de erro clara caso o formato seja inválido.  
+- [ ] Ao submeter o cadastro com dados válidos, o usuário recebe mensagem de confirmação “Cadastro concluído com sucesso!”.  
+- [ ] Após a confirmação, o usuário pode acessar a tela de login e autenticar-se com a conta recém‑criada.  
 
 ---
 
-### Observações de Coerência e Prioridade
-- **Prioridade**: US01 → US03 → US04 → US05 → US06 → US08 → US09 → US10 → US11 → US12 → US07 → US12 (após base de navegação)  
-- **Coerência**: Cada história trata de um aspecto único; não há sobreposição de escopo.  
-- **Testabilidade**: Todos os critérios de aceite são objetivos e verificáveis via testes automatizados ou manuais.  
-- **Valor para o usuário**: Garantem uma experiência bancária completa, segura e confiável, alinhada com os requisitos de usabilidade do documento de critérios de aceite.
+**US02 – Login**  
+Como **usuário autenticado**, eu quero fazer login no sistema usando credenciais válidas para acessar minha conta.  
+**Descrição**: O usuário deverá inserir e‑mail (ou número de telefone) e senha em campo de login. O sistema deve validar a existência da conta e a correspondência da senha. Em caso de sucesso, o usuário é redirecionado para a página inicial da conta. Em caso de erro, a mensagem de falha deve ser exibida de forma clara.  
+**Critérios de Aceite**  
+- [ ] O usuário pode inserir credenciais corretas e é autenticado com sucesso.  
+- [ ] O usuário recebe a página inicial da conta após login bem‑sucedido.  
+- [ ] Credenciais inválidas (e‑mail ou senha incorretos) exibem a mensagem “Credenciais inválidas. Por favor, tente novamente.”  
+- [ ] O sistema bloqueia o acesso à página inicial sem login.  
+
+---
+
+**US03 – Visualização do Saldo**  
+Como **cliente bancário**, eu quero visualizar meu saldo atual para saber quanto dinheiro tenho disponível.  
+**Descrição**: No painel inicial, o sistema deve exibir o saldo da conta do usuário, atualizado em tempo real após cada operação financeira (transferência, pagamento, etc.).  
+**Critérios de Aceite**  
+- [ ] O saldo exibido corresponde ao saldo real da conta no banco de dados.  
+- [ ] Após qualquer operação financeira, o saldo é recalculado e mostrado imediatamente.  
+- [ ] O saldo é formatado em moeda (ex.: R$ 1.234,56).  
+
+---
+
+**US04 – Extrato de Transações**  
+Como **cliente bancário**, eu quero visualizar o extrato com transações recentes em ordem cronológica para acompanhar minhas movimentações.  
+**Descrição**: O sistema deve listar no extrato as transações realizadas nos últimos 30 dias, exibindo data, descrição, tipo (crédito/débito) e valor, ordenadas do mais recente para o mais antigo.  
+**Critérios de Aceite**  
+- [ ] O extrato lista pelo menos as 10 transações mais recentes.  
+- [ ] Cada linha contém data (dd/mm/aaaa), descrição, tipo (Crédito/Débito) e valor formatado.  
+- [ ] As transações são ordenadas cronologicamente do mais recente ao mais antigo.  
+- [ ] O usuário pode filtrar por período (opcional).  
+
+---
+
+**US05 – Transferência de Fundos**  
+Como **cliente bancário**, eu quero transferir um valor de minha conta para outra conta para realizar pagamentos ou enviar dinheiro a terceiros.  
+**Descrição**: O usuário deve selecionar a conta de origem (sua conta), escolher a conta de destino (identificada por número), inserir o valor e confirmar a operação. O sistema deve impedir transferências cujo valor exceda o saldo disponível, debitar a origem, creditar a destino e registrar a transação em ambas as contas.  
+**Critérios de Aceite**  
+- [ ] O sistema bloqueia transferências cujo valor seja maior que o saldo disponível, exibindo “Saldo insuficiente”.  
+- [ ] Ao confirmar, o valor é debitado da conta de origem e creditado na conta de destino.  
+- [ ] A transação aparece no histórico de ambas as contas.  
+- [ ] O usuário recebe mensagem de confirmação “Transferência concluída com sucesso”.  
+
+---
+
+**US06 – Solicitação de Empréstimo**  
+Como **cliente bancário**, eu quero solicitar um empréstimo informando valor e renda anual para obter financiamento.  
+**Descrição**: O usuário preenche um formulário com o valor solicitado e a renda anual. O sistema avalia a solicitação e retorna um status (“Aprovado” ou “Negado”) com um motivo claro em caso de negativa.  
+**Critérios de Aceite**  
+- [ ] O formulário exige valor do empréstimo e renda anual, ambos válidos.  
+- [ ] O sistema processa a solicitação e exibe “Empréstimo Aprovado” ou “Empréstimo Negado”.  
+- [ ] Em caso de negativa, o sistema mostra uma razão (ex.: “Renda insuficiente” ou “Histórico de crédito ruim”).  
+- [ ] O resultado é visível na tela de solicitação e pode ser salvo no histórico do usuário.  
+
+---
+
+**US07 – Pagamento de Contas**  
+Como **cliente bancário**, eu quero registrar um pagamento de conta informando beneficiário e detalhes para que o pagamento seja incluído no histórico e agendado corretamente.  
+**Descrição**: O usuário preenche campos: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento. O sistema deve validar o formato de cada campo e, ao confirmar, registrar a transação e permitir pagamentos futuros respeitando a data agendada.  
+**Critérios de Aceite**  
+- [ ] Todos os campos obrigatórios são preenchidos e validados (CEP, telefone, data).  
+- [ ] O valor do pagamento não pode ser negativo.  
+- [ ] Após confirmação, a transação aparece no histórico com data marcada.  
+- [ ] O usuário pode editar ou cancelar pagamentos agendados antes da data de vencimento.  
+
+---
+
+**US08 – Navegação e Usabilidade Consistentes**  
+Como **usuário do ParaBank**, eu quero que todas as páginas carreguem corretamente e que os menus sejam consistentes para que a experiência seja fluída e intuitiva.  
+**Descrição**: O sistema deve garantir que cada página carregue sem erros de navegação, que os links e menus estejam presentes em todas as telas (login, cadastro, conta, extrato, transferências, empréstimo, pagamento). Mensagens de erro devem aparecer de forma clara e objetiva.  
+**Critérios de Aceite**  
+- [ ] Todas as páginas carregam dentro de 3 s em conexão típica.  
+- [ ] Menus de navegação (ex.: “Conta”, “Transferência”, “Empréstimo”, “Pagamentos”, “Extrato”) estão visíveis em todas as telas de usuário autenticado.  
+- [ ] Ao clicar em qualquer link, o usuário é levado à página correta.  
+- [ ] Mensagens de erro (ex.: “Erro ao carregar a página”) são exibidas em destaque e com sugestão de ação.  
+- [ ] A navegação funciona corretamente em dispositivos desktop e mobile (responsividade).  
+
+---
