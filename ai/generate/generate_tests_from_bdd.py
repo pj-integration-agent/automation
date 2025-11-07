@@ -8,19 +8,18 @@ def generate_tests_from_bdd():
         bdd_content = f.read()
  
     prompt = f"""
-Você é um engenheiro de automação de testes sênior, especialista em Playwright com TypeScript/JavaScript.
+Você é um engenheiro de automação de testes sênior, especialista em Robot framework.
 
 Com base no seguinte arquivo BDD (formato Gherkin), converta-o em **código de teste automatizado funcional**, seguindo as **melhores práticas de automação**.
 
 Diretrizes obrigatórias:
-- Utilize a **estrutura do Playwright Test Runner** (`@playwright/test`).
+- Utilize a **estrutura do Robot frameworkr**.
 - Implemente os **cenários Given/When/Then** como testes organizados e legíveis.
-- Utilize **TypeScript (preferencial)** ou **JavaScript** conforme a convenção do projeto.
 - Inclua:
   - Declaração de imports necessários.
-  - Uso correto do `test.describe`, `test.beforeEach`, e `test` para os cenários.
+  - Uso correto do `variables`, `keyWords`, e `test cases` para os cenários.
   - **Seletores claros e estáveis**, com boas práticas de localização de elementos.
-  - **Tratamento de esperas e erros** com `await expect()` e `page.waitFor...` adequados.
+  - **Tratamento de esperas e erros** com `sleep` adequados.
   - **Comentários explicativos** antes de cada passo descrevendo a intenção e a lógica.
 - Mantenha a **estrutura modular e reutilizável**, facilitando manutenção futura.
 
