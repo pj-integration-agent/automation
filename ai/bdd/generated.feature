@@ -1,427 +1,204 @@
-## Feature: US01 – Cadastro de Usuário  
-**Como** potencial cliente do ParaBank, **eu quero** preencher um formulário de cadastro para criar minha conta no sistema, **para** ter acesso aos serviços bancários online.
-
----
-
-### Cenário: Cadastro com dados válidos  
-```gherkin
-Dado que eu estou na página de cadastro  
-Quando eu preencho "Nome completo" com "João da Silva"  
-E preencho "Data de nascimento" com "01/01/1990"  
-E preencho "Endereço" com "Rua A, 123"  
-E preencho "CEP" com "12345678"  
-E preencho "Telefone" com "11987654321"  
-E preencho "E‑mail" com "joao@example.com"  
-E preencho "Senha" com "Password123"  
-E subo o formulário  
-Então devo ver a mensagem "Cadastro concluído com sucesso"  
-E devo ser redirecionado para a página de login  
-Quando eu faço login com "joao@example.com" e "Password123"  
-Então devo ser direcionado para o "Dashboard"  
-E devo ver o saldo da minha conta
+```json
+[
+  {
+    "titulo": "US01 – Registro de nova conta",
+    "cenario_bdd": [
+      {
+        "nome": "Registro bem-sucedido",
+        "tipo": "positivo",
+        "gherkin": "Feature: Registro de nova conta\nScenario: Registro bem-sucedido\n  Given eu sou um novo cliente\n  When preencho todos os campos obrigatórios com dados válidos\n  And envio o formulário\n  Then recebo a mensagem \"Cadastro concluído, verifique seu e‑mail\"\n  And posso fazer login com as credenciais recém‑criadas"
+      },
+      {
+        "nome": "Erro de e‑mail inválido",
+        "tipo": "negativo",
+        "gherkin": "Feature: Registro de nova conta\nScenario: E‑mail inválido\n  Given eu sou um novo cliente\n  When preencho o campo e‑mail com \"usuario@exemplo\"\n  And completo os demais campos obrigatórios com dados válidos\n  And envio o formulário\n  Then recebo a mensagem \"E‑mail inválido\"\n  And o registro não é criado"
+      },
+      {
+        "nome": "Campo obrigatório ausente",
+        "tipo": "negativo",
+        "gherkin": "Feature: Registro de nova conta\nScenario: Campo obrigatório ausente\n  Given eu sou um novo cliente\n  When deixo o campo \"CEP\" em branco e preencho os demais campos com dados válidos\n  And envio o formulário\n  Then recebo a mensagem \"CEP obrigatório\"\n  And o registro não é criado"
+      },
+      {
+        "nome": "E‑mail já cadastrado",
+        "tipo": "negativo",
+        "gherkin": "Feature: Registro de nova conta\nScenario: E‑mail já cadastrado\n  Given eu sou um novo cliente\n  And já existe um usuário com e‑mail \"usuario@exemplo.com\"\n  When preencho todos os campos obrigatórios com dados válidos\n  And envio o formulário\n  Then recebo a mensagem \"E‑mail já cadastrado\"\n  And o registro não é criado"
+      }
+    ]
+  },
+  {
+    "titulo": "US02 – Login do cliente",
+    "cenario_bdd": [
+      {
+        "nome": "Login bem-sucedido",
+        "tipo": "positivo",
+        "gherkin": "Feature: Login do cliente\nScenario: Login bem-sucedido\n  Given eu sou um cliente registrado com e‑mail \"usuario@exemplo.com\" e senha \"Senha1234\"\n  When preencho o e‑mail e a senha\n  And clico em \"Entrar\"\n  Then sou redirecionado para o Dashboard\n  And a mensagem \"Bem‑vindo\" aparece"
+      },
+      {
+        "nome": "Credenciais inválidas",
+        "tipo": "negativo",
+        "gherkin": "Feature: Login do cliente\nScenario: Credenciais inválidas\n  Given eu sou um cliente registrado com e‑mail \"usuario@exemplo.com\"\n  When preencho o e‑mail com \"usuario@exemplo.com\" e senha com \"senhaerrada\"\n  And clico em \"Entrar\"\n  Then recebo a mensagem \"Credenciais inválidas. Tente novamente.\"\n  And permaneço na página de login"
+      },
+      {
+        "nome": "Campo de senha pode ser exibido",
+        "tipo": "positivo",
+        "gherkin": "Feature: Login do cliente\nScenario: Exibição da senha\n  Given eu estou na tela de login\n  When clico no ícone \"Mostrar\"\n  Then a senha é exibida em texto\n  When clico novamente no ícone \"Ocultar\"\n  Then a senha fica oculta"
+      }
+    ]
+  },
+  {
+    "titulo": "US03 – Visualização do saldo",
+    "cenario_bdd": [
+      {
+        "nome": "Saldo inicial exibido corretamente",
+        "tipo": "positivo",
+        "gherkin": "Feature: Visualização do saldo\nScenario: Saldo inicial\n  Given eu estou no Dashboard\n  Then o saldo exibido está no formato \"R$ 1.234,56\"\n  And o valor não é negativo"
+      },
+      {
+        "nome": "Saldo atualizado após transferência",
+        "tipo": "positivo",
+        "gherkin": "Feature: Visualização do saldo\nScenario: Saldo atualizado após transferência\n  Given eu tenho saldo \"R$ 1.000,00\"\n  And realizei uma transferência de \"R$ 200,00\"\n  Then o saldo exibido no Dashboard é \"R$ 800,00\""
+      }
+    ]
+  },
+  {
+    "titulo": "US04 – Extrato de transações",
+    "cenario_bdd": [
+      {
+        "nome": "Extrato exibe 10 transações recentes",
+        "tipo": "positivo",
+        "gherkin": "Feature: Extrato de transações\nScenario: Exibição de 10 transações\n  Given eu tenho pelo menos 10 transações na conta\n  When acesso a página de extrato\n  Then a lista exibe 10 linhas\n  And cada linha contém data, descrição, tipo e valor"
+      },
+      {
+        "nome": "Extrato exibe menos de 10 se houver menos registros",
+        "tipo": "positivo",
+        "gherkin": "Feature: Extrato de transações\nScenario: Menos de 10 transações\n  Given eu tenho 5 transações na conta\n  When acesso a página de extrato\n  Then a lista exibe 5 linhas\n  And as linhas estão em ordem decrescente"
+      }
+    ]
+  },
+  {
+    "titulo": "US05 – Transferência de fundos",
+    "cenario_bdd": [
+      {
+        "nome": "Transferência bem-sucedida",
+        "tipo": "positivo",
+        "gherkin": "Feature: Transferência de fundos\nScenario: Transferência bem-sucedida\n  Given eu tenho saldo \"R$ 1.000,00\" na conta A\n  And a conta B existe\n  When realizo uma transferência de \"R$ 300,00\" da conta A para a conta B\n  And confirmo a operação\n  Then o saldo da conta A é \"R$ 700,00\"\n  And o saldo da conta B aumenta em \"R$ 300,00\"\n  And ambas as contas registram a transação no histórico"
+      },
+      {
+        "nome": "Transferência bloqueada por saldo insuficiente",
+        "tipo": "negativo",
+        "gherkin": "Feature: Transferência de fundos\nScenario: Saldo insuficiente\n  Given eu tenho saldo \"R$ 100,00\" na conta A\n  When tento transferir \"R$ 200,00\" da conta A para a conta B\n  Then recebo a mensagem \"Saldo insuficiente\"\n  And a transferência não ocorre"
+      }
+    ]
+  },
+  {
+    "titulo": "US06 – Solicitação de empréstimo",
+    "cenario_bdd": [
+      {
+        "nome": "Solicitação enviada",
+        "tipo": "positivo",
+        "gherkin": "Feature: Solicitação de empréstimo\nScenario: Envio de solicitação\n  Given eu sou um cliente autenticado\n  And preencho o valor \"R$ 10.000,00\" e renda anual \"R$ 60.000,00\"\n  When envio a solicitação\n  Then recebo a mensagem \"Solicitação enviada. Aguarde avaliação.\"\n  And a solicitação fica registrada em \"Meus Empréstimos\""
+      },
+      {
+        "nome": "Resultado aprovado após 5 minutos",
+        "tipo": "positivo",
+        "gherkin": "Feature: Solicitação de empréstimo\nScenario: Empréstimo aprovado\n  Given eu enviei uma solicitação de empréstimo\n  When 5 minutos se passam\n  Then a página mostra \"Aprovado\"\n  And a entrada aparece em \"Meus Empréstimos\""
+      },
+      {
+        "nome": "Resultado negado após 5 minutos",
+        "tipo": "negativo",
+        "gherkin": "Feature: Solicitação de empréstimo\nScenario: Empréstimo negado\n  Given eu enviei uma solicitação de empréstimo\n  When 5 minutos se passam\n  Then a página mostra \"Negado\"\n  And a entrada aparece em \"Meus Empréstimos\""
+      },
+      {
+        "nome": "Solicitação com campo obrigatório ausente",
+        "tipo": "negativo",
+        "gherkin": "Feature: Solicitação de empréstimo\nScenario: Campo obrigatório ausente\n  Given eu sou um cliente autenticado\n  When deixo o campo \"valor do empréstimo\" em branco\n  And envio a solicitação\n  Then recebo a mensagem \"Valor do empréstimo obrigatório\"\n  And a solicitação não é criada"
+      }
+    ]
+  },
+  {
+    "titulo": "US07 – Pagamento de contas",
+    "cenario_bdd": [
+      {
+        "nome": "Pagamento agendado com sucesso",
+        "tipo": "positivo",
+        "gherkin": "Feature: Pagamento de contas\nScenario: Pagamento agendado\n  Given eu sou um cliente autenticado\n  And preencho todos os campos obrigatórios com dados válidos\n  And seleciono a data \"25/12/2025\"\n  When envio o pagamento\n  Then recebo a mensagem \"Pagamento agendado para 25/12/2025\"\n  And a transação aparece no histórico na data correta"
+      },
+      {
+        "nome": "Erro de CEP inválido",
+        "tipo": "negativo",
+        "gherkin": "Feature: Pagamento de contas\nScenario: CEP inválido\n  Given eu sou um cliente autenticado\n  And preencho o CEP com \"12345\"\n  When envio o pagamento\n  Then recebo a mensagem \"CEP inválido\"\n  And o pagamento não é registrado"
+      },
+      {
+        "nome": "Pagamento futuro não processado na data atual",
+        "tipo": "negativo",
+        "gherkin": "Feature: Pagamento de contas\nScenario: Pagamento futuro não processado\n  Given eu agendei um pagamento para \"30/12/2025\"\n  When verifico a conta no dia \"01/12/2025\"\n  Then o pagamento permanece com status \"Agendado\"\n  And não há débito na conta"
+      }
+    ]
+  },
+  {
+    "titulo": "US08 – Navegação sem erros",
+    "cenario_bdd": [
+      {
+        "nome": "Todas as páginas carregam sem erro 404",
+        "tipo": "positivo",
+        "gherkin": "Feature: Navegação sem erros\nScenario: Navegação completa\n  Given eu estou autenticado\n  When clico em cada link do menu principal\n  Then cada página carrega corretamente\n  And nenhuma rota retorna erro 404\n  And o breadcrumb sempre aponta para o Dashboard"
+      }
+    ]
+  },
+  {
+    "titulo": "US09 – Mensagens de erro claras",
+    "cenario_bdd": [
+      {
+        "nome": "Mensagem de erro de login clara",
+        "tipo": "negativo",
+        "gherkin": "Feature: Mensagens de erro claras\nScenario: Erro de login\n  Given eu sou um cliente registrado\n  When preencho e‑mail e senha incorretos\n  And clico em \"Entrar\"\n  Then recebo a mensagem \"Credenciais inválidas. Tente novamente.\"\n  And a mensagem não contém códigos técnicos"
+      },
+      {
+        "nome": "Mensagem de erro de e‑mail já cadastrado",
+        "tipo": "negativo",
+        "gherkin": "Feature: Mensagens de erro claras\nScenario: E‑mail já cadastrado\n  Given eu estou na página de cadastro\n  And já existe usuário com e‑mail \"usuario@exemplo.com\"\n  When envio o formulário\n  Then recebo a mensagem \"E‑mail já cadastrado\"\n  And a mensagem não contém stack traces"
+      }
+    ]
+  },
+  {
+    "titulo": "US10 – Registro no histórico de transações",
+    "cenario_bdd": [
+      {
+        "nome": "Transferência registrada no histórico",
+        "tipo": "positivo",
+        "gherkin": "Feature: Registro no histórico\nScenario: Transferência\n  Given eu realizo uma transferência de \"R$ 200,00\" entre contas\n  Then há um registro no histórico com data, tipo \"Transferência\" e valor \"R$ 200,00\"\n  And a descrição indica a conta de destino"
+      },
+      {
+        "nome": "Pagamento registrado no histórico",
+        "tipo": "positivo",
+        "gherkin": "Feature: Registro no histórico\nScenario: Pagamento\n  Given eu pago uma conta de \"Luz\"\n  Then há um registro no histórico com data, tipo \"Pagamento\" e valor correspondente\n  And a descrição inclui o beneficiário"
+      },
+      {
+        "nome": "Empréstimo registrado no histórico",
+        "tipo": "positivo",
+        "gherkin": "Feature: Registro no histórico\nScenario: Empréstimo\n  Given eu recebo aprovação de empréstimo de \"R$ 5.000,00\"\n  Then há um registro no histórico com data, tipo \"Empréstimo\" e valor \"R$ 5.000,00\"\n  And a descrição indica status \"Aprovado\""
+      }
+    ]
+  },
+  {
+    "titulo": "US11 – Pagamentos futuros respeitam data agendada",
+    "cenario_bdd": [
+      {
+        "nome": "Pagamento futuro respeita a data de agendamento",
+        "tipo": "positivo",
+        "gherkin": "Feature: Pagamentos futuros\nScenario: Respeito da data agendada\n  Given eu agendei um pagamento para \"15/01/2026\"\n  And a conta tem saldo suficiente em 15/01/2026\n  When a data atual é \"15/01/2026\"\n  Then o sistema processa o pagamento automaticamente\n  And o saldo é debitado no dia correto"
+      }
+    ]
+  },
+  {
+    "titulo": "US12 – Layout responsivo em dispositivos móveis",
+    "cenario_bdd": [
+      {
+        "nome": "Interface se adapta ao viewport de 480px",
+        "tipo": "positivo",
+        "gherkin": "Feature: Layout responsivo\nScenario: Visualização em smartphone\n  Given eu acesso o site com viewport de 480px de largura\n  Then o menu principal se transforma em hamburger\n  And os campos de formulário têm largura mínima de 80% da tela\n  And os botões têm área de toque de pelo menos 48×48px"
+      }
+    ]
+  }
+]
 ```
-
----
-
-### Cenário: Cadastro com campo obrigatório vazio  
-```gherkin
-Cenário Outline: Cadastro com campo obrigatório em branco
-  Dado que eu estou na página de cadastro
-  Quando eu deixo "<campo>" em branco
-  E preencho os demais campos com dados válidos
-  E subo o formulário
-  Então devo ver a mensagem de erro "Campo obrigatório" para "<campo>"
-
-  Exemplos:
-    | campo             |
-    | Nome completo     |
-    | Data de nascimento|
-    | Endereço          |
-    | CEP                |
-    | Telefone           |
-    | E‑mail             |
-    | Senha              |
-```
-
----
-
-### Cenário: Validação de telefone  
-```gherkin
-Cenário Outline: Cadastro com telefone inválido
-  Dado que eu estou na página de cadastro
-  Quando eu preencho "Telefone" com "<valor>"
-  E preencho os demais campos com dados válidos
-  E subo o formulário
-  Então devo ver a mensagem de erro "Telefone inválido"
-
-  Exemplos:
-    | valor        | Motivo                                 |
-    | abcdefg      | Não é numérico                         |
-    | 1234567      | Menos de 10 dígitos                    |
-    | 123456789012 | Mais de 11 dígitos                     |
-```
-
----
-
-### Cenário: Validação de CEP  
-```gherkin
-Cenário Outline: Cadastro com CEP inválido
-  Dado que eu estou na página de cadastro
-  Quando eu preencho "CEP" com "<valor>"
-  E preencho os demais campos com dados válidos
-  E subo o formulário
-  Então devo ver a mensagem de erro "CEP inválido"
-
-  Exemplos:
-    | valor     | Motivo           |
-    | 1234      | Menos de 8 dígitos |
-    | 123456789 | Mais de 8 dígitos   |
-    | abcdefgh  | Não é numérico     |
-```
-
----
-
-### Cenário: Validação de e‑mail  
-```gherkin
-Cenário Outline: Cadastro com e‑mail inválido
-  Dado que eu estou na página de cadastro
-  Quando eu preencho "E‑mail" com "<valor>"
-  E preencho os demais campos com dados válidos
-  E subo o formulário
-  Então devo ver a mensagem de erro "E‑mail inválido"
-
-  Exemplos:
-    | valor               | Motivo                     |
-    | joao.com            | Falta @                     |
-    | joao@                 | Falta domínio               |
-    | joao@example          | Falta TLD                    |
-```
-
----
-
-## Feature: US02 – Login do Usuário  
-**Como** cliente já cadastrado, **eu quero** autenticar-me no ParaBank com meu e‑mail e senha, **para** acessar minha conta e realizar operações.
-
----
-
-### Cenário: Login com credenciais válidas  
-```gherkin
-Dado que eu estou na página de login
-Quando eu preencho "E‑mail" com "joao@example.com"
-E preencho "Senha" com "Password123"
-E clico no botão "Login"
-Então devo ser redirecionado para o "Dashboard"
-E devo ver a mensagem de boas‑vindas
-```
-
----
-
-### Cenário: Login com e‑mail inexistente  
-```gherkin
-Dado que eu estou na página de login
-Quando eu preencho "E‑mail" com "naoexiste@example.com"
-E preencho "Senha" com "Password123"
-E clico no botão "Login"
-Então devo ver a mensagem "Credenciais inválidas. Por favor, tente novamente."
-```
-
----
-
-### Cenário: Login com senha errada  
-```gherkin
-Dado que eu estou na página de login
-Quando eu preencho "E‑mail" com "joao@example.com"
-E preencho "Senha" com "SenhaErrada"
-E clico no botão "Login"
-Então devo ver a mensagem "Credenciais inválidas. Por favor, tente novamente."
-```
-
----
-
-### Cenário: Botão de login desabilitado quando campos vazios  
-```gherkin
-Dado que eu estou na página de login
-Quando eu deixo o campo "E‑mail" vazio
-E deixo o campo "Senha" vazio
-Então o botão "Login" deve estar desabilitado
-E ao preencher apenas um dos campos, o botão continua desabilitado
-```
-
----
-
-## Feature: US03 – Visualização do Saldo e Extrato  
-**Como** cliente autenticado, **eu quero** ver o saldo atual da minha conta e o extrato das transações recentes, **para** acompanhar minhas finanças em tempo real.
-
----
-
-### Cenário: Exibição correta do saldo  
-```gherkin
-Dado que eu estou autenticado
-E tenho saldo disponível de R$ 1.234,56
-Quando eu acesse a página da conta
-Então devo ver o saldo exibido como "R$ 1.234,56"
-```
-
----
-
-### Cenário: Atualização do saldo após transferência  
-```gherkin
-Dado que eu tenho saldo de R$ 1.000,00
-E realizo uma transferência de R$ 200,00 para a conta "123456789"
-Quando eu retorno à página da conta
-Então o saldo exibido deve ser "R$ 800,00"
-```
-
----
-
-### Cenário: Lista de transações no extrato  
-```gherkin
-Dado que eu tenho 7 transações nas últimas 30 dias
-Quando eu visualizo o extrato
-Então devo ver pelo menos 5 transações
-E todas devem estar ordenadas pelo campo "data" em ordem decrescente
-```
-
----
-
-### Cenário: Menos de 5 transações no extrato  
-```gherkin
-Dado que eu tenho 3 transações nas últimas 30 dias
-Quando eu visualizo o extrato
-Então devo ver todas as 3 transações
-E nenhuma mensagem de “mais transações” aparece
-```
-
----
-
-## Feature: US04 – Transferência de Fundos  
-**Como** cliente autenticado, **eu quero** transferir dinheiro de minha conta para outra conta bancária, **para** movimentar recursos entre contas de forma segura e automática.
-
----
-
-### Cenário: Transferência bem‑sucedida com saldo suficiente  
-```gherkin
-Dado que eu tenho saldo de R$ 1.500,00
-Quando eu faço transferência de R$ 300,00 para a conta "987654321"
-Então o saldo da minha conta deve ser "R$ 1.200,00"
-E o saldo da conta destino deve ser aumentado em R$ 300,00
-E a transação aparece no extrato de ambas as contas com descrição apropriada
-```
-
----
-
-### Cenário: Transferência com valor zero  
-```gherkin
-Dado que eu tenho saldo de R$ 1.000,00
-Quando eu tento transferir R$ 0,00
-Então devo ver a mensagem de erro "Valor deve ser maior que zero"
-```
-
----
-
-### Cenário: Transferência com valor negativo  
-```gherkin
-Dado que eu tenho saldo de R$ 1.000,00
-Quando eu tento transferir R$ -50,00
-Então devo ver a mensagem de erro "Valor deve ser positivo"
-```
-
----
-
-### Cenário: Transferência sem saldo suficiente  
-```gherkin
-Dado que eu tenho saldo de R$ 200,00
-Quando eu tento transferir R$ 300,00
-Então devo ver a mensagem "Saldo insuficiente"
-```
-
----
-
-### Cenário: Transferência para conta inexistente  
-*(Caso de negócio não define, mas adicionamos para cobertura)*  
-```gherkin
-Dado que eu tenho saldo de R$ 1.000,00
-Quando eu tento transferir R$ 100,00 para a conta "000000000"
-Então devo ver a mensagem "Conta de destino não encontrada"
-```
-
----
-
-## Feature: US05 – Solicitação de Empréstimo  
-**Como** cliente autenticado, **eu quero** solicitar um empréstimo informando o valor desejado e minha renda anual, **para** avaliar se o banco aprovará o pedido e ter acesso ao montante solicitado.
-
----
-
-### Cenário: Empréstimo aprovado  
-```gherkin
-Dado que minha renda anual é R$ 80.000,00
-Quando eu solicito um empréstimo de R$ 10.000,00
-Então devo ver a mensagem "Seu empréstimo de R$ 10.000,00 foi aprovado."
-```
-
----
-
-### Cenário: Empréstimo negado por renda insuficiente  
-```gherkin
-Dado que minha renda anual é R$ 15.000,00
-Quando eu solicito um empréstimo de R$ 10.000,00
-Então devo ver a mensagem "Seu empréstimo de R$ 10.000,00 foi negado. Motivo: renda insuficiente."
-```
-
----
-
-### Cenário: Valor do empréstimo fora do limite  
-```gherkin
-Dado que minha renda anual é R$ 200.000,00
-Quando eu solicito um empréstimo de R$ 12.000.000,00
-Então devo ver a mensagem de erro "Valor excede o limite máximo permitido (10.000.000,00)"
-```
-
----
-
-### Cenário: Renda anual inválida (zero ou negativa)  
-```gherkin
-Quando eu preencho "Renda anual" com "0,00"
-E submeto a solicitação
-Então devo ver a mensagem de erro "Renda anual deve ser maior que zero"
-
-Quando eu preencho "Renda anual" com "-1000,00"
-E submeto a solicitação
-Então devo ver a mensagem de erro "Renda anual deve ser maior que zero"
-```
-
----
-
-## Feature: US06 – Pagamento de Contas  
-**Como** cliente autenticado, **eu quero** registrar pagamentos de contas (bancos, serviços, etc.) informando beneficiário e dados da fatura, **para** garantir que as contas sejam salvas no histórico e que futuros pagamentos sejam agendados corretamente.
-
----
-
-### Cenário: Pagamento imediato (data hoje)  
-```gherkin
-Dado que eu estou na página de pagamento de contas
-Quando eu preencho todos os campos obrigatórios, incluindo "Data de pagamento" com a data de hoje
-E confirmo o pagamento
-Então devo ver a transação no extrato com data de hoje
-E o saldo da conta de destino deve ser reduzido imediatamente
-```
-
----
-
-### Cenário: Pagamento futuro (agendamento)  
-```gherkin
-Dado que eu estou na página de pagamento de contas
-Quando eu preencho todos os campos obrigatórios, incluindo "Data de pagamento" com uma data 5 dias à frente
-E confirmo o pagamento
-Então devo ver a transação no extrato com a data marcada
-E o saldo da conta não é alterado agora
-E no dia da data de pagamento, o saldo é automaticamente debitado
-```
-
----
-
-### Cenário: Data de pagamento passada  
-```gherkin
-Dado que eu estou na página de pagamento de contas
-Quando eu preencho todos os campos obrigatórios, incluindo "Data de pagamento" com a data de ontem
-E confirmo o pagamento
-Então devo ver a mensagem de erro "Data inválida"
-```
-
----
-
-### Cenário: Valor do pagamento inválido (zero)  
-```gherkin
-Quando eu preencho "Valor" com "0,00"
-E submeto o pagamento
-Então devo ver a mensagem de erro "Valor deve ser maior que zero"
-```
-
----
-
-### Cenário: Valor do pagamento inválido (negativo)  
-```gherkin
-Quando eu preencho "Valor" com "-100,00"
-E submeto o pagamento
-Então devo ver a mensagem de erro "Valor deve ser positivo"
-```
-
----
-
-### Cenário: Campos obrigatórios ausentes  
-```gherkin
-Cenário Outline: Pagamento com campo obrigatório em branco
-  Dado que eu estou na página de pagamento de contas
-  Quando eu deixo "<campo>" em branco
-  E preencho os demais campos com dados válidos
-  E submeto o pagamento
-  Então devo ver a mensagem de erro "Campo obrigatório"
-
-  Exemplos:
-    | campo           |
-    | Beneficiário    |
-    | Endereço        |
-    | Cidade          |
-    | Estado          |
-    | CEP             |
-    | Telefone        |
-    | Conta de destino|
-    | Valor           |
-    | Data de pagamento |
-```
-
----
-
-## Feature: US07 – Navegação e Usabilidade Consistente  
-**Como** usuário do ParaBank, **eu quero** navegar de forma intuitiva, com menus e links consistentes e mensagens de erro claras, **para** ter uma experiência de uso sem confusão e erros técnicos.
-
----
-
-### Cenário: Navegação entre páginas em tempo aceitável  
-```gherkin
-Dado que eu estou em qualquer página do portal
-Quando eu clico em qualquer link de menu (Home, Conta, Transferências, Empréstimos, Pagamentos, Logout)
-Então a nova página deve carregar em ≤ 3 segundos
-E não deve apresentar erro 404
-```
-
----
-
-### Cenário: Mensagens de erro em modal ou banner  
-```gherkin
-Dado que eu tento submeter um formulário com campos inválidos
-Quando o sistema gera um erro
-Então a mensagem de erro aparece em um modal ou banner com cor vermelha
-E o texto da mensagem é claro e específico (ex.: "Campo obrigatório", "Saldo insuficiente", "Data inválida")
-```
-
----
-
-### Cenário: Responsividade da navegação  
-```gherkin
-Cenário Outline: Estrutura de navegação responsiva
-  Dado que eu acesso a aplicação no dispositivo "<dispositivo>"
-  Quando eu visualizo a barra de navegação
-  Então os links devem estar visíveis e em ordem consistente
-  E o layout deve se ajustar ao tamanho da tela
-
-  Exemplos:
-    | dispositivo |
-    | desktop     |
-    | tablet      |
-    | mobile      |
-```
-
----
-
-### Cenário: Links de menu ativos e corretos  
-```gherkin
-Dado que eu estou em cada página (Home, Conta, Transferências, Empréstimos, Pagamentos, Logout)
-Quando eu olho os links de menu
-Então todos os links estão ativos
-E cada link leva à página correta
-```
-
----
-
-> **Observação**: Cada cenário acima cobre tanto casos positivos quanto negativos, alinhando‑se aos critérios de aceitação de cada User Story. Eles são independentes e podem ser executados de forma incremental para garantir entregas contínuas e testabilidade.
