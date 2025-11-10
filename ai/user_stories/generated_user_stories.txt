@@ -1,29 +1,126 @@
-**User Stories – ParaBank (Sprints iniciais)**  
+**US01 – Cadastro de Usuário**  
+- **Como** cliente do ParaBank,  
+- **eu quero** cadastrar uma nova conta de usuário preenchendo todos os campos obrigatórios,  
+- **para** ter acesso ao sistema e realizar operações bancárias.
 
-| ID | Título | User Story | Descrição | Critérios de Aceite (Objetivos) |  
-|----|--------|------------|-----------|---------------------------------|
+**Descrição detalhada**  
+O usuário acessa a página “Criar Conta” e deve informar Nome completo, Email, Telefone, CEP, e uma senha que cumpra as regras de complexidade. O sistema valida cada campo em tempo real, exibindo mensagens de erro específicas (por ex.: “O CEP deve conter 8 dígitos” ou “E‑mail inválido”). Ao submeter o formulário, o sistema cria a conta, envia um e‑mail de confirmação e torna o usuário habilitado a fazer login.
 
-| **US01** | Cadastro de Usuário | **Como** cliente em potencial, **eu quero** criar uma conta no ParaBank informando meus dados pessoais, **para** poder acessar serviços bancários online de forma segura. | A tela de cadastro apresenta campos obrigatórios: nome completo, CPF, data de nascimento, email, telefone, endereço completo, CEP, senha e confirmação de senha. O usuário pode visualizar dicas de preenchimento e receber feedback imediato sobre a validade de cada campo (ex.: formato de email, número de telefone e CEP). Após confirmação, o sistema grava a conta no banco de dados e envia um e‑mail de ativação. | 1. Todos os campos obrigatórios são verificados antes da submissão. <br>2. Campos com formato inválido exibem mensagem de erro específica (ex.: “Telefone inválido – digite 10 ou 11 dígitos”). <br>3. Ao cadastrar com dados válidos, usuário recebe e‑mail de confirmação e a conta aparece como “pendente de ativação”. <br>4. Se o email já existir, exibe “Este e‑mail já está em uso”. <br>5. O cadastro só é concluído quando todas as validações são aprovadas. |
-
-| **US02** | Login no Sistema | **Como** cliente já cadastrado, **eu quero** entrar no ParaBank com meu e‑mail e senha, **para** acessar minhas informações bancárias. | A página de login recebe e‑mail e senha. Em caso de credenciais válidas, o usuário é redirecionado automaticamente para a página inicial da conta. Caso contrário, uma mensagem de erro claro é mostrada. | 1. Credenciais corretas → redirecionamento para a “Dashboard” da conta. <br>2. Credenciais inválidas → mensagem “Credenciais incorretas, tente novamente”. <br>3. Sistema bloqueia sessão após 3 tentativas consecutivas de falha (ex.: “Sua conta foi bloqueada. Contacte o suporte”). <br>4. O link “Esqueci minha senha” redireciona para a página de recuperação. <br>5. O login funciona em dispositivos desktop e mobile (responsividade). |
-
-| **US03** | Visualização de Saldo e Extrato | **Como** cliente, **eu quero** ver meu saldo atual e o extrato das últimas transações, **para** acompanhar meus recursos e histórico financeiro. | A “Dashboard” exibe o saldo em tempo real, atualizado após cada operação (depósito, retirada, transferência). O extrato mostra as 10 últimas transações em ordem cronológica inversa, com data, descrição, tipo e valor. O usuário pode clicar em “Ver Mais” para carregar o histórico completo. | 1. Saldo exibido no cabeçalho da tela em formato monetário. <br>2. Após qualquer operação, saldo é atualizado sem necessidade de recarregar a página. <br>3. Extrato lista 10 itens; botão “Ver Mais” carrega os próximos 10. <br>4. Cada transação exibe: data, descrição, tipo (crédito/débito), valor e saldo pós‑transação. <br>5. Usuário pode filtrar extrato por período (ex.: “Último mês”). |
-
-| **US04** | Transferência de Fundos | **Como** cliente, **eu quero** transferir um valor de minha conta para outra conta (interna ou externa), **para** mover recursos entre minhas contas ou pagar terceiros. | O usuário seleciona a conta de origem (ex.: Conta Corrente), a conta de destino (ex.: Conta Poupança ou outro cliente) e insere o valor a transferir. O sistema valida que o valor não excede o saldo disponível. Após confirmação, debita o valor da origem, credita no destino e registra a transação em ambos os extratos. | 1. Campos obrigatórios: conta origem, conta destino e valor. <br>2. O sistema bloqueia transferência se valor > saldo da origem (“Saldo insuficiente”). <br>3. Confirmação de transferência exibe “Você está prestes a transferir R$ X,XX para Conta Y – confirme”. <br>4. Após confirmação, saldo da origem e destino atualizados instantaneamente. <br>5. Ambas as contas recebem uma entrada no extrato com data e hora da transferência. <br>6. Caso a conta destino pertença a outro usuário, o sistema envia notificação (e‑mail ou notificação interna). |
-
-| **US05** | Solicitação de Empréstimo | **Como** cliente, **eu quero** solicitar um empréstimo indicando valor e renda anual, **para** avaliar se a instituição aprova e obter financiamento. | O usuário preenche formulário com valor solicitado e renda anual. O sistema calcula uma taxa de aprovação baseada em regras internas (ex.: renda mínima, score de crédito) e retorna instantaneamente “Aprovado” ou “Negado”, com motivo em caso de negação (ex.: “Renda insuficiente”). | 1. Campos obrigatórios: valor do empréstimo e renda anual. <br>2. Valor deve ser positivo e não exceder 30% da renda anual (regra de negócio simplificada). <br>3. Processamento retorna “Aprovado” ou “Negado” em até 2 segundos. <br>4. Se aprovado, exibe taxa de juros e prazo padrão. <br>5. Se negado, exibe motivo e sugestão de melhorar renda ou valor. <br>6. Solicitação salva no histórico do cliente com status e data. |
-
-| **US06** | Pagamento de Contas | **Como** cliente, **eu quero** cadastrar e agendar pagamentos de contas (banco, luz, água), **para** garantir que sejam liquidados na data correta. | O usuário adiciona beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data de pagamento. O pagamento pode ser imediato ou agendado. O sistema salva no histórico e, se agendado, garante que o débito ocorra na data marcada. | 1. Campos obrigatórios: beneficiário, endereço, cidade, estado, CEP, telefone, conta de destino, valor e data. <br>2. Valor positivo e conta de destino válida (ex.: 8 dígitos). <br>3. Se data < hoje → mensagem “Data inválida – selecione uma data futura”. <br>4. Pagamentos agendados aparecem em “Pagamentos Programados” com status “Pendente”. <br>5. Na data agendada, sistema debita automaticamente e registra transação no histórico. <br>6. Notificação (e‑mail ou push) enviada ao usuário 1 dia antes da data de pagamento. |
-
-| **US07** | Navegação e Usabilidade | **Como** cliente, **eu quero** que todas as páginas carreguem sem erros e que os menus estejam consistentes, **para** navegar de forma intuitiva e sem confusão. | O aplicativo deve ter navegação clara (topo, lateral, breadcrumbs) e garantir que todas as páginas sejam responsivas e livres de erros de carregamento. Mensagens de erro devem ser claras e contextualizadas. | 1. Cada página tem cabeçalho com logo, menu principal e ícone de usuário. <br>2. Links do menu levam ao destino correto sem erro 404. <br>3. Se uma página falhar no carregamento, exibe mensagem “Erro inesperado – tente novamente”. <br>4. Navegação mobile utiliza menu hambúrguer e mantém mesma estrutura do desktop. <br>5. Todas as páginas têm botão “Voltar” ou breadcrumbs para retorno fácil. <br>6. Navegação é testada com usuários simulando 50 sessões simultâneas para garantir estabilidade. |
+**Critérios de Aceitação**  
+- Todos os campos obrigatórios são exibidos e marcados como tal.  
+- O formulário não pode ser enviado se algum campo obrigatório estiver vazio.  
+- Validação de telefone, CEP e e‑mail produz mensagens de erro claras e específicas.  
+- Após cadastro bem‑sucedido, o usuário recebe um e‑mail de confirmação contendo um link de verificação.  
+- O usuário consegue fazer login imediatamente após confirmar o e‑mail.  
+- Tentativa de cadastro com e‑mail já existente retorna mensagem “E‑mail já cadastrado”.
 
 ---
 
-### Observações de Rastreabilidade e Organização
+**US02 – Login**  
+- **Como** usuário registrado,  
+- **eu quero** fazer login usando credenciais válidas,  
+- **para** acessar minha conta e executar transações.
 
-- **US01 → US02 → US03 → US04 → US05 → US06 → US07** formam o fluxo de uso típico: cadastro → login → acesso ao dashboard → operações (transferência, empréstimo, pagamento).  
-- Cada história contém **descrição detalhada** e **critérios objetivos**, tornando-as testáveis via automação ou testes manuais.  
-- Não há sobreposição de escopo: cada funcionalidade possui seus próprios campos e regras de negócio.  
-- Priorizamos **valor ao usuário**: cadastro permite acesso, login garante segurança, visualização de saldo/extrato traz transparência, transferências e pagamentos possibilitam movimentação real, empréstimos permitem crédito, e usabilidade garante experiência agradável.  
+**Descrição detalhada**  
+O usuário insere E‑mail/Usuário e Senha na tela de login. O sistema autentica contra a base de dados. Se as credenciais forem corretas, redireciona‑lo para a página inicial da conta; caso contrário, mostra mensagem de erro adequada sem expor detalhes de segurança. A sessão permanece ativa enquanto o usuário navega, com logout manual ou expiração automática.
 
-Essas User Stories podem ser adicionadas ao backlog e refinadas em cada sprint, permitindo entregas incrementais e alinhamento contínuo com requisitos de negócio.
+**Critérios de Aceitação**  
+- O campo de senha não exibe caracteres visíveis (mas permite “mostrar/ocultar”).  
+- Credenciais inválidas (senha errada ou usuário inexistente) exibem a mensagem “Credenciais inválidas. Tente novamente.”  
+- Credenciais válidas redirecionam para a página inicial da conta.  
+- Sessão expira após 15 minutos de inatividade, exibindo “Sessão expirada – faça login novamente”.  
+- Logout remove a sessão e redireciona para a tela de login.
+
+---
+
+**US03 – Visualizar Saldo e Extrato**  
+- **Como** cliente autenticado,  
+- **eu quero** visualizar meu saldo atualizado e extrato em ordem cronológica,  
+- **para** ter controle das minhas finanças e acompanhar cada transação.
+
+**Descrição detalhada**  
+Na página inicial, o sistema exibe o saldo atual em formato monetário, atualizado automaticamente após qualquer operação. Um link “Extrato” abre uma lista das transações mais recentes (últimos 30 dias) em ordem decrescente, com data, descrição, valor (crédito/débito) e saldo após cada transação.
+
+**Critérios de Aceitação**  
+- O saldo exibido reflete imediatamente qualquer transação realizada.  
+- O extrato mostra, no mínimo, as 10 transações mais recentes, ordenadas cronologicamente (mais recente primeiro).  
+- Cada linha do extrato exibe data no formato DD/MM/AAAA, descrição curta, valor (positivo ou negativo) e saldo pós‑transação.  
+- O usuário pode clicar em “Mostrar mais” para carregar 10 registros adicionais.  
+- Se não houver transações, exibe mensagem “Nenhuma transação encontrada”.
+
+---
+
+**US04 – Transferência de Fundos**  
+- **Como** cliente autenticado,  
+- **eu quero** transferir dinheiro entre contas,  
+- **para** movimentar recursos de forma rápida e segura.
+
+**Descrição detalhada**  
+Na seção “Transferências”, o usuário escolhe a conta de origem (sempre a própria) e a conta destino (pode ser interna ou externa). Ele digita o valor e confirma a transferência. O sistema valida que o valor não exceda o saldo disponível, processa a transação instantaneamente, debita a conta origem e credita a conta destino, registrando ambas as partes no histórico.
+
+**Critérios de Aceitação**  
+- O campo “Conta de destino” aceita apenas CNPJs/CPF válidos e exibe mensagem de erro se inválido.  
+- O valor informado não pode exceder o saldo disponível; se exceder, mostra “Saldo insuficiente”.  
+- A transferência é processada em tempo real (≤ 2 segundos).  
+- Após confirmação, o saldo da origem diminui e o saldo da destino aumenta imediatamente.  
+- Ambas as contas listam a transação no extrato com data, hora e descrição “Transferência X → Y”.  
+- O usuário recebe e‑mail de confirmação contendo detalhes da transferência.
+
+---
+
+**US05 – Solicitação de Empréstimo**  
+- **Como** cliente autenticado,  
+- **eu quero** solicitar um empréstimo informando valor e renda anual,  
+- **para** obter crédito que atenda às minhas necessidades financeiras.
+
+**Descrição detalhada**  
+O usuário acessa a página “Solicitar Empréstimo”, digita o valor desejado e a renda anual. O sistema calcula automaticamente uma taxa de juros (baseada em regras internas) e retorna instantaneamente o status de aprovação (Aprovado / Negado). Se aprovado, mostra os detalhes de parcelas, taxa e prazo. Se negado, fornece sugestão de renda mínima ou valor alternativo.
+
+**Critérios de Aceitação**  
+- Campos obrigatórios (valor do empréstimo, renda anual) não podem ficar vazios.  
+- O valor do empréstimo deve ser ≥ R$ 500 e ≤ R$ 100 000.  
+- Renda anual deve ser ≥ R$ 20 000.  
+- O sistema retorna status em ≤ 5 segundos.  
+- Caso aprovado, exibe “Empréstimo aprovado. Taxa: X%, Prazo: Y meses”.  
+- Caso negado, exibe “Empréstimo negado. Renda insuficiente”.  
+- Em ambos os casos, registra a solicitação no histórico de “Solicitações de Empréstimo”.
+
+---
+
+**US06 – Pagamento de Contas**  
+- **Como** cliente autenticado,  
+- **eu quero** registrar um pagamento de conta (beneficiário, endereço, telefone, conta de destino, valor, data),  
+- **para** efetuar pagamentos programados de forma organizada.
+
+**Descrição detalhada**  
+Na tela “Pagamentos”, o usuário preenche: Beneficiário, Endereço, Cidade, Estado, CEP, Telefone, Conta de destino, Valor e Data de pagamento (pode ser imediato ou futuro). O sistema valida todos os campos, evita pagamentos futuros com data < 3 dias a partir de hoje, e registra a transação no histórico. Pagamentos agendados aparecem na lista de “Pagamentos Pendentes” e são processados automaticamente na data escolhida.
+
+**Critérios de Aceitação**  
+- Todos os campos obrigatórios são obrigatórios; campos de endereço exigem CEP válido.  
+- O valor deve ser ≥ R$ 10.  
+- Data futura deve estar pelo menos 3 dias após a data atual; caso contrário, exibe “Data de pagamento deve ser pelo menos 3 dias à frente”.  
+- O pagamento imediato debita a conta do usuário e adiciona a transação ao histórico com status “Pago”.  
+- Pagamentos futuros são salvos como “Pendente” e aparecem na lista de “Pagamentos Pendentes”.  
+- Em cada transação de pagamento, o histórico exibe data de pagamento, beneficiário, valor e status.  
+- O sistema envia e‑mail de confirmação contendo detalhes do pagamento.
+
+---
+
+**US07 – Navegação, Usabilidade e Consistência de Mensagens**  
+- **Como** usuário do ParaBank,  
+- **eu quero** que todas as páginas carreguem sem erros, menus e links estejam consistentes, e as mensagens de erro sejam claras,  
+- **para** ter uma experiência de uso fluida e confiável.
+
+**Descrição detalhada**  
+Este conjunto de requisitos abrange a usabilidade geral: todas as páginas (login, cadastro, conta, extrato, transferências, empréstimo, pagamentos) devem carregar em < 2 segundos em conexão padrão. Menus de navegação (home, extrato, transferências, empréstimos, pagamentos, perfil, logout) permanecem nos mesmos lugares e com o mesmo estilo visual. Mensagens de erro e de confirmação são exibidas em banners visíveis, com cores diferenciadas (verde para sucesso, vermelho para erro) e textos objetivos (ex.: “Telefone inválido: 12‑3456‑7890”). Navegação entre páginas deve ser possível por links, botões ou barra de menu, sem perda de estado.
+
+**Critérios de Aceitação**  
+- Tempo de carregamento de qualquer página ≤ 2 segundos (em 3G simulada).  
+- Todos os menus de navegação aparecem em todas as páginas, com a mesma ordem e estilo.  
+- Ao clicar em “Logout”, a sessão termina e a tela de login aparece.  
+- Mensagens de erro são exibidas em banners de fundo vermelho e desaparecem após 5 segundos ou após confirmação.  
+- Mensagens de sucesso são exibidas em banners de fundo verde.  
+- Nenhum link quebrado (HTTP 404) aparece em nenhuma página.  
+- O layout responde adequadamente a dispositivos móveis (responsividade).
+
+---
