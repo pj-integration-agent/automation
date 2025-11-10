@@ -1,157 +1,337 @@
-titulo: US01 – Cadastro de Usuário,
+**User Story: Cadastro de Usuário**
+
+```yaml
+titulo: Cadastro de Usuário
 cenario_bdd:
-    nome: Cadastro com todos os campos preenchidos corretamente,
-    tipo: positivo,
-    gherkin: "Feature: Cadastro de Usuário\n  Scenario: Cadastro com dados válidos\n    Given o usuário está na página de cadastro\n    When ele preenche Nome Completo com \"João da Silva\"\n    And preenche Email com \"joao.silva@example.com\"\n    And preenche Telefone com \"11987654321\"\n    And preenche CEP com \"12345678\"\n    And preenche Endereço com \"Rua A, 100\"\n    And preenche Senha com \"Password123!\"\n    And confirma Senha com \"Password123!\"\n    And clica em \"Cadastrar\"\n    Then a mensagem \"Cadastro concluído com sucesso\" é exibida\n    And o usuário é redirecionado para a página de login",
+  - nome: Cadastro com todos os campos válidos
+    tipo: positivo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Usuário registra conta com dados válidos
+        Given o usuário está na página de cadastro
+        When ele preenche nome com "Ana"
+        And preenche sobrenome com "Silva"
+        And preenche e‑mail com "ana.silva@email.com"
+        And preenche telefone com "11987654321"
+        And preenche CEP com "12345678"
+        And preenche endereço com "Rua das Flores, 123"
+        And preenche cidade com "São Paulo"
+        And preenche estado com "SP"
+        And preenche senha com "Senha123!"
+        And confirma senha com "Senha123!"
+        And clica em "Cadastrar"
+        Then a tela exibe "Cadastro concluído – acesse seu login"
+        And o usuário pode fazer login com os dados cadastrados
 
+  - nome: Campo obrigatório vazio
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Usuário deixa campo obrigatório em branco
+        Given o usuário está na página de cadastro
+        When ele deixa o campo e‑mail em branco
+        And preenche os demais campos com valores válidos
+        And clica em "Cadastrar"
+        Then a mensagem "Campo obrigatório" aparece abaixo do campo e‑mail
+
+  - nome: E‑mail com formato inválido
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Usuário insere e‑mail inválido
+        Given o usuário está na página de cadastro
+        When ele preenche e‑mail com "ana.silva@"
+        And preenche os demais campos com valores válidos
+        And clica em "Cadastrar"
+        Then a mensagem "Formato de e‑mail inválido" aparece abaixo do campo e‑mail
+
+  - nome: Telefone com caracteres não numéricos
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Usuário insere telefone inválido
+        Given o usuário está na página de cadastro
+        When ele preenche telefone com "123ABC"
+        And preenche os demais campos com valores válidos
+        And clica em "Cadastrar"
+        Then a mensagem "Formato de telefone inválido" aparece abaixo do campo telefone
+
+  - nome: CEP com menos de 8 dígitos
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de Usuário
+      Scenario: Usuário insere CEP inválido
+        Given o usuário está na página de cadastro
+        When ele preenche CEP com "1234567"
+        And preenche os demais campos com valores válidos
+        And clica em "Cadastrar"
+        Then a mensagem "CEP inválido (deve conter 8 dígitos)" aparece abaixo do campo CEP
+```
+
+---
+
+**User Story: Login**
+
+```yaml
+titulo: Login
 cenario_bdd:
-    nome: Cadastro com campos obrigatórios vazios,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\n  Scenario: Cadastro sem preencher nenhum campo\n    Given o usuário está na página de cadastro\n    When ele clica em \"Cadastrar\" sem preencher campos\n    Then exibe mensagem \"Nome completo é obrigatório\"\n    And exibe mensagem \"Email é obrigatório\"\n    And exibe mensagem \"Telefone é obrigatório\"\n    And exibe mensagem \"CEP é obrigatório\"\n    And exibe mensagem \"Endereço é obrigatório\"\n    And exibe mensagem \"Senha é obrigatória\"\n    And exibe mensagem \"Confirmação de senha é obrigatória\"",
+  - nome: Login com credenciais corretas
+    tipo: positivo
+    gherkin: |
+      Feature: Login
+      Scenario: Usuário faz login com e‑mail e senha corretos
+        Given o usuário está na página de login
+        When ele preenche e‑mail com "ana.silva@email.com"
+        And preenche senha com "Senha123!"
+        And clica em "Entrar"
+        Then a página redireciona para a tela inicial
+        And exibe "Bem‑vindo, Ana"
 
+  - nome: E‑mail ou senha em branco
+    tipo: negativo
+    gherkin: |
+      Feature: Login
+      Scenario: Usuário tenta login sem preencher e‑mail ou senha
+        Given o usuário está na página de login
+        When ele deixa e‑mail e senha em branco
+        And clica em "Entrar"
+        Then a mensagem "Informe seu e‑mail e senha" aparece
+
+  - nome: Credenciais inválidas
+    tipo: negativo
+    gherkin: |
+      Feature: Login
+      Scenario: Usuário tenta login com credenciais incorretas
+        Given o usuário está na página de login
+        When ele preenche e‑mail com "ana.silva@email.com"
+        And preenche senha com "SenhaErrada!"
+        And clica em "Entrar"
+        Then a mensagem "Credenciais inválidas" aparece
+```
+
+---
+
+**User Story: Visualizar Saldo e Extrato**
+
+```yaml
+titulo: Visualizar Saldo e Extrato
 cenario_bdd:
-    nome: Cadastro com email inválido,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\n  Scenario: Cadastro com email no formato inválido\n    Given o usuário está na página de cadastro\n    When ele preenche Email com \"usuario\"\n    And preenche os demais campos válidos\n    And clica em \"Cadastrar\"\n    Then exibe mensagem \"Formato de email inválido\"",
+  - nome: Exibição do saldo e últimos 10 lançamentos após login
+    tipo: positivo
+    gherkin: |
+      Feature: Visualizar Saldo e Extrato
+      Scenario: Usuário visualiza saldo e extrato imediatamente após login
+        Given o usuário está autenticado na página inicial
+        Then a tela mostra "Saldo atual: R$ 2.500,00"
+        And o extrato lista pelo menos os últimos 10 lançamentos
+        And cada lançamento exibe data, descrição, tipo e valor
+        And os lançamentos estão ordenados cronologicamente (mais recente primeiro)
 
+  - nome: Saldo atualiza após operação de transferência
+    tipo: positivo
+    gherkin: |
+      Feature: Visualizar Saldo e Extrato
+      Scenario: Saldo atualiza após transferência
+        Given o usuário está na página inicial com saldo R$ 1.000,00
+        When ele realiza uma transferência de R$ 200,00
+        Then a tela atualiza o saldo para R$ 800,00
+        And a transferência aparece no extrato com data e hora
+```
+
+---
+
+**User Story: Transferência de Fundos**
+
+```yaml
+titulo: Transferência de Fundos
 cenario_bdd:
-    nome: Cadastro com telefone fora do padrão,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\n  Scenario: Cadastro com telefone sem DDD ou com caracteres não numéricos\n    Given o usuário está na página de cadastro\n    When ele preenche Telefone com \"1234\"\n    And preenche os demais campos válidos\n    And clica em \"Cadastrar\"\n    Then exibe mensagem \"Formato de telefone inválido\"",
+  - nome: Transferência bem‑sucedida dentro do saldo disponível
+    tipo: positivo
+    gherkin: |
+      Feature: Transferência de Fundos
+      Scenario: Usuário transfere valor dentro do saldo
+        Given o usuário está na página de transferências
+        And o saldo da conta origem é R$ 1.000,00
+        When ele seleciona conta origem "Conta A"
+        And seleciona conta destino "Conta B"
+        And digita valor "300,00"
+        And confirma a transferência
+        Then a conta origem diminui para R$ 700,00
+        And a conta destino aumenta em R$ 300,00
+        And ambas as contas têm a transação registrada no histórico com data e hora
 
+  - nome: Transferência rejeitada por saldo insuficiente
+    tipo: negativo
+    gherkin: |
+      Feature: Transferência de Fundos
+      Scenario: Usuário tenta transferir valor maior que o saldo
+        Given o usuário está na página de transferências
+        And o saldo da conta origem é R$ 400,00
+        When ele seleciona conta origem "Conta A"
+        And seleciona conta destino "Conta B"
+        And digita valor "500,00"
+        And confirma a transferência
+        Then a mensagem "Saldo insuficiente" aparece
+
+  - nome: Valor de transferência inválido (zero ou negativo)
+    tipo: negativo
+    gherkin: |
+      Feature: Transferência de Fundos
+      Scenario: Usuário entra valor inválido na transferência
+        Given o usuário está na página de transferências
+        When ele digita valor "0,00"
+        And confirma a transferência
+        Then a mensagem "Valor deve ser positivo" aparece
+```
+
+---
+
+**User Story: Solicitação de Empréstimo**
+
+```yaml
+titulo: Solicitação de Empréstimo
 cenario_bdd:
-    nome: Cadastro com CEP inválido,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Usuário\n  Scenario: Cadastro com CEP com letras\n    Given o usuário está na página de cadastro\n    When ele preenche CEP com \"abc\"\n    And preenche os demais campos válidos\n    And clica em \"Cadastrar\"\n    Then exibe mensagem \"Formato de CEP inválido\"",
+  - nome: Solicitação de empréstimo com dados válidos e aprovação
+    tipo: positivo
+    gherkin: |
+      Feature: Solicitação de Empréstimo
+      Scenario: Usuário solicita empréstimo e recebe aprovação
+        Given o usuário está na página de empréstimos
+        When ele preenche valor do empréstimo com "10.000,00"
+        And preenche renda anual com "50.000,00"
+        And clica em "Solicitar"
+        Then o sistema processa a solicitação em até 30s
+        And exibe "Solicitação Aprovada"
+        And a solicitação aparece no histórico de solicitações
 
---- 
+  - nome: Solicitação de empréstimo com campo inválido
+    tipo: negativo
+    gherkin: |
+      Feature: Solicitação de Empréstimo
+      Scenario: Usuário deixa campo de renda em branco
+        Given o usuário está na página de empréstimos
+        When ele preenche valor do empréstimo com "5.000,00"
+        And deixa renda anual em branco
+        And clica em "Solicitar"
+        Then a mensagem "Campo obrigatório" aparece abaixo do campo renda anual
 
-titulo: US02 – Login de Usuário,
+  - nome: Solicitação de empréstimo negada por renda insuficiente
+    tipo: negativo
+    gherkin: |
+      Feature: Solicitação de Empréstimo
+      Scenario: Usuário recebe negação por baixa renda
+        Given o usuário está na página de empréstimos
+        When ele preenche valor do empréstimo com "20.000,00"
+        And preenche renda anual com "5.000,00"
+        And clica em "Solicitar"
+        Then o sistema exibe "Solicitação Negada: Renda insuficiente"
+        And a solicitação aparece no histórico de solicitações com status negado
+```
+
+---
+
+**User Story: Pagamento de Contas**
+
+```yaml
+titulo: Pagamento de Contas
 cenario_bdd:
-    nome: Login com credenciais válidas,
-    tipo: positivo,
-    gherkin: "Feature: Login de Usuário\n  Scenario: Login com email e senha corretos\n    Given o usuário está na página de login\n    When ele preenche Email com \"joao.silva@example.com\"\n    And preenche Senha com \"Password123!\"\n    And clica em \"Entrar\"\n    Then o usuário é redirecionado para o Dashboard\n    And a mensagem de boas‑vindas é exibida",
+  - nome: Registro de pagamento agendado com dados válidos
+    tipo: positivo
+    gherkin: |
+      Feature: Pagamento de Contas
+      Scenario: Usuário agenda pagamento de conta
+        Given o usuário está na página de pagamentos
+        When ele preenche beneficiário com "Pedro Santos"
+        And preenche endereço com "Av. Central, 456"
+        And preenche cidade com "Rio de Janeiro"
+        And preenche estado com "RJ"
+        And preenche CEP com "98765432"
+        And preenche telefone com "21987654321"
+        And preenche conta de destino com "123456-7"
+        And preenche valor com "150,00"
+        And escolhe data "2025‑12‑20"
+        And clica em "Confirmar"
+        Then o pagamento aparece no histórico com data e hora
+        And o usuário pode visualizar a lista de pagamentos agendados
 
+  - nome: Pagamento com data passada
+    tipo: negativo
+    gherkin: |
+      Feature: Pagamento de Contas
+      Scenario: Usuário agenda pagamento com data no passado
+        Given o usuário está na página de pagamentos
+        When ele preenche os campos com valores válidos
+        And escolhe data "2020‑01‑01"
+        And clica em "Confirmar"
+        Then a mensagem "Data inválida" aparece
+
+  - nome: Pagamento com campo obrigatório em branco
+    tipo: negativo
+    gherkin: |
+      Feature: Pagamento de Contas
+      Scenario: Usuário deixa telefone em branco
+        Given o usuário está na página de pagamentos
+        When ele deixa telefone em branco
+        And preenche os demais campos com valores válidos
+        And clica em "Confirmar"
+        Then a mensagem "Campo obrigatório" aparece abaixo do campo telefone
+```
+
+---
+
+**User Story: Navegação Consistente**
+
+```yaml
+titulo: Navegação Consistente
 cenario_bdd:
-    nome: Login com campos vazios,
-    tipo: negativo,
-    gherkin: "Feature: Login de Usuário\n  Scenario: Login com email vazio\n    Given o usuário está na página de login\n    When ele clica em \"Entrar\" com Email vazio\n    Then exibe mensagem \"Este campo é obrigatório\"\n    And não há redirecionamento\n\n  Scenario: Login com senha vazia\n    Given o usuário está na página de login\n    When ele clica em \"Entrar\" com Senha vazia\n    Then exibe mensagem \"Este campo é obrigatório\"\n    And não há redirecionamento",
+  - nome: Menus e cabeçalho visíveis em todas as páginas
+    tipo: positivo
+    gherkin: |
+      Feature: Navegação Consistente
+      Scenario: Verificar cabeçalho e menu em todas as páginas
+        Given o usuário está na página inicial
+        Then o cabeçalho contém logo, menu principal e rodapé
+        And cada item do menu leva à página correta
+        And nenhuma página retorna erro 404
 
+  - nome: Rodapé presente em todas as páginas
+    tipo: positivo
+    gherkin: |
+      Feature: Navegação Consistente
+      Scenario: Rodapé contém links necessários
+        Given o usuário está em qualquer página do sistema
+        Then o rodapé exibe links "Termos", "Privacidade" e "Suporte"
+```
+
+---
+
+**User Story: Mensagens de Erro Claras**
+
+```yaml
+titulo: Mensagens de Erro Claras
 cenario_bdd:
-    nome: Login com credenciais inválidas,
-    tipo: negativo,
-    gherkin: "Feature: Login de Usuário\n  Scenario: Login com email não cadastrado\n    Given o usuário está na página de login\n    When ele preenche Email com \"naoexiste@example.com\"\n    And preenche Senha com \"Password123!\"\n    And clica em \"Entrar\"\n    Then exibe mensagem \"Email ou senha incorretos\"\n    And permanece na página de login",
+  - nome: Erro de e‑mail em campo de cadastro
+    tipo: negativo
+    gherkin: |
+      Feature: Mensagens de Erro Claras
+      Scenario: Usuário insere e‑mail inválido no cadastro
+        Given o usuário está na página de cadastro
+        When ele preenche e‑mail com "invalid"
+        And preenche os demais campos com valores válidos
+        And clica em "Cadastrar"
+        Then a mensagem "Formato de e‑mail inválido" aparece em vermelho abaixo do campo e‑mail
+        And a mensagem sugere: "Exemplo: usuario@exemplo.com"
 
-cenario_bdd:
-    nome: Persistência de sessão,
-    tipo: positivo,
-    gherkin: "Feature: Persistência de Sessão\n  Scenario: Sessão permanece ativa após recarregar a página\n    Given o usuário está autenticado e no Dashboard\n    When ele recarrega a página\n    Then ele permanece autenticado e continua no Dashboard",
+  - nome: Erro de servidor durante login
+    tipo: negativo
+    gherkin: |
+      Feature: Mensagens de Erro Claras
+      Scenario: Ocorre erro interno no servidor ao tentar login
+        Given o usuário está na página de login
+        When ele preenche credenciais corretas
+        And clica em "Entrar"
+        And o servidor retorna erro 500
+        Then a mensagem "Ocorreu um erro interno. Tente novamente mais tarde." aparece centralizada na tela
+```
 
---- 
-
-titulo: US03 – Visualização de Saldo,
-cenario_bdd:
-    nome: Exibição do saldo após login,
-    tipo: positivo,
-    gherkin: "Feature: Visualização de Saldo\n  Scenario: Saldo visível no Dashboard\n    Given o usuário está autenticado\n    And o saldo registrado no banco de dados é R$ 1.234,56\n    When ele acessa o Dashboard\n    Then exibe saldo \"R$ 1.234,56\" no componente de saldo",
-
-cenario_bdd:
-    nome: Formato monetário do saldo,
-    tipo: positivo,
-    gherkin: "Feature: Formato Monetário\n  Scenario: Saldo aparece com notação padrão\n    Given o usuário está no Dashboard\n    And o saldo é R$ 5000\n    When ele visualiza o saldo\n    Then o saldo exibido segue a notação \"R$ 5.000,00\"",
-
---- 
-
-titulo: US04 – Visualização de Extrato,
-cenario_bdd:
-    nome: Exibição de pelo menos 10 transações recentes,
-    tipo: positivo,
-    gherkin: "Feature: Visualização de Extrato\n  Scenario: Lista de transações mostra 10 itens\n    Given o usuário tem 12 transações nos últimos 30 dias\n    When ele acessa a página de Extrato\n    Then exibe 10 linhas de transações\n    And cada linha contém data, descrição, tipo, valor e saldo final",
-
-cenario_bdd:
-    nome: Ordem decrescente de transações,
-    tipo: positivo,
-    gherkin: "Feature: Ordem de Transações\n  Scenario: Transações exibidas do mais recente para o mais antigo\n    Given as transações têm datas 01/01, 02/01 e 03/01\n    When o usuário visualiza o extrato\n    Then a primeira linha corresponde à transação de 03/01\n    And a última linha corresponde à transação de 01/01",
-
-cenario_bdd:
-    nome: Mensagem quando não há transações,
-    tipo: negativo,
-    gherkin: "Feature: Extrato Vazio\n  Scenario: Exibição quando não existem transações\n    Given o usuário não possui transações nos últimos 30 dias\n    When ele acessa a página de Extrato\n    Then exibe mensagem \"Nenhuma transação encontrada\"",
-
---- 
-
-titulo: US05 – Transferência de Fundos,
-cenario_bdd:
-    nome: Transferência bem-sucedida entre contas próprias,
-    tipo: positivo,
-    gherkin: "Feature: Transferência de Fundos\n  Scenario: Transferência de R$ 100 entre contas\n    Given a conta de origem tem saldo R$ 200\n    And a conta de destino possui saldo R$ 50\n    When o usuário seleciona Conta Origem e Conta Destino\n    And preenche Valor com \"100\"\n    And clica em \"Confirmar\"\n    Then a origem é debitada e o saldo fica R$ 100\n    And a destinação é creditada e o saldo fica R$ 150\n    And a transação aparece no extrato de ambas as contas com a mesma data/hora",
-
-cenario_bdd:
-    nome: Transferência com valor superior ao saldo,
-    tipo: negativo,
-    gherkin: "Feature: Transferência de Fundos\n  Scenario: Transferência excede saldo disponível\n    Given a conta de origem tem saldo R$ 50\n    When o usuário tenta transferir R$ 100\n    Then exibe mensagem \"Saldo insuficiente para esta transferência\"\n    And a transferência não é realizada",
-
-cenario_bdd:
-    nome: Campos obrigatórios não preenchidos,
-    tipo: negativo,
-    gherkin: "Feature: Transferência de Fundos\n  Scenario: Falta preencher Conta Destino\n    Given a conta de origem tem saldo R$ 200\n    When o usuário deixa o campo Conta Destino vazio\n    And preenche Valor com \"50\"\n    And clica em \"Confirmar\"\n    Then exibe mensagem \"Conta de destino é obrigatória\"\n    And não executa a transferência",
-
---- 
-
-titulo: US06 – Solicitação de Empréstimo,
-cenario_bdd:
-    nome: Empréstimo aprovado automaticamente,
-    tipo: positivo,
-    gherkin: "Feature: Solicitação de Empréstimo\n  Scenario: Aprovação de empréstimo\n    Given o usuário possui renda anual de R$ 120.000\n    And solicita empréstimo de R$ 30.000\n    When o usuário submete a solicitação\n    Then exibe mensagem \"Aprovado\" em destaque verde\n    And credita R$ 30.000 na conta do usuário\n    And registra transação \"Empréstimo aprovado\" no extrato",
-
-cenario_bdd:
-    nome: Empréstimo negado por insuficiência de renda,
-    tipo: negativo,
-    gherkin: "Feature: Solicitação de Empréstimo\n  Scenario: Negação de empréstimo por renda insuficiente\n    Given o usuário possui renda anual de R$ 50.000\n    And solicita empréstimo de R$ 30.000\n    When o usuário submete a solicitação\n    Then exibe mensagem \"Negado\" em destaque vermelho\n    And não credita valor na conta\n    And registra transação \"Empréstimo negado\" no extrato",
-
-cenario_bdd:
-    nome: Validação de campos obrigatórios,
-    tipo: negativo,
-    gherkin: "Feature: Solicitação de Empréstimo\n  Scenario: Falta preencher Valor do Empréstimo\n    Given o usuário deixa campo em branco\n    And preenche Renda Anual com \"60.000\"\n    When clica em \"Solicitar\"\n    Then exibe mensagem \"Valor do empréstimo é obrigatório\"",
-
---- 
-
-titulo: US07 – Pagamento de Contas,
-cenario_bdd:
-    nome: Pagamento agendado com data futura válida,
-    tipo: positivo,
-    gherkin: "Feature: Pagamento de Contas\n  Scenario: Agendamento de pagamento\n    Given o usuário preenche Beneficiário \"Empresa X\"\n    And Endereço \"Av. Y, 123\"\n    And Cidade \"São Paulo\"\n    And Estado \"SP\"\n    And CEP \"01001000\"\n    And Telefone \"1199999999\"\n    And Conta Destino \"123456-7\"\n    And Valor \"200\"\n    And Data \"30/12/2025\"\n    And clica em \"Confirmar\"\n    Then exibe mensagem \"Pagamento agendado\" no extrato com status \"Agendado\"\n    And data de pagamento é 30/12/2025",
-
-cenario_bdd:
-    nome: Pagamento com data no passado,
-    tipo: negativo,
-    gherkin: "Feature: Pagamento de Contas\n  Scenario: Selecionar data no passado\n    Given o usuário preenche todos os campos\n    And Data \"01/01/2020\"\n    And clica em \"Confirmar\"\n    Then exibe mensagem \"Data não pode ser anterior à data atual\"\n    And o pagamento não é registrado",
-
-cenario_bdd:
-    nome: Campos obrigatórios vazios,
-    tipo: negativo,
-    gherkin: "Feature: Pagamento de Contas\n  Scenario: Falta preencher Beneficiário\n    Given o usuário deixa Beneficiário vazio\n    And preenche os demais campos válidos\n    And clica em \"Confirmar\"\n    Then exibe mensagem \"Beneficiário é obrigatório\"\n    And pagamento não é registrado",
-
---- 
-
-titulo: US08 – Navegação e Usabilidade,
-cenario_bdd:
-    nome: Links de navegação funcionam em todas as páginas,
-    tipo: positivo,
-    gherkin: "Feature: Navegação e Usabilidade\n  Scenario Outline: Navegar para cada link\n    Given o usuário está autenticado\n    When ele clica no link <Link>\n    Then o usuário é redirecionado para a página <Página>\n\n    Examples:\n      | Link          | Página              |\n      | Dashboard     | /dashboard          |\n      | Transferências| /transferencias     |\n      | Empréstimos   | /emprestimos        |\n      | Pagamentos    | /pagamentos         |\n      | Extrato       | /extrato            |\n      | Logout        | /login (sessão encerrada) |",
-
-cenario_bdd:
-    nome: Item ativo destacado no cabeçalho,
-    tipo: positivo,
-    gherkin: "Feature: Navegação e Usabilidade\n  Scenario: Header mostra link ativo\n    Given o usuário está na página de Transferências\n    Then o link \"Transferências\" está destacado (substituído ou cor diferente)",
-
-cenario_bdd:
-    nome: Acesso a página inexistente exibe 404,
-    tipo: negativo,
-    gherkin: "Feature: Navegação e Usabilidade\n  Scenario: Acesso a rota inexistente\n    Given o usuário navega para \"/pagina-inexistente\"\n    Then exibe mensagem \"404 – Página não encontrada\"",
-
-cenario_bdd:
-    nome: Logout encerra sessão e redireciona,
-    tipo: positivo,
-    gherkin: "Feature: Navegação e Usabilidade\n  Scenario: Logout\n    Given o usuário está autenticado\n    When ele clica em \"Logout\"\n    Then a sessão é encerrada\n    And o usuário é redirecionado para a página de login".
-
+---
