@@ -1,126 +1,174 @@
-**US01 – Cadastro de Usuário**  
-- **Como** cliente do ParaBank,  
-- **eu quero** cadastrar uma nova conta de usuário preenchendo todos os campos obrigatórios,  
-- **para** ter acesso ao sistema e realizar operações bancárias.
+## User Stories (US)
 
-**Descrição detalhada**  
-O usuário acessa a página “Criar Conta” e deve informar Nome completo, Email, Telefone, CEP, e uma senha que cumpra as regras de complexidade. O sistema valida cada campo em tempo real, exibindo mensagens de erro específicas (por ex.: “O CEP deve conter 8 dígitos” ou “E‑mail inválido”). Ao submeter o formulário, o sistema cria a conta, envia um e‑mail de confirmação e torna o usuário habilitado a fazer login.
+| **Código** | **User Story** | **Descrição detalhada** | **Critérios de aceite** |
+|------------|----------------|--------------------------|--------------------------|
+| **US01** | **Como usuário do sistema de bancos, eu quero abrir a tela de cadastro de banco ao clicar em “Novo” para iniciar o registro de um novo banco.** | Quando o usuário clica no botão “Novo”, o sistema deve exibir uma tela limpa com todos os campos necessários para a criação de um banco. A tela deve possuir título “Cadastro de Banco” e botões “Salvar” e “Cancelar”. | 1. Ao clicar em “Novo” a tela de cadastro é exibida. <br> 2. A tela contém os campos: Código, Descrição do Banco, Apelido, Número de inscrição no SBP, Banco controlador, CNJP. <br> 3. A tela possui os botões “Salvar” e “Cancelar”. <br> 4. O botão “Cancelar” fecha a tela e volta para a lista de bancos. |
+| **US02** | **Como usuário do sistema de bancos, eu quero que todos os campos sejam obrigatórios ao salvar para garantir que o cadastro contenha dados completos.** | Cada campo da tela de cadastro deve exibir uma indicação visual de obrigatoriedade (ex.: asterisco vermelho) e o sistema deve validar a presença de dados antes de permitir o envio. | 1. Quando o usuário tenta salvar sem preencher um campo obrigatório, o sistema exibe uma mensagem de erro específica para esse campo. <br> 2. O campo em branco permanece destacado com borda vermelha. <br> 3. Nenhum registro é salvo enquanto houver campos obrigatórios vazios. |
+| **US03** | **Como usuário do sistema de bancos, eu quero que o campo “Código” seja único para evitar duplicatas.** | O sistema deve verificar, em tempo real e ao salvar, se o código informado já existe em outro registro ativo. | 1. Ao digitar um código já existente, a tela exibe uma mensagem “Código já cadastrado”. <br> 2. O botão “Salvar” fica desabilitado enquanto houver duplicidade. <br> 3. O usuário pode alterar o código até que seja único. |
+| **US04** | **Como usuário do sistema de bancos, eu quero que o campo CNJP seja validado quanto à existência e formato correto.** | A entrada de CNJP deve passar por validação de formato (xx.xxx.xxx/xxxx-xx) e ser conferida em um serviço externo de consulta de CNPJ. | 1. Se o CNJP não seguir o padrão, exibe “Formato de CNJP inválido”. <br> 2. Se o CNJP não existir no cadastro de bancos, exibe “CNJP não encontrado”. <br> 3. O botão “Salvar” fica desabilitado até que o CNJP seja válido e existente. |
+| **US05** | **Como usuário do sistema de bancos, eu quero que o campo “Banco controlador” seja um dropdown com bancos já cadastrados, para facilitar a escolha correta.** | O dropdown deve listar apenas bancos que já foram cadastrados e ativos. | 1. O dropdown apresenta pelo menos um banco quando há registros existentes. <br> 2. O usuário pode selecionar um banco controlador dentre os listados. <br> 3. Se não houver bancos cadastrados, o campo exibe “Nenhum banco controlador disponível” e fica desabilitado. |
+| **US06** | **Como usuário do sistema de bancos, eu quero salvar o cadastro após preencher todos os campos obrigatórios, recebendo confirmação de sucesso, para concluir o registro.** | O sistema grava o registro no banco de dados e mostra uma mensagem de sucesso. | 1. Ao clicar em “Salvar” com todos os campos válidos, o registro é criado. <br> 2. A tela exibe “Banco cadastrado com sucesso”. <br> 3. O usuário é redirecionado para a lista de bancos e o novo registro aparece na lista. |
+| **US07** | **Como usuário do sistema de bancos, eu quero receber mensagens de erro claras quando validações falharem, para poder corrigir rapidamente.** | Todas as mensagens de erro devem indicar a causa e o campo afetado. | 1. Mensagens de erro são exibidas ao lado do campo correspondente. <br> 2. O texto do erro é compreensível e instrui o usuário a corrigir o problema. <br> 3. Mensagens desaparecem quando o erro é corrigido. |
 
-**Critérios de Aceitação**  
-- Todos os campos obrigatórios são exibidos e marcados como tal.  
-- O formulário não pode ser enviado se algum campo obrigatório estiver vazio.  
-- Validação de telefone, CEP e e‑mail produz mensagens de erro claras e específicas.  
-- Após cadastro bem‑sucedido, o usuário recebe um e‑mail de confirmação contendo um link de verificação.  
-- O usuário consegue fazer login imediatamente após confirmar o e‑mail.  
-- Tentativa de cadastro com e‑mail já existente retorna mensagem “E‑mail já cadastrado”.
+> **Observação:** Cada US cobre apenas um aspecto da funcionalidade para garantir rastreabilidade, não sobreposição de escopo e facilidade de testes.
 
 ---
 
-**US02 – Login**  
-- **Como** usuário registrado,  
-- **eu quero** fazer login usando credenciais válidas,  
-- **para** acessar minha conta e executar transações.
+## BDD – Cenários de Teste
 
-**Descrição detalhada**  
-O usuário insere E‑mail/Usuário e Senha na tela de login. O sistema autentica contra a base de dados. Se as credenciais forem corretas, redireciona‑lo para a página inicial da conta; caso contrário, mostra mensagem de erro adequada sem expor detalhes de segurança. A sessão permanece ativa enquanto o usuário navega, com logout manual ou expiração automática.
+### US01 – Navegação para a tela de cadastro
 
-**Critérios de Aceitação**  
-- O campo de senha não exibe caracteres visíveis (mas permite “mostrar/ocultar”).  
-- Credenciais inválidas (senha errada ou usuário inexistente) exibem a mensagem “Credenciais inválidas. Tente novamente.”  
-- Credenciais válidas redirecionam para a página inicial da conta.  
-- Sessão expira após 15 minutos de inatividade, exibindo “Sessão expirada – faça login novamente”.  
-- Logout remove a sessão e redireciona para a tela de login.
+```gherkin
+Feature: Acesso à tela de cadastro de banco
 
----
-
-**US03 – Visualizar Saldo e Extrato**  
-- **Como** cliente autenticado,  
-- **eu quero** visualizar meu saldo atualizado e extrato em ordem cronológica,  
-- **para** ter controle das minhas finanças e acompanhar cada transação.
-
-**Descrição detalhada**  
-Na página inicial, o sistema exibe o saldo atual em formato monetário, atualizado automaticamente após qualquer operação. Um link “Extrato” abre uma lista das transações mais recentes (últimos 30 dias) em ordem decrescente, com data, descrição, valor (crédito/débito) e saldo após cada transação.
-
-**Critérios de Aceitação**  
-- O saldo exibido reflete imediatamente qualquer transação realizada.  
-- O extrato mostra, no mínimo, as 10 transações mais recentes, ordenadas cronologicamente (mais recente primeiro).  
-- Cada linha do extrato exibe data no formato DD/MM/AAAA, descrição curta, valor (positivo ou negativo) e saldo pós‑transação.  
-- O usuário pode clicar em “Mostrar mais” para carregar 10 registros adicionais.  
-- Se não houver transações, exibe mensagem “Nenhuma transação encontrada”.
+  Scenario: Usuário clica em "Novo" e visualiza a tela de cadastro
+    Given o usuário está na tela de lista de bancos
+    When ele clica no botão "Novo"
+    Then a tela de cadastro de banco deve aparecer
+    And os campos Código, Descrição do Banco, Apelido, Número de inscrição no SBP, Banco controlador e CNJP devem estar visíveis
+    And o título da tela deve ser "Cadastro de Banco"
+    And os botões "Salvar" e "Cancelar" devem estar habilitados
+```
 
 ---
 
-**US04 – Transferência de Fundos**  
-- **Como** cliente autenticado,  
-- **eu quero** transferir dinheiro entre contas,  
-- **para** movimentar recursos de forma rápida e segura.
+### US02 – Campos obrigatórios
 
-**Descrição detalhada**  
-Na seção “Transferências”, o usuário escolhe a conta de origem (sempre a própria) e a conta destino (pode ser interna ou externa). Ele digita o valor e confirma a transferência. O sistema valida que o valor não exceda o saldo disponível, processa a transação instantaneamente, debita a conta origem e credita a conta destino, registrando ambas as partes no histórico.
+```gherkin
+Feature: Validação de campos obrigatórios
 
-**Critérios de Aceitação**  
-- O campo “Conta de destino” aceita apenas CNPJs/CPF válidos e exibe mensagem de erro se inválido.  
-- O valor informado não pode exceder o saldo disponível; se exceder, mostra “Saldo insuficiente”.  
-- A transferência é processada em tempo real (≤ 2 segundos).  
-- Após confirmação, o saldo da origem diminui e o saldo da destino aumenta imediatamente.  
-- Ambas as contas listam a transação no extrato com data, hora e descrição “Transferência X → Y”.  
-- O usuário recebe e‑mail de confirmação contendo detalhes da transferência.
+  Scenario Outline: Falha ao salvar com campos obrigatórios ausentes
+    Given o usuário preenche o campo "<campo>" com "<valor>"
+    And o usuário tenta salvar o registro
+    Then a mensagem "<mensagem>" deve ser exibida ao lado do campo "<campo>"
 
----
-
-**US05 – Solicitação de Empréstimo**  
-- **Como** cliente autenticado,  
-- **eu quero** solicitar um empréstimo informando valor e renda anual,  
-- **para** obter crédito que atenda às minhas necessidades financeiras.
-
-**Descrição detalhada**  
-O usuário acessa a página “Solicitar Empréstimo”, digita o valor desejado e a renda anual. O sistema calcula automaticamente uma taxa de juros (baseada em regras internas) e retorna instantaneamente o status de aprovação (Aprovado / Negado). Se aprovado, mostra os detalhes de parcelas, taxa e prazo. Se negado, fornece sugestão de renda mínima ou valor alternativo.
-
-**Critérios de Aceitação**  
-- Campos obrigatórios (valor do empréstimo, renda anual) não podem ficar vazios.  
-- O valor do empréstimo deve ser ≥ R$ 500 e ≤ R$ 100 000.  
-- Renda anual deve ser ≥ R$ 20 000.  
-- O sistema retorna status em ≤ 5 segundos.  
-- Caso aprovado, exibe “Empréstimo aprovado. Taxa: X%, Prazo: Y meses”.  
-- Caso negado, exibe “Empréstimo negado. Renda insuficiente”.  
-- Em ambos os casos, registra a solicitação no histórico de “Solicitações de Empréstimo”.
+  Examples:
+    | campo          | valor | mensagem                         |
+    | Código         |       | Código é obrigatório             |
+    | Descrição do Banco |       | Descrição do Banco é obrigatória |
+    | Apelido        |       | Apelido é obrigatório            |
+    | Número de inscrição no SBP |       | Número de inscrição no SBP é obrigatório |
+    | Banco controlador |       | Banco controlador é obrigatório   |
+    | CNJP           |       | CNJP é obrigatório                |
+```
 
 ---
 
-**US06 – Pagamento de Contas**  
-- **Como** cliente autenticado,  
-- **eu quero** registrar um pagamento de conta (beneficiário, endereço, telefone, conta de destino, valor, data),  
-- **para** efetuar pagamentos programados de forma organizada.
+### US03 – Código único
 
-**Descrição detalhada**  
-Na tela “Pagamentos”, o usuário preenche: Beneficiário, Endereço, Cidade, Estado, CEP, Telefone, Conta de destino, Valor e Data de pagamento (pode ser imediato ou futuro). O sistema valida todos os campos, evita pagamentos futuros com data < 3 dias a partir de hoje, e registra a transação no histórico. Pagamentos agendados aparecem na lista de “Pagamentos Pendentes” e são processados automaticamente na data escolhida.
+```gherkin
+Feature: Validação de unicidade do Código
 
-**Critérios de Aceitação**  
-- Todos os campos obrigatórios são obrigatórios; campos de endereço exigem CEP válido.  
-- O valor deve ser ≥ R$ 10.  
-- Data futura deve estar pelo menos 3 dias após a data atual; caso contrário, exibe “Data de pagamento deve ser pelo menos 3 dias à frente”.  
-- O pagamento imediato debita a conta do usuário e adiciona a transação ao histórico com status “Pago”.  
-- Pagamentos futuros são salvos como “Pendente” e aparecem na lista de “Pagamentos Pendentes”.  
-- Em cada transação de pagamento, o histórico exibe data de pagamento, beneficiário, valor e status.  
-- O sistema envia e‑mail de confirmação contendo detalhes do pagamento.
+  Scenario: Código duplicado impede o salvamento
+    Given existe um banco cadastrado com Código "B001"
+    And o usuário digita "B001" no campo Código
+    Then a mensagem "Código já cadastrado" deve ser exibida
+    And o botão "Salvar" deve permanecer desabilitado
+
+  Scenario: Código único permite o salvamento
+    Given o usuário digita "B002" no campo Código
+    Then nenhum aviso de duplicidade deve aparecer
+    And o botão "Salvar" deve estar habilitado
+```
+
+---
+
+### US04 – Validação de CNJP
+
+```gherkin
+Feature: Validação do CNJP
+
+  Scenario: CNJP com formato inválido
+    Given o usuário digita "12345678" no campo CNJP
+    Then a mensagem "Formato de CNJP inválido" deve ser exibida
+    And o botão "Salvar" deve estar desabilitado
+
+  Scenario: CNJP não existente
+    Given o usuário digita "12.345.678/0001-90" no campo CNJP
+    And o sistema não encontra o CNJP em seu cadastro
+    Then a mensagem "CNJP não encontrado" deve ser exibida
+    And o botão "Salvar" deve estar desabilitado
+
+  Scenario: CNJP válido e existente
+    Given o usuário digita "12.345.678/0001-90" no campo CNJP
+    And o CNJP é encontrado no banco de dados
+    Then nenhuma mensagem de erro deve aparecer
+    And o botão "Salvar" deve estar habilitado
+```
 
 ---
 
-**US07 – Navegação, Usabilidade e Consistência de Mensagens**  
-- **Como** usuário do ParaBank,  
-- **eu quero** que todas as páginas carreguem sem erros, menus e links estejam consistentes, e as mensagens de erro sejam claras,  
-- **para** ter uma experiência de uso fluida e confiável.
+### US05 – Seleção do Banco Controlador
 
-**Descrição detalhada**  
-Este conjunto de requisitos abrange a usabilidade geral: todas as páginas (login, cadastro, conta, extrato, transferências, empréstimo, pagamentos) devem carregar em < 2 segundos em conexão padrão. Menus de navegação (home, extrato, transferências, empréstimos, pagamentos, perfil, logout) permanecem nos mesmos lugares e com o mesmo estilo visual. Mensagens de erro e de confirmação são exibidas em banners visíveis, com cores diferenciadas (verde para sucesso, vermelho para erro) e textos objetivos (ex.: “Telefone inválido: 12‑3456‑7890”). Navegação entre páginas deve ser possível por links, botões ou barra de menu, sem perda de estado.
+```gherkin
+Feature: Seleção do banco controlador
 
-**Critérios de Aceitação**  
-- Tempo de carregamento de qualquer página ≤ 2 segundos (em 3G simulada).  
-- Todos os menus de navegação aparecem em todas as páginas, com a mesma ordem e estilo.  
-- Ao clicar em “Logout”, a sessão termina e a tela de login aparece.  
-- Mensagens de erro são exibidas em banners de fundo vermelho e desaparecem após 5 segundos ou após confirmação.  
-- Mensagens de sucesso são exibidas em banners de fundo verde.  
-- Nenhum link quebrado (HTTP 404) aparece em nenhuma página.  
-- O layout responde adequadamente a dispositivos móveis (responsividade).
+  Scenario: Dropdown com bancos existentes
+    Given há pelo menos um banco cadastrado como potencial controlador
+    When o usuário abre o dropdown "Banco controlador"
+    Then os bancos disponíveis devem ser listados
+
+  Scenario: Nenhum banco controlador disponível
+    Given não há bancos cadastrados
+    Then o campo "Banco controlador" deve exibir "Nenhum banco controlador disponível"
+    And o campo deve estar desabilitado
+```
 
 ---
+
+### US06 – Salvamento com sucesso
+
+```gherkin
+Feature: Salvamento de banco com sucesso
+
+  Scenario: Cadastro completo e válido
+    Given o usuário preenche todos os campos obrigatórios com valores válidos:
+      | Campo                 | Valor                 |
+      | Código                | B003                  |
+      | Descrição do Banco    | Banco Teste           |
+      | Apelido               | BT                    |
+      | Número de inscrição no SBP | 123456               |
+      | Banco controlador     | Banco Controlador Exemplo |
+      | CNJP                  | 12.345.678/0001-90    |
+    When o usuário clica em "Salvar"
+    Then o banco deve ser salvo no sistema
+    And a mensagem "Banco cadastrado com sucesso" deve ser exibida
+    And o usuário deve ser redirecionado para a lista de bancos
+    And o banco recém‑criado deve aparecer na lista
+```
+
+---
+
+### US07 – Mensagens de erro detalhadas
+
+```gherkin
+Feature: Mensagens de erro claras e específicas
+
+  Scenario Outline: Exibição de erro ao validar campo
+    Given o usuário preenche o campo "<campo>" com "<valor>"
+    And o usuário tenta salvar o registro
+    Then a mensagem "<mensagem>" deve ser exibida ao lado do campo "<campo>"
+
+  Examples:
+    | campo          | valor | mensagem                         |
+    | Código         |       | Código é obrigatório             |
+    | Código         | B001  | Código já cadastrado             |
+    | CNJP           | 111     | Formato de CNJP inválido         |
+    | CNJP           | 12.345.678/0001-90 | CNJP não encontrado |
+```
+
+---
+
+### Resumo de Prioridade
+
+| US | Prioridade | Justificativa |
+|----|------------|---------------|
+| US01 | Alta | Necessária para iniciar o processo |
+| US02 | Alta | Garante dados completos |
+| US03 | Alta | Evita duplicação de registros |
+| US04 | Alta | Garante legitimidade do banco |
+| US05 | Média | Melhora usabilidade, mas não impede cadastro |
+| US06 | Alta | Finaliza o fluxo de negócio |
+| US07 | Média | Melhora experiência do usuário |
+
+Esses User Stories e cenários BDD cobrem de forma clara, objetiva e testável todas as funcionalidades e requisitos apresentados, assegurando rastreabilidade e evitando sobreposição de escopo.
