@@ -21,7 +21,7 @@ def generate_tests_from_bdd():
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt_base = f.read()
  
-    with open("ai/bdd/generated.feature", "r", encoding="utf-8") as f:
+    with open("ai/bdd/generated.txt", "r", encoding="utf-8") as f:
         bdd_content = f.read()
  
  
