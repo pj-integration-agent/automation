@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Agente IA — Gerador de User Stories e BDDs</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#06b6d4;--success:#10b981}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(180deg,#071024 0%, #071827 100%);color:#e6eef6;display:flex;align-items:center;justify-content:center;padding:28px}
+    .container{width:100%;max-width:980px;background:rgba(10,18,30,0.6);border-radius:12px;padding:22px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    h1{margin:0 0 12px;font-size:20px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    textarea{width:100%;min-height:120px;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;resize:vertical;font-size:14px}
+    .controls{display:flex;gap:10px;margin-top:12px}
+    button{background:var(--accent);border:none;padding:10px 14px;border-radius:8px;color:#042028;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+    button[disabled]{opacity:0.6;cursor:default}
+    .panel{margin-top:18px;padding:14px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+    ul{padding-left:18px}
+    pre{white-space:pre-wrap;font-size:13px}
+    .file-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .file-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;background:rgba(255,255,255,0.01)}
+    .small{font-size:13px;color:var(--muted)}
+    .hint{font-size:13px;color:var(--muted);margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <h1>Agente IA — Gerador de User Stories & BDD</h1>
+    <p class="lead">Cole seus critérios de aceite no campo abaixo e clique em <strong>Gerar user stories</strong>.</p>
+
+    <label for="prompt" class="small">Critérios de aceite</label>
+    <textarea id="prompt" placeholder="coloque aqui seus critérios de aceite e clicar no botão de enviar ou dar um enter"></textarea>
+
+    <div class="controls">
+      <button id="genStories">Gerar user stories</button>
+      <button id="clear" class="secondary">Limpar</button>
+      <div style="flex:1"></div>
+      <div id="status" class="small" aria-live="polite"></div>
+    </div>
+
+    <div id="resultPanel" class="panel" hidden>
+      <h2 style="margin-top:0">User Stories geradas</h2>
+      <div id="storiesList"></div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <button id="genBdd" disabled>Gerar BDD´s Gherkin</button>
+        <div style="flex:1"></div>
+        <span class="small">Após gerar os BDDs ou User Stories, os arquivos são criados junto ao projeto</span>
+      </div>
+
+      <div id="files" class="file-list" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const promptEl = document.getElementById('prompt');
+  const genStoriesBtn = document.getElementById('genStories');
+  const genBddBtn = document.getElementById('genBdd');
+  const clearBtn = document.getElementById('clear');
+  const statusEl = document.getElementById('status');
+  const resultPanel = document.getElementById('resultPanel');
+  const storiesList = document.getElementById('storiesList');
+  const filesEl = document.getElementById('files');
+  
+
+  let latestStories = [];
+  let latestFiles = [];
+
+  function setStatus(text){ statusEl.textContent = text; }
+
+async function generateUserStories(){
+  const prompt = promptEl.value.trim();
+  if(!prompt){ setStatus('Coloque os critérios antes de enviar.'); promptEl.focus(); return; }
+  genStoriesBtn.disabled = true; setStatus('Gerando user stories...');
+  try{
+    const response = await window.pywebview.api.generate_user_stories(prompt);
+    if(!response.success) throw new Error(response.error || 'Falha ao gerar user stories');
+    latestStories = response.user_stories || [];
+    resultPanel.hidden = false;
+    genBddBtn.disabled = false;
+    setStatus('User stories geradas com sucesso!');
+    if (response.txt_content && response.txt_filename) {
+      downloadFile(response.txt_filename, response.txt_content);
+    }
+  }catch(err){
+    console.error(err); setStatus('Erro: '+err.message);
+  } finally{ genStoriesBtn.disabled = false; }
+}
+
+async function generateBdds(){
+  if(!latestStories.length){ setStatus('Não há user stories para gerar BDDs.'); return; }
+  genBddBtn.disabled = true; setStatus('Gerando BDDs...');
+  try{
+    const response = await window.pywebview.api.generate_bdd(latestStories);
+    if(!response.success) throw new Error(response.error || 'Falha ao gerar BDDs');
+    setStatus('BDD(s) gerado(s) com sucesso!');
+    if (response.txt_content && response.txt_filename) {
+      downloadFile(response.txt_filename, response.txt_content);
+    }
+  }catch(err){ console.error(err); setStatus('Erro: '+err.message); }
+  finally{ genBddBtn.disabled = false; }
+}
+
+  function downloadFile(filename, content){
+    const blob = new Blob([content||''], {type:'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+
+  function showPreview(file){
+    const w = window.open('', '_blank', 'noopener');
+    w.document.write('<pre>'+escapeHtml(file.content||'')+'</pre>');
+    w.document.title = file.filename;
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  
+  promptEl.addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter' && !ev.ctrlKey && !ev.shiftKey){ ev.preventDefault(); generateUserStories(); }
+  });
+
+  genStoriesBtn.addEventListener('click', generateUserStories);
+  genBddBtn.addEventListener('click', generateBdds);
+  clearBtn.addEventListener('click', ()=>{ promptEl.value=''; setStatus(''); resultPanel.hidden=true; latestStories=[]; latestFiles=[]; filesEl.innerHTML=''; storiesList.innerHTML=''; genBddBtn.disabled=true; downloadAllBtn.disabled=true; });
+ 
+
+  promptEl.focus();
+})();
+</script>
+</body>
+</html>
