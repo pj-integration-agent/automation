@@ -1,1 +1,4 @@
-Parece que a lista de critérios de aceite está em um arquivo chamado **ARQUIVO DE CRITÉRIOS.MD**, mas eu não tenho acesso direto ao conteúdo dele. Poderia me enviar o texto completo (ou a versão em base64) para que eu possa gerar as User Stories solicitadas?
+Para criar as User Stories de forma completa e precisa, preciso analisar os critérios de aceite que você mencionou no arquivo **ARQUIVO DE CRITÉRIOS.MD**.  
+Por favor, copie e cole o conteúdo do arquivo (ou envie-o em formato base64) aqui no chat. Assim poderei transformar cada critério em histórias ágeis claras, testáveis e alinhadas ao seu projeto. 
+
+Aguardando o texto!
