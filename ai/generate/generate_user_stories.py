@@ -3,7 +3,7 @@ import base64
 from groq import Groq
 
 def generate_user_stories_from_criterios():
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=("SUA_API_KEY_AQUI"))
 
     with open("ai/requirements/criterios.md", "r", encoding="utf-8") as f:
         all_contents = f.read()
@@ -47,7 +47,7 @@ Critérios fornecidos:
     tests_code = response.choices[0].message.content
 
     os.makedirs("ai/user_stories", exist_ok=True)
-    with open("ai/user_stories/generated_user_stories.feature", "w", encoding="utf-8") as f:
+    with open("ai/user_stories/generated_user_stories.txt", "w", encoding="utf-8") as f:
         f.write(tests_code)
 
 if __name__ == "__main__":
