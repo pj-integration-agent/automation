@@ -1,4 +1,148 @@
-Para criar as User Stories de forma completa e precisa, preciso analisar os critérios de aceite que você mencionou no arquivo **ARQUIVO DE CRITÉRIOS.MD**.  
-Por favor, copie e cole o conteúdo do arquivo (ou envie-o em formato base64) aqui no chat. Assim poderei transformar cada critério em histórias ágeis claras, testáveis e alinhadas ao seu projeto. 
+**User Stories – ParaBank (Sprints Iniciais)**  
 
-Aguardando o texto!
+*(Todas as histórias seguem o padrão: “Como <tipo de usuário>, eu quero <objetivo> para <benefício>.”)*
+*(Rastreabilidade: US01, US02, …)*  
+
+---
+
+### US01 – Cadastro de Usuário  
+**Como** cliente novo do ParaBank,  
+**eu quero** criar uma conta de usuário preenchendo todos os campos obrigatórios,  
+**para** poder registrar-me e ter acesso ao sistema.
+
+**Descrição detalhada**  
+O fluxo de cadastro deverá solicitar:  
+- Nome completo  
+- E‑mail (validado via regex)  
+- Senha (mínimo 8 caracteres, contendo letra maiúscula, minúscula e dígito)  
+- Telefone (formato internacional +55 XXX XXXXX-XXXX)  
+- CEP (formato XXXXX‑XXX)  
+
+O sistema deve validar cada campo em tempo real e bloquear a submissão até que todos os dados sejam válidos. Após um cadastro bem‑sucedido, a página de confirmação exibe uma mensagem de sucesso e redireciona o usuário para a tela de login.  
+
+**Critérios de Aceite**  
+- [ ] Todos os campos obrigatórios são obrigatórios; o botão “Registrar” permanece inativo até que sejam preenchidos.  
+- [ ] Se o e‑mail já existir, exibe “E‑mail já cadastrado”.  
+- [ ] Se o telefone não for válido, exibe “Telefone inválido – use o formato +55 XXX XXXXX‑XXXX”.  
+- [ ] Se o CEP não for válido, exibe “CEP inválido – use o formato XXXXX‑XXX”.  
+- [ ] Após envio, a tela mostra “Cadastro concluído com sucesso!”.  
+- [ ] O usuário é redirecionado para a tela de login sem necessidade de recarregar a página.  
+
+---
+
+### US02 – Login  
+**Como** cliente já registrado,  
+**eu quero** acessar minha conta usando e‑mail e senha,  
+**para** visualizar meus dados bancários de forma segura.
+
+**Descrição detalhada**  
+O login deve aceitar apenas credenciais válidas. Em caso de falha, o usuário recebe uma mensagem clara e a tela permanece na mesma página, permitindo nova tentativa. Após o login, o usuário deve ser automaticamente redirecionado para a página inicial da conta (dashboard).  
+
+**Critérios de Aceite**  
+- [ ] Ao inserir credenciais corretas, a página redireciona para a dashboard.  
+- [ ] Credenciais inválidas exibem “E‑mail ou senha inválidos”.  
+- [ ] O sistema impede tentativas de login sem preencher os campos.  
+- [ ] O token de sessão é criado e armazenado em cookie seguro (httpOnly).  
+- [ ] O usuário permanece autenticado por 30 minutos de inatividade.  
+
+---
+
+### US03 – Visualizar Saldo  
+**Como** cliente autenticado,  
+**eu quero** ver meu saldo atual na dashboard,  
+**para** ter controle imediato dos meus recursos financeiros.
+
+**Descrição detalhada**  
+A dashboard deve exibir o saldo da conta corrente em moeda local (R$), atualizado em tempo real após qualquer operação (transferência, pagamento, etc.). O saldo deve ser exibido com separador de milhares e duas casas decimais.  
+
+**Critérios de Aceite**  
+- [ ] O saldo é exibido com o formato “R$ 12 345,67”.  
+- [ ] Após qualquer operação financeira, o saldo é recalculado e exibido em menos de 2 s.  
+- [ ] Se o usuário não possui saldo, exibe “R$ 0,00”.  
+
+---
+
+### US04 – Visualizar Extrato  
+**Como** cliente autenticado,  
+**eu quero** consultar meu extrato de transações recentes,  
+**para** acompanhar e verificar todas as movimentações da minha conta.
+
+**Descrição detalhada**  
+A página de extrato deve listar as últimas 20 transações em ordem cronológica (mais recente acima). Cada linha exibe data, descrição, tipo (crédito/débito), valor e saldo após a transação. O usuário pode filtrar por data inicial/final e por tipo de transação.  
+
+**Critérios de Aceite**  
+- [ ] O extrato lista as 20 transações mais recentes.  
+- [ ] As transações estão ordenadas por data descendente.  
+- [ ] O filtro por data retorna resultados corretos e atualiza a lista.  
+- [ ] Cada linha contém data (DD/MM/AAAA), descrição, valor e saldo.  
+
+---
+
+### US05 – Transferência de Fundos  
+**Como** cliente autenticado,  
+**eu quero** transferir um valor entre contas dentro do ParaBank,  
+**para** movimentar meus recursos entre contas ou enviar dinheiro a outros usuários.
+
+**Descrição detalhada**  
+O usuário seleciona a conta de origem (conta própria) e a conta de destino (ou outro cliente), insere o valor a transferir e confirma a operação. O sistema deve impedir transferências cujo valor exceda o saldo disponível e registrar a transação em ambos os extratos.  
+
+**Critérios de Aceite**  
+- [ ] O campo “Valor” aceita somente números positivos até o saldo da conta de origem.  
+- [ ] Se o valor for maior que o saldo, exibe “Valor excede saldo disponível”.  
+- [ ] A confirmação exibe “Transferência realizada com sucesso”.  
+- [ ] O valor é debitado da conta de origem e creditado na conta de destino em até 3 s.  
+- [ ] A transação aparece no extrato de ambas as contas.  
+
+---
+
+### US06 – Solicitação de Empréstimo  
+**Como** cliente autenticado,  
+**eu quero** solicitar um empréstimo informando valor e renda anual,  
+**para** obter crédito de acordo com meu perfil financeiro.
+
+**Descrição detalhada**  
+O usuário preenche o valor do empréstimo desejado e a renda anual (valor em R$). O sistema avalia automaticamente se o cliente cumpre critérios mínimos (ex.: renda ≥ 4× valor solicitado) e retorna status “Aprovado” ou “Negado”. O resultado é exibido em destaque na tela de solicitação.  
+
+**Critérios de Aceite**  
+- [ ] O formulário aceita valores numéricos positivos.  
+- [ ] Se a renda anual for insuficiente, exibe “Empréstimo negado – renda insuficiente”.  
+- [ ] Se aprovado, exibe “Empréstimo aprovado – R$ X,XX”.  
+- [ ] O resultado permanece visível por 30 s e dispara notificação por e‑mail.  
+
+---
+
+### US07 – Pagamento de Contas  
+**Como** cliente autenticado,  
+**eu quero** cadastrar e agendar pagamentos de contas (beneficiário, endereço, cidade, estado, CEP, telefone, conta destino, valor e data),  
+**para** garantir o pagamento pontual sem precisar acessar manualmente.
+
+**Descrição detalhada**  
+O fluxo permite inserir dados do beneficiário e do pagamento. O usuário pode escolher data atual ou futura. Ao confirmar, o pagamento é registrado no histórico de transações da conta de destino e marcado como “Agendado” ou “Realizado”.  
+
+**Critérios de Aceite**  
+- [ ] Todos os campos obrigatórios são validados em tempo real.  
+- [ ] Se a data selecionada for no passado, exibe “Data inválida – use data futura ou atual”.  
+- [ ] Após confirmação, a tela mostra “Pagamento agendado para DD/MM/AAAA”.  
+- [ ] O pagamento aparece no histórico de transações da conta destino na data correta.  
+- [ ] Pagamentos futuros são processados automaticamente no dia agendado.  
+
+---
+
+### US08 – Navegação e Usabilidade  
+**Como** qualquer usuário (autenticado ou não),  
+**eu quero** navegar no sistema sem erros e com mensagens claras,  
+**para** ter uma experiência consistente e evitar frustrações.
+
+**Descrição detalhada**  
+Todos os links, botões e menus devem ser acessíveis e direcionar para as páginas corretas. Mensagens de erro e confirmação devem usar cores e ícones consistentes, e as páginas devem carregar em menos de 2 s.  
+
+**Critérios de Aceite**  
+- [ ] Nenhum link leva a uma página 404.  
+- [ ] Mensagens de erro são exibidas em vermelho com ícone de alerta.  
+- [ ] Mensagens de sucesso são exibidas em verde com ícone de check.  
+- [ ] O tempo médio de carregamento de cada página é ≤ 2 s em conexão padrão (3G).  
+- [ ] A navegação lateral permanece visível em todas as telas (header, footer).  
+
+---  
+
+> **Obs.:** Cada história é auto‑contida e testável. Caso deseje decompor ainda mais, as histórias acima podem ser subdivididas em subtarefas (por ex., US05‑a: UI de seleção de contas, US05‑b: Validação de saldo, etc.). Todas mantêm a rastreabilidade e evitam sobreposição de escopo.
