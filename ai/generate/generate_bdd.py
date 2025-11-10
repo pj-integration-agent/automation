@@ -3,11 +3,11 @@ from groq import Groq
  
 def generate_bdd_from_user_stories():
     
- # Utilização do CICD usando secrets
-    # client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
     # Geração utilizando front end usando .env
-    client = Groq(api_key=("API_GROQ"))
+    # client = Groq(api_key=("API_GROQ"))
+    
+ # Utilização do CICD usando secrets
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
  
     with open("ai/user_stories/generated_user_stories.txt", "r", encoding="utf-8") as f:
         stories = f.read()
