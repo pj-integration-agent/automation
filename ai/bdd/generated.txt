@@ -1,5 +1,175 @@
-Claro! Para gerar os cenários BDD precisarei analisar os critérios de aceite que você tem no **ARQUIVO DE CRITÉRIOS.MD**.  
+**US01 – Cadastro de Usuário**  
+```
+titulo: US01 – Cadastro de Usuário,
+cenario_bdd:
+    nome: Cadastro bem‑sucedido com dados válidos,
+    tipo: positivo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Cadastro bem‑sucedido com dados válidos\nGiven o usuário acessa a página de registro\nWhen preenche Nome completo, E‑mail válido, Senha forte, Telefone no formato +55 XXX XXXXX‑XXXX e CEP no formato XXXXX‑XXX\nAnd clica em \"Registrar\"\nThen o sistema exibe a mensagem \"Cadastro concluído com sucesso!\"\nAnd redireciona o usuário para a tela de login\nAnd o botão \"Registrar\" permanece desativado enquanto os campos forem inválidos"
+cenario_bdd:
+    nome: Registro bloqueado quando campos obrigatórios faltam,
+    tipo: negativo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Registro bloqueado quando campos obrigatórios faltam\nGiven o usuário acessa a página de registro\nWhen deixa o campo E‑mail vazio e preenche os demais campos corretamente\nThen o botão \"Registrar\" permanece inativo\nAnd nenhuma mensagem de erro aparece"
+cenario_bdd:
+    nome: Validação de e‑mail já cadastrado,
+    tipo: negativo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Validação de e‑mail já cadastrado\nGiven o usuário acessa a página de registro\nWhen preenche E‑mail com um endereço já existente\nAnd tenta submeter o formulário\nThen o sistema exibe a mensagem \"E‑mail já cadastrado\""
+cenario_bdd:
+    nome: Validação de telefone inválido,
+    tipo: negativo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Validação de telefone inválido\nGiven o usuário acessa a página de registro\nWhen preenche Telefone com formato inválido (ex.: 12345)\nAnd tenta submeter o formulário\nThen o sistema exibe a mensagem \"Telefone inválido – use o formato +55 XXX XXXXX‑XXXX\""
+cenario_bdd:
+    nome: Validação de CEP inválido,
+    tipo: negativo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Validação de CEP inválido\nGiven o usuário acessa a página de registro\nWhen preenche CEP com formato inválido (ex.: 1234-567)\nAnd tenta submeter o formulário\nThen o sistema exibe a mensagem \"CEP inválido – use o formato XXXXX‑XXX\""
+cenario_bdd:
+    nome: Validação de senha fraca,
+    tipo: negativo,
+    gherkin: "Feature: US01 - Cadastro de Usuário\nScenario: Validação de senha fraca\nGiven o usuário acessa a página de registro\nWhen preenche Senha com menos de 8 caracteres ou sem combinação de letras e dígitos\nAnd tenta submeter o formulário\nThen o sistema exibe a mensagem \"Senha inválida – deve conter mínimo 8 caracteres, letras maiúsculas, minúsculas e dígito\""
+```
 
-Por favor, copie e cole o conteúdo deste arquivo aqui no chat (ou envie-o em formato Base64) para que eu possa transformar cada critério em histórias ágeis claras, testáveis e alinhadas ao seu projeto.  
+**US02 – Login**  
+```
+titulo: US02 – Login,
+cenario_bdd:
+    nome: Login bem‑sucedido com credenciais válidas,
+    tipo: positivo,
+    gherkin: "Feature: US02 - Login\nScenario: Login bem‑sucedido com credenciais válidas\nGiven o usuário está na página de login\nWhen insere e‑mail e senha corretos\nAnd clica em \"Entrar\"\nThen o sistema cria um token de sessão em cookie httpOnly\nAnd redireciona o usuário para a dashboard"
+cenario_bdd:
+    nome: Login falha com credenciais inválidas,
+    tipo: negativo,
+    gherkin: "Feature: US02 - Login\nScenario: Login falha com credenciais inválidas\nGiven o usuário está na página de login\nWhen insere e‑mail válido e senha incorreta\nAnd clica em \"Entrar\"\nThen o sistema exibe a mensagem \"E‑mail ou senha inválidos\"\nAnd permanece na página de login"
+cenario_bdd:
+    nome: Login bloqueado sem preencher campos,
+    tipo: negativo,
+    gherkin: "Feature: US02 - Login\nScenario: Login bloqueado sem preencher campos\nGiven o usuário está na página de login\nWhen deixa ambos campos vazios\nThen o botão \"Entrar\" permanece desativado\nAnd nenhuma mensagem de erro aparece"
+cenario_bdd:
+    nome: Expiração de sessão após 30 minutos de inatividade,
+    tipo: negativo,
+    gherkin: "Feature: US02 - Login\nScenario: Expiração de sessão após 30 minutos de inatividade\nGiven o usuário está autenticado e não realiza nenhuma ação\nWhen o tempo de inatividade atinge 30 minutos\nThen o sistema invalida a sessão\nAnd redireciona o usuário para a página de login\nAnd exibe mensagem \"Sessão expirada, por favor faça login novamente\""
+```
 
-Aguardando o texto!
+**US03 – Visualizar Saldo**  
+```
+titulo: US03 – Visualizar Saldo,
+cenario_bdd:
+    nome: Exibição do saldo em formato correto,
+    tipo: positivo,
+    gherkin: "Feature: US03 - Visualizar Saldo\nScenario: Exibição do saldo em formato correto\nGiven o usuário está autenticado na dashboard\nAnd a conta tem saldo de 12345,67\nThen o saldo exibido é \"R$ 12 345,67\""
+cenario_bdd:
+    nome: Exibição de saldo zero,
+    tipo: positivo,
+    gherkin: "Feature: US03 - Visualizar Saldo\nScenario: Exibição de saldo zero\nGiven o usuário está autenticado na dashboard\nAnd a conta tem saldo de 0,00\nThen o saldo exibido é \"R$ 0,00\""
+cenario_bdd:
+    nome: Atualização do saldo após transferência,
+    tipo: positivo,
+    gherkin: "Feature: US03 - Visualizar Saldo\nScenario: Atualização do saldo após transferência\nGiven o usuário tem saldo de 5000,00\nWhen realiza transferência de 1500,00 para outra conta\nAnd a transferência conclui com sucesso\nThen o saldo atualizado aparece em menos de 2 s\nAnd exibe \"R$ 3 500,00\""
+```
+
+**US04 – Visualizar Extrato**  
+```
+titulo: US04 – Visualizar Extrato,
+cenario_bdd:
+    nome: Lista as 20 transações mais recentes,
+    tipo: positivo,
+    gherkin: "Feature: US04 - Visualizar Extrato\nScenario: Lista as 20 transações mais recentes\nGiven o usuário tem 45 transações na conta\nWhen acessa a página de extrato\nThen o sistema exibe somente as 20 transações mais recentes\nAnd cada linha contém data, descrição, valor e saldo"
+cenario_bdd:
+    nome: Ordenação das transações por data descendente,
+    tipo: positivo,
+    gherkin: "Feature: US04 - Visualizar Extrato\nScenario: Ordenação das transações por data descendente\nGiven o usuário tem transações com datas variadas\nWhen visualiza o extrato\nThen a primeira linha corresponde à transação mais recente"
+cenario_bdd:
+    nome: Filtragem por intervalo de datas retorna resultados corretos,
+    tipo: positivo,
+    gherkin: "Feature: US04 - Visualizar Extrato\nScenario: Filtragem por intervalo de datas retorna resultados corretos\nGiven o usuário tem transações em vários meses\nWhen aplica filtro de data inicial 01/01/2024 e data final 31/01/2024\nThen a lista exibe apenas transações dentro desse intervalo\nAnd a contagem é correta"
+cenario_bdd:
+    nome: Filtragem por tipo de transação (crédito/débito),
+    tipo: positivo,
+    gherkin: "Feature: US04 - Visualizar Extrato\nScenario: Filtragem por tipo de transação\nGiven o usuário tem transações de crédito e débito\nWhen filtra apenas transações de crédito\nThen a lista exibe somente linhas de crédito\nAnd nenhuma linha de débito aparece"
+cenario_bdd:
+    nome: Exibição correta quando não há transações,
+    tipo: negativo,
+    gherkin: "Feature: US04 - Visualizar Extrato\nScenario: Exibição correta quando não há transações\nGiven o usuário tem saldo zero e nenhuma transação\nWhen acessa o extrato\nThen o sistema exibe mensagem \"Nenhuma transação encontrada\""
+```
+
+**US05 – Transferência de Fundos**  
+```
+titulo: US05 – Transferência de Fundos,
+cenario_bdd:
+    nome: Transferência dentro do saldo disponível,
+    tipo: positivo,
+    gherkin: "Feature: US05 - Transferência de Fundos\nScenario: Transferência dentro do saldo disponível\nGiven o usuário tem saldo de 2000,00\nWhen seleciona conta destino válida\nAnd insere valor 1500,00\nAnd confirma a transferência\nThen o sistema exibe \"Transferência realizada com sucesso\"\nAnd debita 1500,00 da conta de origem\nAnd credita 1500,00 na conta de destino em até 3 s\nAnd a transação aparece nos extratos das duas contas"
+cenario_bdd:
+    nome: Valor excede saldo disponível,
+    tipo: negativo,
+    gherkin: "Feature: US05 - Transferência de Fundos\nScenario: Valor excede saldo disponível\nGiven o usuário tem saldo de 1000,00\nWhen tenta transferir 1500,00\nThen o sistema exibe a mensagem \"Valor excede saldo disponível\"\nAnd não realiza a transferência"
+cenario_bdd:
+    nome: Valor negativo ou zero na transferência,
+    tipo: negativo,
+    gherkin: "Feature: US05 - Transferência de Fundos\nScenario: Valor negativo ou zero na transferência\nGiven o usuário tem saldo de 500,00\nWhen tenta transferir -100,00 ou 0,00\nThen o sistema exibe a mensagem \"Valor inválido – deve ser positivo\""
+cenario_bdd:
+    nome: Destino inválido (conta não existente),
+    tipo: negativo,
+    gherkin: "Feature: US05 - Transferência de Fundos\nScenario: Destino inválido (conta não existente)\nGiven o usuário tem saldo suficiente\nWhen insere número de conta destino inexistente\nAnd tenta transferir\nThen o sistema exibe a mensagem \"Conta de destino não encontrada\"\nAnd não processa a transferência"
+```
+
+**US06 – Solicitação de Empréstimo**  
+```
+titulo: US06 – Solicitação de Empréstimo,
+cenario_bdd:
+    nome: Empréstimo aprovado quando critérios atendidos,
+    tipo: positivo,
+    gherkin: "Feature: US06 - Solicitação de Empréstimo\nScenario: Empréstimo aprovado quando critérios atendidos\nGiven o usuário tem renda anual de R$ 120.000,00\nWhen solicita empréstimo de R$ 20.000,00\nThen o sistema avalia a renda ≥ 4× valor solicitado\nAnd exibe \"Empréstimo aprovado – R$ 20 000,00\"\nAnd mantém a mensagem visível por 30 s\nAnd dispara notificação por e‑mail"
+cenario_bdd:
+    nome: Empréstimo negado por renda insuficiente,
+    tipo: negativo,
+    gherkin: "Feature: US06 - Solicitação de Empréstimo\nScenario: Empréstimo negado por renda insuficiente\nGiven o usuário tem renda anual de R$ 30.000,00\nWhen solicita empréstimo de R$ 10.000,00\nThen o sistema determina que renda < 4× valor solicitado\nAnd exibe \"Empréstimo negado – renda insuficiente\"\nAnd a mensagem desaparece em 30 s"
+cenario_bdd:
+    nome: Validação de valor e renda não numéricos,
+    tipo: negativo,
+    gherkin: "Feature: US06 - Solicitação de Empréstimo\nScenario: Validação de valor e renda não numéricos\nGiven o usuário tenta inserir texto no campo valor ou renda\nWhen tenta submeter o formulário\nThen o sistema exibe mensagem de erro \"Valores devem ser numéricos\"\nAnd não processa a solicitação"
+```
+
+**US07 – Pagamento de Contas**  
+```
+titulo: US07 – Pagamento de Contas,
+cenario_bdd:
+    nome: Pagamento agendado com data futura,
+    tipo: positivo,
+    gherkin: "Feature: US07 - Pagamento de Contas\nScenario: Pagamento agendado com data futura\nGiven o usuário está autenticado\nWhen insere Beneficiário, endereço, cidade, estado, CEP, telefone, conta destino, valor e data 10 dias no futuro\nAnd confirma o pagamento\nThen o sistema exibe \"Pagamento agendado para DD/MM/AAAA\"\nAnd o pagamento aparece no histórico da conta destino na data correta"
+cenario_bdd:
+    nome: Pagamento realizado imediatamente ao selecionar data atual,
+    tipo: positivo,
+    gherkin: "Feature: US07 - Pagamento de Contas\nScenario: Pagamento realizado imediatamente ao selecionar data atual\nGiven o usuário escolhe a data de hoje\nWhen confirma o pagamento\nThen o sistema processa imediatamente\nE exibe mensagem de sucesso"
+cenario_bdd:
+    nome: Data inválida no passado,
+    tipo: negativo,
+    gherkin: "Feature: US07 - Pagamento de Contas\nScenario: Data inválida no passado\nGiven o usuário insere data 01/01/2020\nWhen tenta submeter o pagamento\nThen o sistema exibe \"Data inválida – use data futura ou atual\""
+cenario_bdd:
+    nome: Campos obrigatórios faltando,
+    tipo: negativo,
+    gherkin: "Feature: US07 - Pagamento de Contas\nScenario: Campos obrigatórios faltando\nGiven o usuário deixa o campo Beneficiário vazio\nWhen tenta submeter o pagamento\nThen o sistema exibe mensagem de erro específica para cada campo vazio\nAnd não registra a transação"
+```
+
+**US08 – Navegação e Usabilidade**  
+```
+titulo: US08 – Navegação e Usabilidade,
+cenario_bdd:
+    nome: Todos os links direcionam corretamente,
+    tipo: positivo,
+    gherkin: "Feature: US08 - Navegação e Usabilidade\nScenario: Todos os links direcionam corretamente\nGiven o usuário navega por todas as páginas via menu\nWhen clica em cada link\nThen cada link abre a página correspondente sem gerar erro 404"
+cenario_bdd:
+    nome: Mensagens de erro exibidas em vermelho com ícone de alerta,
+    tipo: positivo,
+    gherkin: "Feature: US08 - Navegação e Usabilidade\nScenario: Mensagens de erro exibidas em vermelho com ícone de alerta\nGiven ocorre uma falha (ex.: login inválido)\nThen a mensagem aparece em vermelho com ícone de alerta\nAnd não contém cores ou estilos inconsistentes"
+cenario_bdd:
+    nome: Mensagens de sucesso exibidas em verde com ícone de check,
+    tipo: positivo,
+    gherkin: "Feature: US08 - Navegação e Usabilidade\nScenario: Mensagens de sucesso exibidas em verde com ícone de check\nGiven ocorre sucesso (ex.: cadastro concluído)\nThen a mensagem aparece em verde com ícone de check\nAnd permanece visível pelo tempo especificado"
+cenario_bdd:
+    nome: Nenhum link gera erro 404,
+    tipo: negativo,
+    gherkin: "Feature: US08 - Navegação e Usabilidade\nScenario: Nenhum link gera erro 404\nGiven o usuário tenta acessar todas as rotas disponíveis\nWhen nenhum link direciona para 404\nThen o sistema garante que todas as rotas estão corretas"
+cenario_bdd:
+    nome: Tempo médio de carregamento ≤ 2 s em 3G,
+    tipo: positivo,
+    gherkin: "Feature: US08 - Navegação e Usabilidade\nScenario: Tempo médio de carregamento ≤ 2 s em 3G\nGiven o usuário navega entre todas as páginas principais\nWhen cada página carrega\nThen o tempo médio de carregamento não excede 2 s em conexão 3G"
+```
