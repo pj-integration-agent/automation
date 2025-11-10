@@ -1,287 +1,205 @@
-**US01 – Cadastro de Usuário**  
-```
-titulo: US01 – Cadastro de Usuário,
+**US01 – Abrir a tela de cadastro**
+
+```yaml
+titulo: US01 - Abrir a tela de cadastro de banco
 cenario_bdd:
-    - nome: Usuário cadastra nova conta com todos os campos válidos,
-      tipo: positivo,
-      gherkin: "Feature: Cadastro de Usuário\n\
-Scenario: Usuário cadastra nova conta com todos os campos válidos\n\
-Given o usuário está na página \"Criar Conta\"\n\
-When o usuário preenche Nome completo com \"Maria Silva\"\n\
-And preenche Email com \"maria.silva@email.com\"\n\
-And preenche Telefone com \"(11) 91234-5678\"\n\
-And preenche CEP com \"01234567\"\n\
-And preenche Senha com \"Senha123!\"\n\
-And clica em \"Criar Conta\"\n\
-Then a mensagem de confirmação \"E‑mail de confirmação enviado\" deve ser exibida\n\
-And a conta deve ser criada e o usuário deve ser habilitado a fazer login"
-
-    - nome: Cadastro não é possível quando campo obrigatório está vazio,
-      tipo: negativo,
-      gherkin: "Feature: Cadastro de Usuário\n\
-Scenario: Cadastro não é possível quando campo obrigatório está vazio\n\
-Given o usuário está na página \"Criar Conta\"\n\
-When o usuário deixa o campo Nome completo vazio\n\
-And preenche os demais campos com valores válidos\n\
-And clica em \"Criar Conta\"\n\
-Then o sistema exibe a mensagem de erro \"Nome completo é obrigatório\" no banner vermelho"
-
-    - nome: Cadastro falha ao inserir e‑mail inválido,
-      tipo: negativo,
-      gherkin: "Feature: Cadastro de Usuário\n\
-Scenario: Cadastro falha ao inserir e‑mail inválido\n\
-Given o usuário está na página \"Criar Conta\"\n\
-When preenche Email com \"maria.silva[at]email.com\"\n\
-And preenche os demais campos com valores válidos\n\
-And clica em \"Criar Conta\"\n\
-Then o sistema exibe a mensagem de erro \"E‑mail inválido\" no banner vermelho"
-
-    - nome: Cadastro falha quando e‑mail já existe na base,
-      tipo: negativo,
-      gherkin: "Feature: Cadastro de Usuário\n\
-Scenario: Cadastro falha quando e‑mail já existe na base\n\
-Given o e‑mail \"maria.silva@email.com\" já está cadastrado no sistema\n\
-When o usuário tenta cadastrar novamente com o mesmo e‑mail\n\
-Then o sistema exibe a mensagem de erro \"E‑mail já cadastrado\" no banner vermelho"
+    nome: Usuário clica em "Novo" e visualiza a tela de cadastro
+    tipo: positivo
+    gherkin: "Feature: Acesso à tela de cadastro de banco\n\
+Scenario: Usuário clica em \"Novo\" e visualiza a tela de cadastro\n\
+Given o usuário está na tela de lista de bancos\n\
+When ele clica no botão \"Novo\"\n\
+Then a tela de cadastro de banco deve aparecer\n\
+And os campos Código, Descrição do Banco, Apelido, Número de inscrição no SBP, Banco controlador e CNJP devem estar visíveis\n\
+And o título da tela deve ser \"Cadastro de Banco\"\n\
+And os botões \"Salvar\" e \"Cancelar\" devem estar habilitados"
 ```
 
-**US02 – Login**  
-```
-titulo: US02 – Login,
+---
+
+**US02 – Campos obrigatórios**
+
+```yaml
+titulo: US02 - Campos obrigatórios na tela de cadastro
 cenario_bdd:
-    - nome: Usuário faz login com credenciais válidas,
-      tipo: positivo,
-      gherkin: "Feature: Login\n\
-Scenario: Usuário faz login com credenciais válidas\n\
-Given o usuário está na tela de login\n\
-When preenche Email com \"maria.silva@email.com\"\n\
-And preenche Senha com \"Senha123!\"\n\
-And clica em \"Entrar\"\n\
-Then o usuário é redirecionado para a página inicial da conta\n\
-And o banner de boas‑vindas em verde é exibido"
+    nome: Não há mensagens de erro quando todos os campos obrigatórios são preenchidos
+    tipo: positivo
+    gherkin: "Feature: Validação de campos obrigatórios\n\
+Scenario: Usuário preenche todos os campos obrigatórios e salva com sucesso\n\
+Given o usuário preenche o campo Código com \"B001\"\n\
+And o usuário preenche o campo \"Descrição do Banco\" com \"Banco Alfa\"\n\
+And o usuário preenche o campo Apelido com \"Alfa\"\n\
+And o usuário preenche o campo \"Número de inscrição no SBP\" com \"123456\"\n\
+And o usuário seleciona um Banco Controlador válido no dropdown\n\
+And o usuário preenche o campo CNJP com \"12.345.678/0001-90\"\n\
+When o usuário clica em \"Salvar\"\n\
+Then a mensagem de sucesso \"Banco cadastrado com sucesso\" deve ser exibida\n\
+And não devem existir mensagens de erro nos campos obrigatórios"
 
-    - nome: Usuário não consegue fazer login com senha inválida,
-      tipo: negativo,
-      gherkin: "Feature: Login\n\
-Scenario: Usuário não consegue fazer login com senha inválida\n\
-Given o usuário está na tela de login\n\
-When preenche Email com \"maria.silva@email.com\"\n\
-And preenche Senha com \"SenhaErrada\"\n\
-And clica em \"Entrar\"\n\
-Then o sistema exibe a mensagem de erro \"Credenciais inválidas. Tente novamente.\" no banner vermelho"
-
-    - nome: Sessão expira após 15 minutos de inatividade,
-      tipo: negativo,
-      gherkin: "Feature: Login\n\
-Scenario: Sessão expira após 15 minutos de inatividade\n\
-Given o usuário está logado e acessou a página inicial\n\
-When o usuário permanece inativo por 15 minutos\n\
-Then a sessão expira e o sistema exibe \"Sessão expirada – faça login novamente\"\n\
-And o usuário é redirecionado para a tela de login"
-
-    - nome: Logout remove a sessão e redireciona para login,
-      tipo: positivo,
-      gherkin: "Feature: Login\n\
-Scenario: Logout remove a sessão e redireciona para login\n\
-Given o usuário está na página inicial da conta\n\
-When o usuário clica no botão \"Logout\"\n\
-Then a sessão é destruída e o usuário é redirecionado para a tela de login"
-```
-
-**US03 – Visualizar Saldo e Extrato**  
-```
-titulo: US03 – Visualizar Saldo e Extrato,
 cenario_bdd:
-    - nome: Saldo reflete imediatamente após uma transação de crédito,
-      tipo: positivo,
-      gherkin: "Feature: Saldo e Extrato\n\
-Scenario: Saldo reflete imediatamente após uma transação de crédito\n\
-Given o usuário está na página inicial com saldo atual de R$ 1.000,00\n\
-When o usuário recebe um depósito de R$ 200,00\n\
-Then o saldo exibido deve ser R$ 1.200,00\n\
-And o extrato mostra a transação com descrição \"Depósito\""
-
-    - nome: Extrato exibe as 10 transações mais recentes em ordem decrescente,
-      tipo: positivo,
-      gherkin: "Feature: Saldo e Extrato\n\
-Scenario: Extrato exibe as 10 transações mais recentes em ordem decrescente\n\
-Given o usuário tem pelo menos 10 transações registradas\n\
-When o usuário clica em \"Extrato\"\n\
-Then a lista mostra as 10 transações mais recentes ordenadas por data, mais recente primeiro\n\
-And cada linha contém data no formato DD/MM/AAAA, descrição curta, valor e saldo pós‑transação"
-
-    - nome: Nenhuma transação encontrada exibe mensagem apropriada,
-      tipo: negativo,
-      gherkin: "Feature: Saldo e Extrato\n\
-Scenario: Nenhuma transação encontrada exibe mensagem apropriada\n\
-Given o usuário não tem transações em sua conta\n\
-When o usuário clica em \"Extrato\"\n\
-Then o sistema exibe a mensagem \"Nenhuma transação encontrada\" em banner verde"
+    nome: Falha ao salvar quando um campo obrigatório está em branco
+    tipo: negativo
+    gherkin: "Feature: Validação de campos obrigatórios\n\
+Scenario Outline: Falha ao salvar com campo obrigatório ausente\n\
+Given o usuário preenche o campo \"<campo>\" com \"<valor>\"\n\
+And o usuário tenta salvar o registro\n\
+Then a mensagem \"<mensagem>\" deve ser exibida ao lado do campo \"<campo>\"\n\nExamples:\n| campo               | valor | mensagem                         |\n| Código              |       | Código é obrigatório             |\n| Descrição do Banco  |       | Descrição do Banco é obrigatória |\n| Apelido             |       | Apelido é obrigatório            |\n| Número de inscrição no SBP |  | Número de inscrição no SBP é obrigatório |\n| Banco controlador   |       | Banco controlador é obrigatório   |\n| CNJP                |       | CNJP é obrigatório                |"
 ```
 
-**US04 – Transferência de Fundos**  
-```
-titulo: US04 – Transferência de Fundos,
+---
+
+**US03 – Código único**
+
+```yaml
+titulo: US03 - Código único
 cenario_bdd:
-    - nome: Transferência interna realizada com sucesso,
-      tipo: positivo,
-      gherkin: "Feature: Transferência de Fundos\n\
-Scenario: Transferência interna realizada com sucesso\n\
-Given o usuário está na seção \"Transferências\"\n\
-When seleciona a conta de origem (sua própria)\n\
-And preenche Conta de destino com \"123.456.789-00\"\n\
-And preenche Valor com \"150,00\"\n\
-And clica em \"Confirmar\"\n\
-Then a transferência é processada em até 2 segundos\n\
-And o saldo da origem diminui em R$ 150,00\n\
-And o saldo do destino aumenta em R$ 150,00\n\
-And a transação aparece no extrato de ambas as contas com descrição \"Transferência X → Y\"\n\
-And o usuário recebe um e‑mail de confirmação contendo os detalhes"
+    nome: Código duplicado impede o salvamento
+    tipo: negativo
+    gherkin: "Feature: Validação de unicidade do Código\n\
+Scenario: Código duplicado impede o salvamento\n\
+Given existe um banco cadastrado com Código \"B001\"\n\
+And o usuário digita \"B001\" no campo Código\n\
+Then a mensagem \"Código já cadastrado\" deve ser exibida\n\
+And o botão \"Salvar\" deve permanecer desabilitado"
 
-    - nome: Transferência falha quando conta de destino tem formato inválido,
-      tipo: negativo,
-      gherkin: "Feature: Transferência de Fundos\n\
-Scenario: Transferência falha quando conta de destino tem formato inválido\n\
-Given o usuário está na seção \"Transferências\"\n\
-When preenche Conta de destino com \"12345\"\n\
-And preenche Valor com \"100,00\"\n\
-And clica em \"Confirmar\"\n\
-Then o sistema exibe a mensagem de erro \"Conta de destino inválida\" no banner vermelho"
-
-    - nome: Transferência falha por saldo insuficiente,
-      tipo: negativo,
-      gherkin: "Feature: Transferência de Fundos\n\
-Scenario: Transferência falha por saldo insuficiente\n\
-Given o usuário tem saldo de R$ 50,00 na conta origem\n\
-When tenta transferir R$ 100,00 para conta válida\n\
-Then o sistema exibe a mensagem de erro \"Saldo insuficiente\" no banner vermelho"
-```
-
-**US05 – Solicitação de Empréstimo**  
-```
-titulo: US05 – Solicitação de Empréstimo,
 cenario_bdd:
-    - nome: Empréstimo aprovado com valor e renda adequados,
-      tipo: positivo,
-      gherkin: "Feature: Solicitação de Empréstimo\n\
-Scenario: Empréstimo aprovado com valor e renda adequados\n\
-Given o usuário está na página \"Solicitar Empréstimo\"\n\
-When preenche Valor do empréstimo com \"20.000\"\n\
-And preenche Renda anual com \"30.000\"\n\
-And clica em \"Calcular\"\n\
-Then o sistema retorna status em até 5 segundos\n\
-And exibe \"Empréstimo aprovado. Taxa: 5%, Prazo: 48 meses\"\n\
-And registra a solicitação no histórico de \"Solicitações de Empréstimo\""
-
-    - nome: Empréstimo negado por renda insuficiente,
-      tipo: negativo,
-      gherkin: "Feature: Solicitação de Empréstimo\n\
-Scenario: Empréstimo negado por renda insuficiente\n\
-Given o usuário está na página \"Solicitar Empréstimo\"\n\
-When preenche Valor do empréstimo com \"10.000\"\n\
-And preenche Renda anual com \"15.000\"\n\
-And clica em \"Calcular\"\n\
-Then o sistema exibe \"Empréstimo negado. Renda insuficiente\" no banner vermelho"
-
-    - nome: Empréstimo não pode ser solicitado com valor abaixo de R$ 500,
-      tipo: negativo,
-      gherkin: "Feature: Solicitação de Empréstimo\n\
-Scenario: Empréstimo não pode ser solicitado com valor abaixo de R$ 500\n\
-Given o usuário está na página \"Solicitar Empréstimo\"\n\
-When preenche Valor do empréstimo com \"300\"\n\
-And preenche Renda anual com \"25.000\"\n\
-And clica em \"Calcular\"\n\
-Then o sistema exibe a mensagem de erro \"Valor do empréstimo deve ser ≥ R$ 500\" no banner vermelho"
+    nome: Código único permite o salvamento
+    tipo: positivo
+    gherkin: "Feature: Validação de unicidade do Código\n\
+Scenario: Código único permite o salvamento\n\
+Given o usuário digita \"B002\" no campo Código\n\
+Then nenhum aviso de duplicidade deve aparecer\n\
+And o botão \"Salvar\" deve estar habilitado"
 ```
 
-**US06 – Pagamento de Contas**  
-```
-titulo: US06 – Pagamento de Contas,
+---
+
+**US04 – Validação do CNJP**
+
+```yaml
+titulo: US04 - Validação do CNJP
 cenario_bdd:
-    - nome: Pagamento imediato é processado e registrado como \"Pago\",
-      tipo: positivo,
-      gherkin: "Feature: Pagamento de Contas\n\
-Scenario: Pagamento imediato é processado e registrado como \"Pago\"\n\
-Given o usuário está na tela \"Pagamentos\"\n\
-When preenche Beneficiário com \"Pedro\", Endereço com \"Rua A\", Cidade com \"São Paulo\", Estado com \"SP\", CEP com \"01234-567\", Telefone com \"(11) 98765-4321\", Conta de destino com \"987654321-00\", Valor com \"50,00\" e Data de pagamento com a data de hoje\n\
-And clica em \"Registrar\"\n\
-Then a conta do usuário é debitada em R$ 50,00\n\
-And a transação aparece no histórico com status \"Pago\"\n\
-And o usuário recebe um e‑mail de confirmação contendo os detalhes"
+    nome: CNJP com formato inválido impede a validação
+    tipo: negativo
+    gherkin: "Feature: Validação do CNJP\n\
+Scenario: CNJP com formato inválido\n\
+Given o usuário digita \"12345678\" no campo CNJP\n\
+Then a mensagem \"Formato de CNJP inválido\" deve ser exibida\n\
+And o botão \"Salvar\" deve estar desabilitado"
 
-    - nome: Pagamento futuro é salvo como \"Pendente\" e aparece na lista de pendentes,
-      tipo: positivo,
-      gherkin: "Feature: Pagamento de Contas\n\
-Scenario: Pagamento futuro é salvo como \"Pendente\" e aparece na lista de pendentes\n\
-Given o usuário está na tela \"Pagamentos\"\n\
-When preenche os mesmos campos acima e define Data de pagamento para 5 dias a partir de hoje\n\
-And clica em \"Registrar\"\n\
-Then a transação é salva com status \"Pendente\"\n\
-And aparece na lista de \"Pagamentos Pendentes\""
-
-    - nome: Pagamento falha quando data de pagamento está menos de 3 dias à frente,
-      tipo: negativo,
-      gherkin: "Feature: Pagamento de Contas\n\
-Scenario: Pagamento falha quando data de pagamento está menos de 3 dias à frente\n\
-Given o usuário tenta registrar pagamento com Data de pagamento em 2 dias a partir de hoje\n\
-When clica em \"Registrar\"\n\
-Then o sistema exibe a mensagem de erro \"Data de pagamento deve ser pelo menos 3 dias à frente\" no banner vermelho"
-
-    - nome: Pagamento falha quando valor é inferior a R$ 10,
-      tipo: negativo,
-      gherkin: "Feature: Pagamento de Contas\n\
-Scenario: Pagamento falha quando valor é inferior a R$ 10\n\
-Given o usuário tenta registrar pagamento com Valor de R$ 5,00\n\
-When clica em \"Registrar\"\n\
-Then o sistema exibe a mensagem de erro \"Valor mínimo de pagamento é R$ 10\" no banner vermelho"
-```
-
-**US07 – Navegação, Usabilidade e Consistência de Mensagens**  
-```
-titulo: US07 – Navegação, Usabilidade e Consistência de Mensagens,
 cenario_bdd:
-    - nome: Todas as páginas carregam em menos de 2 segundos em conexão 3G,
-      tipo: positivo,
-      gherkin: "Feature: Navegação e Performance\n\
-Scenario: Todas as páginas carregam em menos de 2 segundos em conexão 3G\n\
-Given o usuário acessa qualquer página do ParaBank em conexão 3G\n\
-When a página inicia o carregamento\n\
-Then o carregamento termina em ≤ 2 segundos\n\
-And o banner de carregamento desaparece automaticamente"
+    nome: CNJP não existente impede o salvamento
+    tipo: negativo
+    gherkin: "Feature: Validação do CNJP\n\
+Scenario: CNJP não existente\n\
+Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
+And o sistema não encontra o CNJP em seu cadastro\n\
+Then a mensagem \"CNJP não encontrado\" deve ser exibida\n\
+And o botão \"Salvar\" deve estar desabilitado"
 
-    - nome: Menus de navegação permanecem consistentes em todas as páginas,
-      tipo: positivo,
-      gherkin: "Feature: Navegação e Consistência\n\
-Scenario: Menus de navegação permanecem consistentes em todas as páginas\n\
-Given o usuário navega entre \"Home\", \"Extrato\", \"Transferências\", \"Empréstimos\", \"Pagamentos\", \"Perfil\" e \"Logout\"\n\
-When cada página é exibida\n\
-Then o menu de navegação aparece no mesmo local e com a mesma ordem e estilo visual"
+cenario_bdd:
+    nome: CNJP válido e existente permite o salvamento
+    tipo: positivo
+    gherkin: "Feature: Validação do CNJP\n\
+Scenario: CNJP válido e existente\n\
+Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
+And o CNJP é encontrado no banco de dados\n\
+Then nenhuma mensagem de erro deve aparecer\n\
+And o botão \"Salvar\" deve estar habilitado"
+```
 
-    - nome: Mensagem de erro aparece em banner vermelho e desaparece após 5 segundos,
-      tipo: positivo,
-      gherkin: "Feature: Mensagens de Erro\n\
-Scenario: Mensagem de erro aparece em banner vermelho e desaparece após 5 segundos\n\
-Given o usuário dispara uma ação que gera erro (ex.: login inválido)\n\
-When o erro ocorre\n\
-Then o banner de erro aparece em vermelho com a mensagem correta\n\
-And o banner desaparece automaticamente após 5 segundos"
+---
 
-    - nome: Mensagem de sucesso aparece em banner verde e permanece até confirmação do usuário,
-      tipo: positivo,
-      gherkin: "Feature: Mensagens de Sucesso\n\
-Scenario: Mensagem de sucesso aparece em banner verde e permanece até confirmação do usuário\n\
-Given o usuário completa uma operação bem‑sucedida (ex.: pagamento confirmado)\n\
-When a operação termina\n\
-Then o banner de sucesso aparece em verde com a mensagem correspondente\n\
-And permanece visível até que o usuário clique em \"OK\" ou feche o banner"
+**US05 – Seleção do Banco Controlador**
 
-    - nome: Logout limpa sessão e redireciona para tela de login,
-      tipo: positivo,
-      gherkin: "Feature: Logout\n\
-Scenario: Logout limpa sessão e redireciona para tela de login\n\
-Given o usuário está autenticado e na página inicial\n\
-When clica em \"Logout\"\n\
-Then a sessão é destruída\n\
-And o usuário é redirecionado para a tela de login\n\
-And nenhum link 404 é exibido"
+```yaml
+titulo: US05 - Seleção do Banco Controlador
+cenario_bdd:
+    nome: Dropdown mostra bancos controladores disponíveis
+    tipo: positivo
+    gherkin: "Feature: Seleção do banco controlador\n\
+Scenario: Dropdown mostra bancos controladores disponíveis\n\
+Given há pelo menos um banco cadastrado como potencial controlador\n\
+When o usuário abre o dropdown \"Banco controlador\"\n\
+Then os bancos disponíveis devem ser listados"
+
+cenario_bdd:
+    nome: Nenhum banco controlador disponível desabilita o campo
+    tipo: negativo
+    gherkin: "Feature: Seleção do banco controlador\n\
+Scenario: Nenhum banco controlador disponível\n\
+Given não há bancos cadastrados\n\
+Then o campo \"Banco controlador\" deve exibir \"Nenhum banco controlador disponível\"\n\
+And o campo deve estar desabilitado"
+```
+
+---
+
+**US06 – Salvamento com sucesso**
+
+```yaml
+titulo: US06 - Salvamento de banco com sucesso
+cenario_bdd:
+    nome: Cadastro completo e válido resulta em sucesso
+    tipo: positivo
+    gherkin: "Feature: Salvamento de banco com sucesso\n\
+Scenario: Cadastro completo e válido\n\
+Given o usuário preenche todos os campos obrigatórios com valores válidos:\n\
+    | Campo                  | Valor                       |\n\
+    | Código                 | B003                        |\n\
+    | Descrição do Banco     | Banco Teste                 |\n\
+    | Apelido                | BT                          |\n\
+    | Número de inscrição no SBP | 123456               |\n\
+    | Banco controlador     | Banco Controlador Exemplo    |\n\
+    | CNJP                   | 12.345.678/0001-90          |\n\
+When o usuário clica em \"Salvar\"\n\
+Then o banco deve ser salvo no sistema\n\
+And a mensagem \"Banco cadastrado com sucesso\" deve ser exibida\n\
+And o usuário deve ser redirecionado para a lista de bancos\n\
+And o banco recém‑criado deve aparecer na lista"
+```
+
+---
+
+**US07 – Mensagens de erro claras**
+
+```yaml
+titulo: US07 - Mensagens de erro claras e específicas
+cenario_bdd:
+    nome: Exibição de erro ao validar campo obrigatório vazio
+    tipo: negativo
+    gherkin: "Feature: Mensagens de erro claras e específicas\n\
+Scenario Outline: Exibição de erro ao validar campo obrigatório vazio\n\
+Given o usuário preenche o campo \"<campo>\" com \"<valor>\"\n\
+And o usuário tenta salvar o registro\n\
+Then a mensagem \"<mensagem>\" deve ser exibida ao lado do campo \"<campo>\"\n\nExamples:\n| campo               | valor | mensagem                         |\n| Código              |       | Código é obrigatório             |\n| Descrição do Banco  |       | Descrição do Banco é obrigatória |\n| Apelido             |       | Apelido é obrigatório            |\n| Número de inscrição no SBP |  | Número de inscrição no SBP é obrigatório |\n| Banco controlador   |       | Banco controlador é obrigatório   |\n| CNJP                |       | CNJP é obrigatório                |"
+
+cenario_bdd:
+    nome: Exibição de erro de duplicidade de Código
+    tipo: negativo
+    gherkin: "Feature: Mensagens de erro claras e específicas\n\
+Scenario: Exibição de erro de duplicidade de Código\n\
+Given existe um banco cadastrado com Código \"B001\"\n\
+And o usuário digita \"B001\" no campo Código\n\
+When o usuário tenta salvar o registro\n\
+Then a mensagem \"Código já cadastrado\" deve ser exibida ao lado do campo \"Código\""
+
+cenario_bdd:
+    nome: Exibição de erro de formato inválido do CNJP
+    tipo: negativo
+    gherkin: "Feature: Mensagens de erro claras e específicas\n\
+Scenario: Exibição de erro de formato inválido do CNJP\n\
+Given o usuário digita \"12345678\" no campo CNJP\n\
+When o usuário tenta salvar o registro\n\
+Then a mensagem \"Formato de CNJP inválido\" deve ser exibida ao lado do campo \"CNJP\""
+
+cenario_bdd:
+    nome: Exibição de erro de CNJP não encontrado
+    tipo: negativo
+    gherkin: "Feature: Mensagens de erro claras e específicas\n\
+Scenario: Exibição de erro de CNJP não encontrado\n\
+Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
+And o sistema não encontra o CNJP em seu cadastro\n\
+When o usuário tenta salvar o registro\n\
+Then a mensagem \"CNJP não encontrado\" deve ser exibida ao lado do campo \"CNJP\""
 ```
