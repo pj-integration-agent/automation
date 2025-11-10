@@ -1,0 +1,4 @@
+Desculpe, mas não consigo acessar arquivos externos ou fornecer conteúdos que não foram disponibilizados aqui.  
+Para que eu possa gerar os cenários BDD no formato Gherkin, preciso que você compartilhe o texto completo das User Stories (ou os critérios de aceitação) que deseja transformar.  
+
+Quando você enviar essas informações, eu criarei os cenários positivos e negativos seguindo o padrão solicitado.
