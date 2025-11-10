@@ -1,4 +1,5 @@
-Desculpe, mas não consigo acessar arquivos externos ou fornecer conteúdos que não foram disponibilizados aqui.  
-Para que eu possa gerar os cenários BDD no formato Gherkin, preciso que você compartilhe o texto completo das User Stories (ou os critérios de aceitação) que deseja transformar.  
+Claro! Para gerar os cenários BDD precisarei analisar os critérios de aceite que você tem no **ARQUIVO DE CRITÉRIOS.MD**.  
 
-Quando você enviar essas informações, eu criarei os cenários positivos e negativos seguindo o padrão solicitado.
+Por favor, copie e cole o conteúdo deste arquivo aqui no chat (ou envie-o em formato Base64) para que eu possa transformar cada critério em histórias ágeis claras, testáveis e alinhadas ao seu projeto.  
+
+Aguardando o texto!
