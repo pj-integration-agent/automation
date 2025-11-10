@@ -1,337 +1,310 @@
-**User Story: Cadastro de Usuário**
-
+**US01 – Cadastro de Usuário**  
 ```yaml
-titulo: Cadastro de Usuário
+titulo: US01 – Cadastro de Usuário,
 cenario_bdd:
-  - nome: Cadastro com todos os campos válidos
+  - nome: Cadastro com dados válidos
     tipo: positivo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário registra conta com dados válidos
-        Given o usuário está na página de cadastro
-        When ele preenche nome com "Ana"
-        And preenche sobrenome com "Silva"
-        And preenche e‑mail com "ana.silva@email.com"
-        And preenche telefone com "11987654321"
-        And preenche CEP com "12345678"
-        And preenche endereço com "Rua das Flores, 123"
-        And preenche cidade com "São Paulo"
-        And preenche estado com "SP"
-        And preenche senha com "Senha123!"
-        And confirma senha com "Senha123!"
-        And clica em "Cadastrar"
-        Then a tela exibe "Cadastro concluído – acesse seu login"
-        And o usuário pode fazer login com os dados cadastrados
-
-  - nome: Campo obrigatório vazio
+      Scenario: Cadastro com dados válidos
+        Given o usuário abre a página de cadastro
+        When ele preenche todos os campos obrigatórios com dados válidos
+        And ele clica em "Cadastrar"
+        Then uma mensagem de confirmação "Cadastro concluído" é exibida
+        And o usuário pode fazer login imediatamente
+  - nome: Cadastro bloqueado quando campo obrigatório está vazio
     tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário deixa campo obrigatório em branco
-        Given o usuário está na página de cadastro
-        When ele deixa o campo e‑mail em branco
-        And preenche os demais campos com valores válidos
-        And clica em "Cadastrar"
-        Then a mensagem "Campo obrigatório" aparece abaixo do campo e‑mail
-
-  - nome: E‑mail com formato inválido
+      Scenario: Cadastro bloqueado por campo obrigatório vazio
+        Given o usuário abre a página de cadastro
+        When ele deixa o campo "CPF" vazio e tenta cadastrar
+        Then o botão "Cadastrar" permanece desabilitado
+        And a mensagem de erro "Campo obrigatório" aparece ao lado do campo
+  - nome: Cadastro rejeitado com telefone inválido
     tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário insere e‑mail inválido
-        Given o usuário está na página de cadastro
-        When ele preenche e‑mail com "ana.silva@"
-        And preenche os demais campos com valores válidos
-        And clica em "Cadastrar"
-        Then a mensagem "Formato de e‑mail inválido" aparece abaixo do campo e‑mail
-
-  - nome: Telefone com caracteres não numéricos
+      Scenario: Cadastro rejeitado com telefone inválido
+        Given o usuário abre a página de cadastro
+        When ele preenche o campo "Telefone" com "12345"
+        And tenta cadastrar
+        Then a mensagem de erro "Telefone inválido" é exibida
+        And o cadastro não é processado
+  - nome: Cadastro rejeitado com CEP em formato errado
     tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário insere telefone inválido
-        Given o usuário está na página de cadastro
-        When ele preenche telefone com "123ABC"
-        And preenche os demais campos com valores válidos
-        And clica em "Cadastrar"
-        Then a mensagem "Formato de telefone inválido" aparece abaixo do campo telefone
-
-  - nome: CEP com menos de 8 dígitos
+      Scenario: Cadastro rejeitado com CEP em formato errado
+        Given o usuário abre a página de cadastro
+        When ele preenche o campo "CEP" com "1234-567"
+        And tenta cadastrar
+        Then a mensagem de erro "CEP inválido" é exibida
+  - nome: Cadastro rejeitado com e‑mail sem “@”
     tipo: negativo
     gherkin: |
       Feature: Cadastro de Usuário
-      Scenario: Usuário insere CEP inválido
-        Given o usuário está na página de cadastro
-        When ele preenche CEP com "1234567"
-        And preenche os demais campos com valores válidos
-        And clica em "Cadastrar"
-        Then a mensagem "CEP inválido (deve conter 8 dígitos)" aparece abaixo do campo CEP
+      Scenario: Cadastro rejeitado com e‑mail sem “@”
+        Given o usuário abre a página de cadastro
+        When ele preenche o campo "E‑mail" com "usuario.com"
+        And tenta cadastrar
+        Then a mensagem de erro "Formato de e‑mail inválido" é exibida
 ```
 
 ---
 
-**User Story: Login**
-
+**US02 – Login**  
 ```yaml
-titulo: Login
+titulo: US02 – Login,
 cenario_bdd:
-  - nome: Login com credenciais corretas
+  - nome: Login bem‑sucedido com CPF e senha válidos
     tipo: positivo
     gherkin: |
       Feature: Login
-      Scenario: Usuário faz login com e‑mail e senha corretos
+      Scenario: Login bem-sucedido
         Given o usuário está na página de login
-        When ele preenche e‑mail com "ana.silva@email.com"
-        And preenche senha com "Senha123!"
+        When ele digita CPF válido "123.456.789-00" e senha correta "Senha123"
         And clica em "Entrar"
-        Then a página redireciona para a tela inicial
-        And exibe "Bem‑vindo, Ana"
-
-  - nome: E‑mail ou senha em branco
+        Then o usuário é redirecionado para "/dashboard"
+        And a sessão permanece ativa por 30 minutos de inatividade
+  - nome: Login falha por CPF inválido
     tipo: negativo
     gherkin: |
       Feature: Login
-      Scenario: Usuário tenta login sem preencher e‑mail ou senha
+      Scenario: Falha de login por CPF inválido
         Given o usuário está na página de login
-        When ele deixa e‑mail e senha em branco
+        When ele digita CPF inválido "111.111.111-11" e senha correta
         And clica em "Entrar"
-        Then a mensagem "Informe seu e‑mail e senha" aparece
-
-  - nome: Credenciais inválidas
+        Then a mensagem "CPF ou senha inválidos" é exibida
+        And a sessão permanece não autenticada
+  - nome: Login falha por senha incorreta
     tipo: negativo
     gherkin: |
       Feature: Login
-      Scenario: Usuário tenta login com credenciais incorretas
+      Scenario: Falha de login por senha incorreta
         Given o usuário está na página de login
-        When ele preenche e‑mail com "ana.silva@email.com"
-        And preenche senha com "SenhaErrada!"
+        When ele digita CPF válido e senha incorreta
         And clica em "Entrar"
-        Then a mensagem "Credenciais inválidas" aparece
+        Then a mensagem "CPF ou senha inválidos" é exibida
+        And a sessão permanece não autenticada
 ```
 
 ---
 
-**User Story: Visualizar Saldo e Extrato**
-
+**US03 – Visualizar Saldo e Extrato**  
 ```yaml
-titulo: Visualizar Saldo e Extrato
+titulo: US03 – Visualizar Saldo e Extrato,
 cenario_bdd:
-  - nome: Exibição do saldo e últimos 10 lançamentos após login
+  - nome: Exibição correta de saldo e extrato recente
     tipo: positivo
     gherkin: |
       Feature: Visualizar Saldo e Extrato
-      Scenario: Usuário visualiza saldo e extrato imediatamente após login
-        Given o usuário está autenticado na página inicial
-        Then a tela mostra "Saldo atual: R$ 2.500,00"
-        And o extrato lista pelo menos os últimos 10 lançamentos
-        And cada lançamento exibe data, descrição, tipo e valor
-        And os lançamentos estão ordenados cronologicamente (mais recente primeiro)
-
-  - nome: Saldo atualiza após operação de transferência
+      Scenario: Exibição de saldo e extrato
+        Given o usuário está autenticado e na página inicial da conta
+        When ele visualiza a seção de saldo
+        Then o saldo é exibido em "R$ 12.345,67"
+        And a lista de extrato exibe pelo menos 10 transações
+        And as transações estão ordenadas por data em ordem decrescente
+        And cada linha contém "Data", "Descrição", "Débito/Credito" e "Saldo Final"
+  - nome: Atualização de saldo após transferência
     tipo: positivo
     gherkin: |
-      Feature: Visualizar Saldo e Extrato
+      Feature: Atualização de Saldo
       Scenario: Saldo atualiza após transferência
-        Given o usuário está na página inicial com saldo R$ 1.000,00
-        When ele realiza uma transferência de R$ 200,00
-        Then a tela atualiza o saldo para R$ 800,00
-        And a transferência aparece no extrato com data e hora
+        Given o usuário transfere R$ 500,00 para outra conta
+        When a transferência é concluída
+        Then o saldo exibido na página inicial atualiza imediatamente sem recarregar a página
 ```
 
 ---
 
-**User Story: Transferência de Fundos**
-
+**US04 – Realizar Transferência de Fundos**  
 ```yaml
-titulo: Transferência de Fundos
+titulo: US04 – Realizar Transferência de Fundos,
 cenario_bdd:
-  - nome: Transferência bem‑sucedida dentro do saldo disponível
+  - nome: Transferência dentro do saldo disponível
     tipo: positivo
     gherkin: |
       Feature: Transferência de Fundos
-      Scenario: Usuário transfere valor dentro do saldo
-        Given o usuário está na página de transferências
-        And o saldo da conta origem é R$ 1.000,00
-        When ele seleciona conta origem "Conta A"
-        And seleciona conta destino "Conta B"
-        And digita valor "300,00"
-        And confirma a transferência
-        Then a conta origem diminui para R$ 700,00
-        And a conta destino aumenta em R$ 300,00
-        And ambas as contas têm a transação registrada no histórico com data e hora
-
+      Scenario: Transferência válida
+        Given o usuário está na tela de transferência
+        When ele seleciona a conta origem e destino
+        And insere o valor "200,00" que está abaixo do saldo
+        And confirma a operação
+        Then o valor é debitado da origem e creditado na destinação
+        And a transação aparece no extrato de ambas as contas
+        And a mensagem "Transferência concluída com sucesso" é exibida
   - nome: Transferência rejeitada por saldo insuficiente
     tipo: negativo
     gherkin: |
       Feature: Transferência de Fundos
-      Scenario: Usuário tenta transferir valor maior que o saldo
-        Given o usuário está na página de transferências
-        And o saldo da conta origem é R$ 400,00
-        When ele seleciona conta origem "Conta A"
-        And seleciona conta destino "Conta B"
-        And digita valor "500,00"
-        And confirma a transferência
-        Then a mensagem "Saldo insuficiente" aparece
-
-  - nome: Valor de transferência inválido (zero ou negativo)
-    tipo: negativo
-    gherkin: |
-      Feature: Transferência de Fundos
-      Scenario: Usuário entra valor inválido na transferência
-        Given o usuário está na página de transferências
-        When ele digita valor "0,00"
-        And confirma a transferência
-        Then a mensagem "Valor deve ser positivo" aparece
+      Scenario: Transferência rejeitada por saldo insuficiente
+        Given o usuário está na tela de transferência
+        When ele tenta transferir R$ 10.000,00 que excede o saldo
+        Then a mensagem "Saldo insuficiente" é exibida
+        And a transação não é realizada
 ```
 
 ---
 
-**User Story: Solicitação de Empréstimo**
-
+**US05 – Solicitar Empréstimo**  
 ```yaml
-titulo: Solicitação de Empréstimo
+titulo: US05 – Solicitar Empréstimo,
 cenario_bdd:
-  - nome: Solicitação de empréstimo com dados válidos e aprovação
+  - nome: Empréstimo aprovado com renda adequada
     tipo: positivo
     gherkin: |
-      Feature: Solicitação de Empréstimo
-      Scenario: Usuário solicita empréstimo e recebe aprovação
-        Given o usuário está na página de empréstimos
-        When ele preenche valor do empréstimo com "10.000,00"
-        And preenche renda anual com "50.000,00"
+      Feature: Solicitar Empréstimo
+      Scenario: Empréstimo aprovado
+        Given o usuário abre a tela de solicitação
+        When ele preenche "Valor do Empréstimo" com 50.000,00
+        And "Renda Anual" com 20.000,00
         And clica em "Solicitar"
-        Then o sistema processa a solicitação em até 30s
-        And exibe "Solicitação Aprovada"
-        And a solicitação aparece no histórico de solicitações
-
-  - nome: Solicitação de empréstimo com campo inválido
+        Then o sistema exibe "Aprovado"
+        And mostra o valor aprovado e prazo sugerido
+        And a solicitação é gravada no histórico de transações
+  - nome: Empréstimo negado por renda insuficiente
     tipo: negativo
     gherkin: |
-      Feature: Solicitação de Empréstimo
-      Scenario: Usuário deixa campo de renda em branco
-        Given o usuário está na página de empréstimos
-        When ele preenche valor do empréstimo com "5.000,00"
-        And deixa renda anual em branco
+      Feature: Solicitar Empréstimo
+      Scenario: Empréstimo negado
+        Given o usuário abre a tela de solicitação
+        When ele preenche "Valor do Empréstimo" com 150.000,00
+        And "Renda Anual" com 20.000,00
         And clica em "Solicitar"
-        Then a mensagem "Campo obrigatório" aparece abaixo do campo renda anual
-
-  - nome: Solicitação de empréstimo negada por renda insuficiente
-    tipo: negativo
-    gherkin: |
-      Feature: Solicitação de Empréstimo
-      Scenario: Usuário recebe negação por baixa renda
-        Given o usuário está na página de empréstimos
-        When ele preenche valor do empréstimo com "20.000,00"
-        And preenche renda anual com "5.000,00"
-        And clica em "Solicitar"
-        Then o sistema exibe "Solicitação Negada: Renda insuficiente"
-        And a solicitação aparece no histórico de solicitações com status negado
+        Then o sistema exibe "Negado"
+        And mostra a razão "Renda insuficiente"
+        And a solicitação é gravada no histórico de transações
 ```
 
 ---
 
-**User Story: Pagamento de Contas**
-
+**US06 – Registrar Pagamento de Contas**  
 ```yaml
-titulo: Pagamento de Contas
+titulo: US06 – Registrar Pagamento de Contas,
 cenario_bdd:
-  - nome: Registro de pagamento agendado com dados válidos
+  - nome: Pagamento imediato (data de hoje)
     tipo: positivo
     gherkin: |
       Feature: Pagamento de Contas
-      Scenario: Usuário agenda pagamento de conta
-        Given o usuário está na página de pagamentos
-        When ele preenche beneficiário com "Pedro Santos"
-        And preenche endereço com "Av. Central, 456"
-        And preenche cidade com "Rio de Janeiro"
-        And preenche estado com "RJ"
-        And preenche CEP com "98765432"
-        And preenche telefone com "21987654321"
-        And preenche conta de destino com "123456-7"
-        And preenche valor com "150,00"
-        And escolhe data "2025‑12‑20"
+      Scenario: Pagamento imediato
+        Given o usuário abre a tela de pagamento
+        When ele preenche todos os campos obrigatórios
+        And define a data de pagamento como hoje
         And clica em "Confirmar"
-        Then o pagamento aparece no histórico com data e hora
-        And o usuário pode visualizar a lista de pagamentos agendados
-
-  - nome: Pagamento com data passada
+        Then o pagamento aparece no histórico com status "Em aberto"
+        And a mensagem "Pagamento efetuado" é exibida
+  - nome: Pagamento agendado para futuro
+    tipo: positivo
+    gherkin: |
+      Feature: Pagamento de Contas
+      Scenario: Pagamento agendado
+        Given o usuário abre a tela de pagamento
+        When ele preenche todos os campos obrigatórios
+        And define a data de pagamento para 15 dias à frente
+        And clica em "Confirmar"
+        Then o pagamento aparece no histórico com status "Agendado"
+        And a mensagem "Pagamento agendado para DD/MM/AAAA" é exibida
+  - nome: Pagamento rejeitado por data em fim de semana
     tipo: negativo
     gherkin: |
       Feature: Pagamento de Contas
-      Scenario: Usuário agenda pagamento com data no passado
-        Given o usuário está na página de pagamentos
-        When ele preenche os campos com valores válidos
-        And escolhe data "2020‑01‑01"
+      Scenario: Pagamento rejeitado por data de fim de semana
+        Given o usuário abre a tela de pagamento
+        When ele preenche todos os campos obrigatórios
+        And define a data de pagamento para um sábado
         And clica em "Confirmar"
-        Then a mensagem "Data inválida" aparece
-
-  - nome: Pagamento com campo obrigatório em branco
-    tipo: negativo
-    gherkin: |
-      Feature: Pagamento de Contas
-      Scenario: Usuário deixa telefone em branco
-        Given o usuário está na página de pagamentos
-        When ele deixa telefone em branco
-        And preenche os demais campos com valores válidos
-        And clica em "Confirmar"
-        Then a mensagem "Campo obrigatório" aparece abaixo do campo telefone
+        Then a mensagem "Data inválida: somente dias úteis" é exibida
+        And o pagamento não é registrado
 ```
 
 ---
 
-**User Story: Navegação Consistente**
-
+**US07 – Navegação e Mensagens de Erro**  
 ```yaml
-titulo: Navegação Consistente
+titulo: US07 – Navegação e Mensagens de Erro,
 cenario_bdd:
-  - nome: Menus e cabeçalho visíveis em todas as páginas
+  - nome: Navegação sequencial sem erros
     tipo: positivo
     gherkin: |
-      Feature: Navegação Consistente
-      Scenario: Verificar cabeçalho e menu em todas as páginas
-        Given o usuário está na página inicial
-        Then o cabeçalho contém logo, menu principal e rodapé
-        And cada item do menu leva à página correta
-        And nenhuma página retorna erro 404
-
-  - nome: Rodapé presente em todas as páginas
-    tipo: positivo
-    gherkin: |
-      Feature: Navegação Consistente
-      Scenario: Rodapé contém links necessários
-        Given o usuário está em qualquer página do sistema
-        Then o rodapé exibe links "Termos", "Privacidade" e "Suporte"
-```
-
----
-
-**User Story: Mensagens de Erro Claras**
-
-```yaml
-titulo: Mensagens de Erro Claras
-cenario_bdd:
-  - nome: Erro de e‑mail em campo de cadastro
-    tipo: negativo
-    gherkin: |
-      Feature: Mensagens de Erro Claras
-      Scenario: Usuário insere e‑mail inválido no cadastro
-        Given o usuário está na página de cadastro
-        When ele preenche e‑mail com "invalid"
-        And preenche os demais campos com valores válidos
-        And clica em "Cadastrar"
-        Then a mensagem "Formato de e‑mail inválido" aparece em vermelho abaixo do campo e‑mail
-        And a mensagem sugere: "Exemplo: usuario@exemplo.com"
-
-  - nome: Erro de servidor durante login
-    tipo: negativo
-    gherkin: |
-      Feature: Mensagens de Erro Claras
-      Scenario: Ocorre erro interno no servidor ao tentar login
+      Feature: Navegação do Sistema
+      Scenario: Navegação sem erros
         Given o usuário está na página de login
-        When ele preenche credenciais corretas
-        And clica em "Entrar"
-        And o servidor retorna erro 500
-        Then a mensagem "Ocorreu um erro interno. Tente novamente mais tarde." aparece centralizada na tela
+        When ele faz login com credenciais válidas
+        Then ele chega na página "/dashboard"
+        And pode acessar "Transferências", "Empréstimos" e "Pagamentos"
+        And pode fazer logout sem erros
+  - nome: Erro de conexão exibido em qualquer tela
+    tipo: negativo
+    gherkin: |
+      Feature: Mensagem de Erro de Rede
+      Scenario: Exibição de erro de conexão
+        Given o usuário está em qualquer página e ocorre falha de rede
+        When a requisição falha
+        Then a mensagem "Problema de conexão. Tente novamente" aparece no centro da tela
+        And os botões permanecem desabilitados até a reconexão
 ```
 
 ---
+
+**US08 – Validações de Entrada em Tempo Real**  
+```yaml
+titulo: US08 – Validações de Entrada em Tempo Real,
+cenario_bdd:
+  - nome: Validação automática do telefone
+    tipo: positivo
+    gherkin: |
+      Feature: Validação de Telefone
+      Scenario: Validação automática do telefone
+        Given o usuário digita "1234567890" no campo Telefone
+        When ele perde o foco do campo
+        Then o número é formatado como "(12) 3456-7890"
+        And nenhum erro é exibido
+  - nome: Mensagem de erro para CEP incompleto
+    tipo: negativo
+    gherkin: |
+      Feature: Validação de CEP
+      Scenario: CEP incompleto
+        Given o usuário digita "12345" no campo CEP
+        When ele perde o foco do campo
+        Then a mensagem "CEP incompleto" aparece abaixo do campo
+  - nome: Mensagem de erro para e‑mail inválido
+    tipo: negativo
+    gherkin: |
+      Feature: Validação de E‑mail
+      Scenario: E‑mail inválido
+        Given o usuário digita "usuario.com" no campo E‑mail
+        When ele perde o foco do campo
+        Then a mensagem "Formato de e‑mail inválido" aparece abaixo do campo
+```
+
+---
+
+**US09 – Recuperar Senha**  
+```yaml
+titulo: US09 – Recuperar Senha,
+cenario_bdd:
+  - nome: Recuperação de senha com e‑mail válido
+    tipo: positivo
+    gherkin: |
+      Feature: Recuperação de Senha
+      Scenario: Recuperação com e‑mail válido
+        Given o usuário está na página de login
+        When ele clica em "Esqueci a senha" e digita seu e‑mail válido
+        And envia a solicitação
+        Then um e‑mail com link de redefinição é enviado
+        When o usuário clica no link
+        And define nova senha "NovaSenha1"
+        And salva
+        Then a mensagem "Senha redefinida com sucesso" é exibida
+        And ele pode fazer login com a nova senha
+  - nome: Tentativa de recuperação com e‑mail inexistente
+    tipo: negativo
+    gherkin: |
+      Feature: Recuperação de Senha
+      Scenario: Recuperação com e‑mail inexistente
+        Given o usuário clica em "Esqueci a senha" e digita um e‑mail que não está cadastrado
+        When ele envia a solicitação
+        Then a mensagem "E‑mail não encontrado" é exibida
+        And nenhum e‑mail é enviado
+```
