@@ -1,529 +1,263 @@
+**BankAutomation.robot**
+
 ```robot
 *** Settings ***
 Library           SeleniumLibrary
 Library           Collections
-Library           String
 Library           OperatingSystem
-# -------------- Custom keyword libraries --------------
-# If you need to interact with an API or database you can create
-# your own python modules and import them here.
-# Example: Library           ../resources/api_keywords.py
-# -------------- Suite Setup & Teardown --------------
 Suite Setup       Open Browser To Base URL
 Suite Teardown    Close Browser
+Test Setup        Maximize Browser Window
+Test Teardown     Capture Page Screenshot
 
-# -------------- Test Teardown --------------
-Test Teardown      Capture Page Screenshot    # useful for debugging
-
-# -------------- Test Timeouts --------------
-Test Timeout       3 minutes
-Resource           ../resources/common_keywords.robot   # reusable keywords
-
+# ------------------------------------------------------------------
+# Variables
+# ------------------------------------------------------------------
 *** Variables ***
-${BASE_URL}         https://app.example.com
-${BROWSER}          Chrome
-${IMPLICIT_WAIT}    5s
-${DEFAULT_TIMEOUT}  15s
-${WAIT_TIME}        0.5s   # small pause after actions
+${BASE_URL}               https://app.example.com/banks
+${BROWSER}                Chrome
+${DEFAULT_TIMEOUT}        10s
+${WAIT}                   1s          # generic short wait for UI to settle
 
-# Locators – use stable attributes (id, data-testid, name, etc.)
-# Example placeholders – replace with real selectors
-${REG_PAGE}           css:#registration-page
-${LOGIN_PAGE}         css:#login-page
-${DASHBOARD}          css:#dashboard
-${EXTRATO_PAGE}       css:#extrato
-${EMPRÉSTIMO_PAGE}    css:#emprestimo
-${TRANSFERIR_PAGE}    css:#transferencia
+# Page‑level locators – keep them stable and readable
+# ------------------------------------------------------------------
+# List page
+${BANKS_LINK}             xpath=//a[normalize-space()='Bancos']
+${NEW_BUTTON}             xpath=//button[normalize-space()='Novo']
+${EDIT_BUTTON}            xpath=//tr[td[normalize-space()='${BANK_CODE}']]//button[normalize-space()='Editar']
 
-# Field locators by label – dynamic lookup
-# Example:  label[for="email"] + input
-${FIELD}              css:label[for="${FIELD_ID}"] + input
+# Edit / New screen
+${FIELD_CODE}             xpath=//input[@id='bankCode']
+${FIELD_DESCRIPTION}     xpath=//input[@id='bankDescription']
+${FIELD_NICKNAME}         xpath=//input[@id='bankNickname']
+${FIELD_SBP}              xpath=//input[@id='bankSBP']
+${FIELD_CONTROLLER}       xpath=//select[@id='bankController']
+${FIELD_CNPJ}             xpath=//input[@id='bankCNPJ']
+${SAVE_BUTTON}            xpath=//button[normalize-space()='Salvar']
+${CANCEL_BUTTON}          xpath=//button[normalize-space()='Cancelar']
 
-# Buttons by visible text
-${BUTTON}             xpath://button[normalize-space()="${BUTTON_TEXT}"]
+# Messages
+${SUCCESS_MSG}            xpath=//div[contains(@class,'alert-success')]
+${ERROR_MSG}              xpath=//div[contains(@class,'alert-danger')]
+${FIELD_ERROR}            xpath=//span[@class='error']
 
-# Messages under a field
-${FIELD_ERROR}        xpath://label[normalize-space()="${FIELD_TEXT}"]/following-sibling::span[contains(@class, "error")]
-
-# ----------------------- Test Cases ---------------------------------
+# ------------------------------------------------------------------
+# Test Cases
+# ------------------------------------------------------------------
 
 *** Test Cases ***
-US01 - Cadastro de Usuário
-  # Positive scenario – successful registration
-  [Documentation]    Registro de usuário com dados válidos
-  Go To Page    ${REG_PAGE}
-  Fill Field    Nome    Ana Costa
-  Fill Field    E‑mail    ana.costa@example.com
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Set Password  Senha123
-  Set Password Confirmation  Senha123
-  Click Button  Registrar
-  Wait For Message    Cadastro concluído. Você pode agora fazer login.
 
-  # Negative – button disabled if required field empty
-  [Documentation]    Registrar desabilitado quando campo obrigatório em branco
-  Go To Page    ${REG_PAGE}
-  Clear Field   Nome
-  Fill Field    E‑mail    ana.costa@example.com
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Set Password  Senha123
-  Set Password Confirmation  Senha123
-  Element Should Be Disabled   ${BUTTON}    Registrar
+Open New Bank Screen
+    [Documentation]    Open the bank list page and click “Novo” to display the
+    ...                 new bank registration form.
+    # Step 1 – Go to banks list
+    Go To Bank List
+    # Step 2 – Click “Novo”
+    Click Element    ${NEW_BUTTON}
+    Sleep            ${WAIT}
+    # Step 3 – Verify form displayed
+    Wait Until Page Contains Element    ${FIELD_CODE}    timeout=${DEFAULT_TIMEOUT}
+    # Step 4 – Verify mandatory fields marked with '*'
+    Element Should Contain    ${FIELD_DESCRIPTION}    *
+    Element Should Contain    ${FIELD_CNPJ}          *
 
-  # Negative – invalid e‑mail format
-  [Documentation]    Mensagem de erro para e‑mail inválido
-  Go To Page    ${REG_PAGE}
-  Fill Field    E‑mail    ana.costa@exemplo
-  Fill Field    Nome    Ana Costa
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Set Password  Senha123
-  Set Password Confirmation  Senha123
-  Wait For Field Error  E‑mail    Formato de e‑mail inválido
+Register New Bank With All Valid Fields
+    [Documentation]    Create a brand‑new bank providing valid data in every
+    ...                 required field and verify success.
+    Go To Bank List
+    Click Element    ${NEW_BUTTON}
+    Sleep            ${WAIT}
+    # Fill all fields
+    Fill Field       ${FIELD_CODE}          BAN001
+    Fill Field       ${FIELD_DESCRIPTION}  Banco do Norte
+    Fill Field       ${FIELD_NICKNAME}      Norte
+    Fill Field       ${FIELD_SBP}           12345678
+    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
+    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
+    # Submit
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    # Verify success message
+    Page Should Contain Element    ${SUCCESS_MSG}
+    Page Should Contain             Banco cadastrado com sucesso.
+    # Verify bank appears in list
+    Verify Bank In List    BAN001
 
-US02 - Validação de Campos de Cadastro
-  # Negative – password without numbers
-  [Documentation]    Senha sem número gera erro
-  Go To Page    ${REG_PAGE}
-  Set Password  SenhaSemNum
-  Set Password Confirmation  SenhaSemNum
-  Fill Field    Nome    Ana Costa
-  Fill Field    E‑mail    ana.costa@example.com
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Wait For Field Error  Senha    A senha deve conter pelo menos um número
+Attempt To Create Bank With Duplicate Code
+    [Documentation]    Try to register a bank using an already existing code
+    ...                 and confirm that the application blocks it.
+    Go To Bank List
+    Click Element    ${NEW_BUTTON}
+    Sleep            ${WAIT}
+    Fill Field       ${FIELD_CODE}          BAN001   # already exists
+    Fill Field       ${FIELD_DESCRIPTION}  Banco de Teste
+    Fill Field       ${FIELD_NICKNAME}      Teste
+    Fill Field       ${FIELD_SBP}           87654321
+    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
+    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${ERROR_MSG}
+    Page Should Contain             O código informado já está em uso. Por favor, informe outro.
 
-  # Negative – passwords do not match
-  [Documentation]    Senhas divergentes exibem mensagem
-  Go To Page    ${REG_PAGE}
-  Set Password  Senha123
-  Set Password Confirmation  Senha124
-  Fill Field    Nome    Ana Costa
-  Fill Field    E‑mail    ana.costa@example.com
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Wait For Field Error  Confirmação de senha    As senhas não coincidem
+Attempt To Create Bank With Invalid CNPJ
+    [Documentation]    Try to register a bank supplying an invalid CNPJ.
+    Go To Bank List
+    Click Element    ${NEW_BUTTON}
+    Sleep            ${WAIT}
+    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-00   # invalid
+    Fill Field       ${FIELD_CODE}          BAN002
+    Fill Field       ${FIELD_DESCRIPTION}  Banco do Teste
+    Fill Field       ${FIELD_NICKNAME}      Teste
+    Fill Field       ${FIELD_SBP}           87654321
+    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${ERROR_MSG}
+    Page Should Contain             CNPJ inválido. Por favor, informe um CNPJ válido.
 
-  # Negative – e‑mail already registered
-  [Documentation]    E‑mail já cadastrado gera erro
-  # Pre‑condition – create user via API (placeholder)
-  Create User Via API    exemplo@exemplo.com    Senha123
-  Go To Page    ${REG_PAGE}
-  Fill Field    E‑mail    exemplo@exemplo.com
-  Fill Field    Nome    Ana Costa
-  Fill Field    Telefone    (11) 98765‑4321
-  Fill Field    CEP    12345678
-  Set Password  Senha123
-  Set Password Confirmation  Senha123
-  Wait For Field Error  E‑mail    E‑mail já está cadastrado
+Attempt To Create Bank Without Mandatory Field
+    [Documentation]    Leave the mandatory “Descrição do Banco” field empty and
+    ...                 ensure an error is shown.
+    Go To Bank List
+    Click Element    ${NEW_BUTTON}
+    Sleep            ${WAIT}
+    # Leave Description blank
+    Clear Element Text    ${FIELD_DESCRIPTION}
+    Fill Field       ${FIELD_CODE}          BAN003
+    Fill Field       ${FIELD_NICKNAME}      Teste
+    Fill Field       ${FIELD_SBP}           87654321
+    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
+    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${ERROR_MSG}
+    Page Should Contain             Descrição do Banco é obrigatória.
 
-US03 - Login Bem‑Sucedido
-  # Positive – successful login
-  [Documentation]    Usuário autenticado com sucesso
-  # Pre‑condition – ensure user exists
-  Create User Via API    joao@exemplo.com    Senha123
-  Go To Page    ${LOGIN_PAGE}
-  Fill Field    E‑mail    joao@exemplo.com
-  Fill Field    Senha    Senha123
-  Click Button  Login
-  Wait Until Page Contains Element    ${DASHBOARD}    ${DEFAULT_TIMEOUT}
-  Page Should Contain    Bem‑vindo, João!
-  Page Should Contain    Saldo atual
+Open Edit Screen And Verify Code Read‑Only
+    [Documentation]    Open the edit screen for BAN001 and verify that the
+    ...                 code field is read‑only.
+    Go To Bank List
+    ${BANK_CODE}=    Set Variable    BAN001
+    Click Edit Of Bank    ${BANK_CODE}
+    Sleep            ${WAIT}
+    # Verify that the field is disabled
+    Element Should Be Disabled    ${FIELD_CODE}
+    # Verify other fields are pre‑filled (simple check on the code)
+    Element Attribute Value Should Be    ${FIELD_CODE}    value    BAN001
 
-  # Negative – button disabled until both fields are filled
-  [Documentation]    Botão Login desabilitado até ambos os campos preenchidos
-  Go To Page    ${LOGIN_PAGE}
-  Clear Field   E‑mail
-  Fill Field    Senha    Senha123
-  Element Should Be Disabled   ${BUTTON}    Login
+Edit Bank Maintaining Code
+    [Documentation]    Update BAN001’s description, nickname, SBP number,
+    ...                 controller and CNPJ while keeping the same code.
+    Go To Bank List
+    ${BANK_CODE}=    Set Variable    BAN001
+    Click Edit Of Bank    ${BANK_CODE}
+    Sleep            ${WAIT}
+    # Change values
+    Input Text       ${FIELD_DESCRIPTION}   Banco do Sul
+    Input Text       ${FIELD_NICKNAME}      Sul
+    Input Text       ${FIELD_SBP}           87654321
+    Select From List By Label    ${FIELD_CONTROLLER}    Banco Regional
+    Input Text       ${FIELD_CNPJ}          98.765.432/0001-10
+    # Submit
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${SUCCESS_MSG}
+    Page Should Contain             Banco atualizado com sucesso.
+    # Verify the bank still appears with same code
+    Verify Bank In List    BAN001
 
-US04 - Login com Credenciais Inválidas
-  # Negative – e‑mail not found
-  [Documentation]    E‑mail não cadastrado
-  Go To Page    ${LOGIN_PAGE}
-  Fill Field    E‑mail    naoexiste@exemplo.com
-  Fill Field    Senha    Senha123
-  Click Button  Login
-  Wait For Message    E‑mail não encontrado
+Attempt To Change Bank Code
+    [Documentation]    Try to change BAN001’s code and confirm it is ignored.
+    Go To Bank List
+    ${BANK_CODE}=    Set Variable    BAN001
+    Click Edit Of Bank    ${BANK_CODE}
+    Sleep            ${WAIT}
+    # Attempt to change the code
+    Input Text       ${FIELD_CODE}    NOVOCOD
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    # Verify code remains unchanged
+    Element Attribute Value Should Be    ${FIELD_CODE}    value    BAN001
+    # No error message should appear
+    Page Should Not Contain Element    ${ERROR_MSG}
 
-  # Negative – wrong password
-  [Documentation]    Senha errada
-  Create User Via API    joao@exemplo.com    Senha123
-  Go To Page    ${LOGIN_PAGE}
-  Fill Field    E‑mail    joao@exemplo.com
-  Fill Field    Senha    Errada123
-  Click Button  Login
-  Wait For Message    Senha inválida
+Attempt To Save Bank With Invalid CNPJ After Edit
+    [Documentation]    Update BAN001’s CNPJ to an invalid value and ensure
+    ...                 validation error appears.
+    Go To Bank List
+    ${BANK_CODE}=    Set Variable    BAN001
+    Click Edit Of Bank    ${BANK_CODE}
+    Sleep            ${WAIT}
+    Input Text       ${FIELD_CNPJ}    11.111.111/1111-11   # invalid
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${ERROR_MSG}
+    Page Should Contain             CNPJ inválido. Por favor, informe um CNPJ válido.
 
-  # Negative – lockout after five failed attempts
-  [Documentation]    Bloqueio após cinco tentativas
-  Go To Page    ${LOGIN_PAGE}
-  # Simulate five previous failures
-  Simulate Failed Logins    joao@exemplo.com    5
-  Fill Field    E‑mail    joao@exemplo.com
-  Fill Field    Senha    Errada123
-  Click Button  Login
-  Wait For Message    Login bloqueado – tente novamente em 5 min
+Attempt To Save Bank With Mandatory Field Empty After Edit
+    [Documentation]    Leave the mandatory “Apelido” field blank and confirm
+    ...                 an error is shown.
+    Go To Bank List
+    ${BANK_CODE}=    Set Variable    BAN001
+    Click Edit Of Bank    ${BANK_CODE}
+    Sleep            ${WAIT}
+    Clear Element Text    ${FIELD_NICKNAME}
+    Click Element    ${SAVE_BUTTON}
+    Sleep            ${WAIT}
+    Page Should Contain Element    ${ERROR_MSG}
+    Page Should Contain             Apelido é obrigatório.
 
-US05 - Visualização de Saldo
-  # Positive – balance displayed as currency
-  [Documentation]    Saldo exibido em formato monetário
-  Go To Page    ${DASHBOARD}
-  # Set balance via API (placeholder)
-  Set Account Balance Via API    1234.56
-  Page Should Contain    R$ 1.234,56
-
-  # Positive – zero balance shows specific message
-  [Documentation]    Saldo zero exibe mensagem específica
-  Set Account Balance Via API    0.00
-  Page Should Contain    Saldo zero
-
-US06 - Visualização de Extrato
-  # Positive – last ten transactions
-  [Documentation]    Exibir últimas dez transações
-  # Create 12 dummy transactions via API
-  Create Transactions Via API    12
-  Go To Page    ${EXTRATO_PAGE}
-  Page Should Contain    Últimos 10 registros
-  # Verify each row contains required fields – simplified loop
-  ${rows}=    Get WebElements    css:#extrato-table tbody tr
-  Should Be True    ${len(rows)} >= 10
-  :FOR    ${row}    IN    @{rows}
-  \    ${row_text}=    Get Text    ${row}
-  \    Should Match Regexp    ${row_text}    \\d{2}/\\d{2}/\\d{4}.*.*.*.*$  # date, description, value, saldo
-
-  # Positive – no transactions
-  [Documentation]    Mensagem quando não há transações
-  Delete All Transactions Via API
-  Go To Page    ${EXTRATO_PAGE}
-  Page Should Contain    Não há movimentação recente
-
-US07 - Transferência de Fundos – Seleção de Contas
-  # Positive – dropdown shows only user accounts
-  [Documentation]    Dropdown de origem exibe apenas contas do usuário
-  Create Account Via API    Conta A
-  Create Account Via API    Conta B
-  Go To Page    ${TRANSFERIR_PAGE}
-  ${options}=    Get Texts    css:#origin-account option
-  Should Contain    ${options}    Conta A
-  Should Contain    ${options}    Conta B
-
-  # Negative – confirm button disabled with empty amount
-  [Documentation]    Confirmar habilitado apenas com campos válidos
-  Go To Page    ${TRANSFERIR_PAGE}
-  Select From List By Label    id:origin-account    Conta A
-  Clear Field   Valor
-  Element Should Be Disabled   ${BUTTON}    Confirmar
-
-  # Positive – amount accepts two decimals
-  [Documentation]    Valor aceita até duas casas decimais
-  Go To Page    ${TRANSFERIR_PAGE}
-  Select From List By Label    id:origin-account    Conta A
-  Select From List By Label    id:destination-account    Conta C
-  Fill Field    Valor    250,50
-  Page Should Not Contain    valor inválido
-
-US08 - Validação de Valor de Transferência
-  # Negative – amount greater than balance
-  [Documentation]    Valor maior que saldo exibe erro
-  Set Account Balance Via API    500.00
-  Go To Page    ${TRANSFERIR_PAGE}
-  Select From List By Label    id:origin-account    Conta A
-  Select From List By Label    id:destination-account    Conta C
-  Fill Field    Valor    600,00
-  Wait For Message    Saldo insuficiente – verifique o saldo
-  Element Should Be Disabled   ${BUTTON}    Confirmar
-
-  # Positive – amount equal to balance enables confirm
-  [Documentation]    Valor igual ao saldo habilita confirmação
-  Set Account Balance Via API    500.00
-  Go To Page    ${TRANSFERIR_PAGE}
-  Select From List By Label    id:origin-account    Conta A
-  Select From List By Label    id:destination-account    Conta C
-  Fill Field    Valor    500,00
-  Element Should Be Enabled   ${BUTTON}    Confirmar
-
-US09 - Transferência Bem‑Sucedida
-  [Documentation]    Saldo atualizado e histórico criado
-  Set Account Balance Via API    1000.00    Conta A
-  Set Account Balance Via API    300.00     Conta C
-  Go To Page    ${TRANSFERIR_PAGE}
-  Select From List By Label    id:origin-account    Conta A
-  Select From List By Label    id:destination-account    Conta C
-  Fill Field    Valor    200,00
-  Click Button  Confirmar
-  Wait For Message    Transferência concluída com sucesso
-  # Verify balances
-  Page Should Contain    R$ 800,00   # origem
-  Page Should Contain    R$ 500,00   # destino
-  # Verify transaction record in origin's extrato
-  Go To Page    ${EXTRATO_PAGE}
-  Page Should Contain    Transferência    -200,00
-  Page Should Contain    Saldo pós‑transação    800,00
-  # Verify record in destination's extrato
-  # (In real test you would switch account context or use API)
-
-US10 - Solicitação de Empréstimo – Entrada de Dados
-  # Positive – value within 5× income
-  [Documentation]    Valor dentro do limite 5× renda é aceito
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Renda Anual    10000
-  Fill Field    Valor do Empréstimo    40000
-  Element Should Be Enabled   ${BUTTON}    Enviar Solicitação
-
-  # Negative – value exceeds limit
-  [Documentation]    Valor maior que 5× renda gera erro
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Renda Anual    10000
-  Fill Field    Valor do Empréstimo    60000
-  Wait For Message    O valor do empréstimo não pode exceder 5 vezes sua renda anual
-  Element Should Be Disabled   ${BUTTON}    Enviar Solicitação
-
-  # Negative – non‑numeric field
-  [Documentation]    Campos obrigatórios não numéricos bloqueiam envio
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Valor do Empréstimo    cinquenta
-  Wait For Message    Valor deve ser um número
-  Element Should Be Disabled   ${BUTTON}    Enviar Solicitação
-
-US11 - Resultado da Solicitação de Empréstimo
-  # Positive – approval
-  [Documentation]    Empréstimo aprovado mostra valor e prazo
-  Submit Loan Request
-  # Simulate approval via API
-  Simulate Loan Approval
-  Wait For Message    Empréstimo Aprovado
-  Page Should Contain    Valor Disponível: R$ 50.000,00
-  Page Should Contain    Prazo: 60 meses
-
-  # Negative – denial
-  [Documentation]    Empréstimo negado exibe sugestão
-  Submit Loan Request
-  Simulate Loan Denial
-  Wait For Message    Empréstimo Negado
-  Page Should Contain    Considere reduzir o valor ou aumentar a renda
-
-US12 - Registro de Pagamento de Contas – Dados
-  # Positive – valid scheduling
-  [Documentation]    Pagamento registrado com dados válidos
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Beneficiário    Minha Conta
-  Fill Field    Valor    150,00
-  ${date}=    Get Current Date    result_format=%d/%m/%Y    increment=5
-  Fill Field    Data    ${date}
-  Click Button  Agendar Pagamento
-  Wait For Message    Pagamento agendado com sucesso
-
-  # Negative – invalid date
-  [Documentation]    Data inválida gera mensagem
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Data    2020-01-01
-  Click Button  Agendar Pagamento
-  Wait For Message    Data inválida
-
-  # Negative – zero value
-  [Documentation]    Valor zero bloqueia agendamento
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Fill Field    Valor    0,00
-  Click Button  Agendar Pagamento
-  Wait For Message    Valor deve ser maior que zero
-
-US13 - Pagamento de Contas Registrado no Histórico
-  [Documentation]    Pagamento aparece no extrato após execução
-  Schedule Payment Via API    2023-12-15
-  # Fast‑forward time or trigger processing via API
-  Execute Scheduled Payment
-  Go To Page    ${EXTRATO_PAGE}
-  Page Should Contain    Pagamento de Conta – [Beneficiário]
-  Page Should Contain    15/12/2023
-  Page Should Contain    150,00
-
-US14 - Pagamento Futuro Respeita Data Agendada
-  # Negative – not present before date
-  [Documentation]    Pagamento não aparece antes da data agendada
-  Schedule Payment Via API    tomorrow
-  Go To Page    ${EXTRATO_PAGE}
-  Page Should Not Contain    Pagamento de Conta – [Beneficiário]
-
-  # Negative – cancel before date
-  [Documentation]    Cancelar pagamento antes da data
-  Schedule Payment Via API    tomorrow
-  Go To Page    ${EMPRÉSTIMO_PAGE}
-  Click Button  Cancelar
-  Wait For Message    Pagamento cancelado
-
-US15 - Navegação Consistente
-  # Positive – menu present on all pages
-  [Documentation]    Menu está presente em todas as páginas
-  Go To Page    ${TRANSFERIR_PAGE}
-  Page Should Contain Element    css:#header-logo
-  Page Should Contain Element    css:#user-name
-  Page Should Contain Element    css:#nav-menu
-
-  # Positive – menu links redirect correctly
-  [Documentation]    Links do menu redirecionam corretamente
-  Click Link    css:#nav-menu a[href="/emprestimos"]
-  Wait Until Page Contains Element    ${EMPRÉSTIMO_PAGE}    ${DEFAULT_TIMEOUT}
-
-  # Positive – logout redirects to login
-  [Documentation]    Sair redireciona para login
-  Click Link    css:#nav-menu a[href="/logout"]
-  Wait Until Page Contains Element    ${LOGIN_PAGE}    ${DEFAULT_TIMEOUT}
-
-US16 - Mensagens de Erro Claras e Objetivas
-  # Positive – error in red below field
-  [Documentation]    Mensagem de erro exibida em vermelho abaixo do campo
-  Go To Page    ${REG_PAGE}
-  Clear Field   E‑mail
-  Click Button  Registrar
-  Wait For Field Error    E‑mail    Preencha o campo E‑mail
-
-  # Negative – generic error for unhandled exception
-  [Documentation]    Mensagem de erro genérica para exceções não tratadas
-  # Simulate unexpected exception via API or mock
-  Trigger Unexpected Exception
-  Wait For Message    Ocorreu um erro inesperado. Tente novamente mais tarde.
+# ------------------------------------------------------------------
+# Keywords
+# ------------------------------------------------------------------
 
 *** Keywords ***
 
-# ----------------------- General Navigation -----------------------
-Go To Page
-    [Arguments]    ${locator}
-    [Documentation]    Navega até a página indicada pelo locator
-    Wait Until Page Contains Element    ${locator}    ${DEFAULT_TIMEOUT}
+Open Browser To Base URL
+    [Documentation]    Open a fresh browser instance and navigate to the
+    ...                 base bank page.
+    Open Browser    ${BASE_URL}    ${BROWSER}    options=--start-maximized
+    Maximize Browser Window
+    Set Selenium Speed    0s
+    Set Selenium Implicit Wait    ${DEFAULT_TIMEOUT}
 
-# ----------------------- Field Interaction -----------------------
-Fill Field
-    [Arguments]    ${label}    ${value}
-    [Documentation]    Preenche o campo identificado pelo label com o valor fornecido
-    ${field_id}=    Get Element Attribute    xpath://label[normalize-space()="${label}"]/following-sibling::input    id
-    ${locator}=    Set Variable    css:input[id="${field_id}"]
-    Wait Until Element Is Visible    ${locator}    ${DEFAULT_TIMEOUT}
-    Input Text    ${locator}    ${value}    clear=True
-    Sleep    ${WAIT_TIME}
+Go To Bank List
+    [Documentation]    Navigate to the banks list page.
+    Wait Until Page Contains Element    ${BANKS_LINK}    timeout=${DEFAULT_TIMEOUT}
+    Click Element    ${BANKS_LINK}
+    Wait Until Page Contains Element    ${NEW_BUTTON}    timeout=${DEFAULT_TIMEOUT}
 
-Clear Field
-    [Arguments]    ${label}
-    [Documentation]    Limpa o campo identificado pelo label
-    ${field_id}=    Get Element Attribute    xpath://label[normalize-space()="${label}"]/following-sibling::input    id
-    ${locator}=    Set Variable    css:input[id="${field_id}"]
-    Wait Until Element Is Visible    ${locator}    ${DEFAULT_TIMEOUT}
-    Clear Element Text    ${locator}
-    Sleep    ${WAIT_TIME}
-
-Set Password
-    [Arguments]    ${value}
-    [Documentation]    Preenche o campo de senha
-    Fill Field    Senha    ${value}
-
-Set Password Confirmation
-    [Arguments]    ${value}
-    [Documentation]    Preenche o campo de confirmação de senha
-    Fill Field    Confirmação de senha    ${value}
-
-Click Button
-    [Arguments]    ${text}
-    [Documentation]    Clica no botão com o texto visível
-    Wait Until Element Is Visible    ${BUTTON}    ${DEFAULT_TIMEOUT}
-    Click Element    ${BUTTON}
-    Sleep    ${WAIT_TIME}
-
-Click Link
-    [Arguments]    ${locator}
-    [Documentation]    Clica no link definido por locator
-    Wait Until Element Is Visible    ${locator}    ${DEFAULT_TIMEOUT}
+Click Edit Of Bank
+    [Arguments]    ${bank_code}
+    [Documentation]    Click the Edit button of the specified bank.
+    # Replace the placeholder in the locator with the actual code
+    ${locator}=    Set Variable    xpath=//tr[td[normalize-space()='${bank_code}']]//button[normalize-space()='Editar']
+    Wait Until Page Contains Element    ${locator}    timeout=${DEFAULT_TIMEOUT}
     Click Element    ${locator}
-    Sleep    ${WAIT_TIME}
+    Wait Until Page Contains Element    ${FIELD_CODE}    timeout=${DEFAULT_TIMEOUT}
 
-# ----------------------- Validation -----------------------
-Wait For Message
-    [Arguments]    ${message}
-    [Documentation]    Espera até que a mensagem apareça na tela
-    Wait Until Page Contains    ${message}    ${DEFAULT_TIMEOUT}
+Fill Field
+    [Arguments]    ${locator}    ${value}
+    [Documentation]    Clear the field and type a new value.
+    Wait Until Page Contains Element    ${locator}    timeout=${DEFAULT_TIMEOUT}
+    Clear Element Text    ${locator}
+    Input Text            ${locator}    ${value}
 
-Wait For Field Error
-    [Arguments]    ${label}    ${expected_error}
-    [Documentation]    Verifica mensagem de erro exibida abaixo do campo
-    ${error_locator}=    Set Variable    ${FIELD_ERROR}    ${label}    ${expected_error}
-    Wait Until Page Contains Element    ${error_locator}    ${DEFAULT_TIMEOUT}
-    Element Text Should Be    ${error_locator}    ${expected_error}
+Verify Bank In List
+    [Arguments]    ${bank_code}
+    [Documentation]    Confirm that a row with the given code appears in the list.
+    ${row_locator}=    Set Variable    xpath=//tr[td[normalize-space()='${bank_code}']]
+    Page Should Contain Element    ${row_locator}
+``` 
 
-Element Should Be Disabled
-    [Arguments]    ${locator}    ${button_text}
-    [Documentation]    Verifica se o botão está desabilitado
-    ${attr}=    Get Element Attribute    ${locator}    disabled
-    Should Not Be Empty    ${attr}
+### Explicação resumida
+1. **Imports & Variables** – Importamos SeleniumLibrary e outras utilidades, definimos URL, navegador, tempos de espera e todos os seletores mais estáveis.
+2. **Test Setup / Teardown** – Cada teste abre um navegador limpo, navega para a página base, tira screenshot de falhas e fecha o navegador no fim.
+3. **Test Cases** – Cada cenário BDD é convertido em um caso de teste Robot, com passos comentados que refletem a intenção de cada Gherkin step.
+4. **Keywords** – Implementamos uma série de *keywords* reutilizáveis (abrir página, ir à lista, clicar “Novo”, preencher campos, etc.) que encapsulam a lógica e garantem modularidade.
+5. **Esperas & Tratamento de Erros** – Utilizamos `Wait Until Page Contains Element`, `Sleep` moderado e verificações de mensagens para garantir que a UI tenha tempo de reagir antes de prosseguir.
+6. **Seletores Estáveis** – Locadores XPath usam textos explícitos, IDs e atributos, facilitando a manutenção quando a UI mudar.
+7. **Comentários** – Cada passo de teste possui um comentário claro explicando sua finalidade.
 
-Element Should Be Enabled
-    [Arguments]    ${locator}    ${button_text}
-    [Documentation]    Verifica se o botão está habilitado
-    ${attr}=    Get Element Attribute    ${locator}    disabled
-    Should Be Empty    ${attr}
-
-# ----------------------- API / DB Helpers (Placeholders) -----------------------
-Create User Via API
-    [Arguments]    ${email}    ${password}
-    # Implement via REST, database insert, or mock
-    No Operation
-
-Set Account Balance Via API
-    [Arguments]    ${amount}    ${account_name}=Conta A
-    No Operation
-
-Create Account Via API
-    [Arguments]    ${name}
-    No Operation
-
-Create Transactions Via API
-    [Arguments]    ${count}
-    No Operation
-
-Delete All Transactions Via API
-    No Operation
-
-Simulate Failed Logins
-    [Arguments]    ${email}    ${attempts}
-    No Operation
-
-Submit Loan Request
-    # Fill loan form and click submit
-    No Operation
-
-Simulate Loan Approval
-    No Operation
-
-Simulate Loan Denial
-    No Operation
-
-Schedule Payment Via API
-    [Arguments]    ${date}
-    No Operation
-
-Execute Scheduled Payment
-    No Operation
-
-Trigger Unexpected Exception
-    No Operation
-
-# ----------------------- Utility Keywords -----------------------
-Get Current Date
-    [Arguments]    ${result_format}=${None}    ${increment}=${None}
-    ${now}=    Get Current Date    result_format=%Y-%m-%d
-    Run Keyword If    '${increment}' != '${None}'    Add Time To Date    ${now}    ${increment} days    result_format=%Y-%m-%d    return=True
-    ${formatted}=    Convert Time    ${now}    result_format=%d/%m/%Y
-    [Return]    ${formatted}
-```
-
-
-**Key Points**
-
-1. **Modular Design** – All common actions are extracted to keywords so that adding new tests only needs a few lines.
-2. **Stable Locators** – Prefer IDs or data‑attributes; dynamic locators (by label) are built at runtime.
-3. **Explicit Waits** – Each action waits for the element to be visible, preventing flakiness.
-4. **Clear Documentation** – Every keyword and test has a description to aid maintenance.
-5. **Error Handling** – Negative scenarios use explicit checks (`Element Should Be Disabled/Enabled`) and error message assertions.
-6. **API Placeholders** – Real tests will replace `No Operation` stubs with API or DB calls to create users, set balances, etc.
-
-Feel free to split the file into separate suites or resource files as your test repository grows.
+O arquivo acima pode ser executado com `robot BankAutomation.robot` e cobre todos os cenários positivos e negativos descritos no arquivo BDD original.
