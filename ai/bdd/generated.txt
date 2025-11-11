@@ -1,160 +1,109 @@
-**User Story 1 – Criação de um novo banco (US01)**  
+**US01 – Cadastro de Banco**
 
 ```yaml
-titulo: Criação de um novo banco (US01)
+titulo: US01 – Cadastro de Banco,
 cenario_bdd:
-    nome: Abrir tela de cadastro ao clicar em Novo
-    tipo: positivo
-    gherkin: "Feature: Cadastro de bancos\n\
-Scenario: Abrir tela de cadastro ao clicar em Novo\n\
-  Given eu estou na lista de bancos\n\
-  When eu clico em 'Novo'\n\
-  Then a tela de cadastro de bancos deve ser exibida\n\
-  And os campos obrigatórios são marcados com '*'\n"
+    nome: Cadastro bem-sucedido com todos os campos válidos,
+    tipo: positivo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Cadastro bem-sucedido com todos os campos válidos\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Código\" com \"BN001\"\n    And preenche \"Descrição\" com \"Banco Nacional ABC\"\n    And preenche \"Apelido\" com \"ABC\"\n    And preenche \"Número de Inscrição no SBP\" com \"12345678\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    And preenche \"CNPJ\" com \"12.345.678/0001-90\"\n    When o usuário clica em \"Salvar\"\n    Then o banco é persistido no banco de dados\n    And a tela fecha\n    And a mensagem \"Banco cadastrado com sucesso\" é exibida"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao tentar cadastrar com Código duplicado,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao tentar cadastrar com Código duplicado\n    Given já existe um banco com \"Código\" = \"BN001\"\n    And o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Código\" com \"BN001\"\n    And preenche \"Descrição\" com \"Banco Nacional DEF\"\n    And preenche \"Apelido\" com \"DEF\"\n    And preenche \"Número de Inscrição no SBP\" com \"87654321\"\n    And seleciona \"Banco Controlador\" como \"Controlador Y\"\n    And preenche \"CNPJ\" com \"98.765.432/0001-01\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Código já cadastrado. Por favor, use outro código.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar sem preencher campo obrigatório (Descrição),
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar sem preencher campo obrigatório (Descrição)\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Código\" com \"BN002\"\n    And deixa \"Descrição\" em branco\n    And preenche \"Apelido\" com \"ABC\"\n    And preenche \"Número de Inscrição no SBP\" com \"12345678\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    And preenche \"CNPJ\" com \"12.345.678/0001-90\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Descrição é obrigatória.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar com CNPJ inválido (formato),
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar com CNPJ inválido (formato)\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"CNPJ\" com \"12345678/0001-90\"\n    And preenche \"Código\" com \"BN003\"\n    And preenche \"Descrição\" com \"Banco Nacional GHI\"\n    And preenche \"Apelido\" com \"GHI\"\n    And preenche \"Número de Inscrição no SBP\" com \"12345678\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"CNPJ inválido. O formato deve ser 00.000.000/0000-00.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar com CNPJ não encontrado no cadastro,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar com CNPJ não encontrado no cadastro\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"CNPJ\" com \"12.345.678/0001-99\"\n    And preenche \"Código\" com \"BN004\"\n    And preenche \"Descrição\" com \"Banco Nacional JKL\"\n    And preenche \"Apelido\" com \"JKL\"\n    And preenche \"Número de Inscrição no SBP\" com \"12345678\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"CNPJ não encontrado no cadastro.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar com Número de Inscrição no SBP não numérico,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar com Número de Inscrição no SBP não numérico\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Número de Inscrição no SBP\" com \"ABCDEFGH\"\n    And preenche \"Código\" com \"BN005\"\n    And preenche \"Descrição\" com \"Banco Nacional MNO\"\n    And preenche \"Apelido\" com \"MNO\"\n    And preenche \"CNPJ\" com \"12.345.678/0001-90\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Número de Inscrição no SBP deve ser numérico e conter 8 dígitos.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar com Número de Inscrição no SBP de tamanho inválido,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar com Número de Inscrição no SBP de tamanho inválido\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Número de Inscrição no SBP\" com \"1234567\"\n    And preenche \"Código\" com \"BN006\"\n    And preenche \"Descrição\" com \"Banco Nacional PQR\"\n    And preenche \"Apelido\" com \"PQR\"\n    And preenche \"CNPJ\" com \"12.345.678/0001-90\"\n    And seleciona \"Banco Controlador\" como \"Controlador X\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Número de Inscrição no SBP deve conter exatamente 8 dígitos.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Erro ao cadastrar sem selecionar Banco Controlador,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Erro ao cadastrar sem selecionar Banco Controlador\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Código\" com \"BN007\"\n    And preenche \"Descrição\" com \"Banco Nacional STU\"\n    And preenche \"Apelido\" com \"STU\"\n    And preenche \"Número de Inscrição no SBP\" com \"12345678\"\n    And deixa \"Banco Controlador\" sem selecionar\n    And preenche \"CNPJ\" com \"12.345.678/0001-90\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Banco Controlador é obrigatório.\" é exibida\n    And o banco não é salvo"
+---
+titulo: US01 – Cadastro de Banco,
+cenario_bdd:
+    nome: Cadastro bem-sucedido usando valores mínimos permitidos,
+    tipo: positivo,
+    gherkin: "Feature: Cadastro de banco\n  Scenario: Cadastro bem-sucedido usando valores mínimos permitidos\n    Given o usuário está na tela de cadastro de bancos\n    When o usuário preenche \"Código\" com \"BN008\"\n    And preenche \"Descrição\" com \"ABC\"\n    And preenche \"Apelido\" com \"AB\"\n    And preenche \"Número de Inscrição no SBP\" com \"87654321\"\n    And seleciona \"Banco Controlador\" como \"Controlador Y\"\n    And preenche \"CNPJ\" com \"98.765.432/0001-01\"\n    When o usuário clica em \"Salvar\"\n    Then o banco é persistido no banco de dados\n    And a tela fecha\n    And a mensagem \"Banco cadastrado com sucesso\" é exibida"
 ```
 
-```yaml
-titulo: Criação de um novo banco (US01)
-cenario_bdd:
-    nome: Registrar banco com todos os campos válidos
-    tipo: positivo
-    gherkin: "Feature: Cadastro de bancos\n\
-Scenario: Registrar banco com todos os campos válidos\n\
-  Given eu estou na tela de cadastro de bancos\n\
-  When eu preencho o campo 'Código' com 'BAN001'\n\
-  And eu preencho o campo 'Descrição do Banco' com 'Banco do Norte'\n\
-  And eu preencho o campo 'Apelido' com 'Norte'\n\
-  And eu preencho o campo 'Número de inscrição no SBP' com '12345678'\n\
-  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
-  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'Banco cadastrado com sucesso.'\n\
-  And o banco com código 'BAN001' deve aparecer na lista de bancos\n"
-```
+**US02 – Edição de Banco**
 
 ```yaml
-titulo: Criação de um novo banco (US01)
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar criar banco com código já existente
-    tipo: negativo
-    gherkin: "Feature: Cadastro de bancos\n\
-Scenario: Tentar criar banco com código já existente\n\
-  Given eu estou na tela de cadastro de bancos\n\
-  When eu preencho o campo 'Código' com 'BAN001'  # código já existente\n\
-  And eu preencho o campo 'Descrição do Banco' com 'Banco de Teste'\n\
-  And eu preencho o campo 'Apelido' com 'Teste'\n\
-  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
-  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
-  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'O código informado já está em uso. Por favor, informe outro.'\n"
-```
-
-```yaml
-titulo: Criação de um novo banco (US01)
+    nome: Edição bem-sucedida de campos permitidos,
+    tipo: positivo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Edição bem-sucedida de campos permitidos\n    Given existe um banco com \"Código\" = \"BN003\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN003\"\n    Then a tela de edição abre com dados pré‑preenchidos\n    And o campo \"Código\" está exibido como somente‑leitura\n    When o usuário altera \"Descrição\" para \"Banco Nacional XYZ\"\n    And altera \"Apelido\" para \"XYZ\"\n    And altera \"Número de Inscrição no SBP\" para \"87654321\"\n    And seleciona \"Banco Controlador\" como \"Controlador Y\"\n    And altera \"CNPJ\" para \"98.765.432/0001-01\"\n    When o usuário clica em \"Salvar\"\n    Then o banco \"BN003\" é atualizado no banco de dados\n    And a tela fecha\n    And a mensagem \"Banco atualizado com sucesso\" é exibida"
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar criar banco com CNPJ inválido
-    tipo: negativo
-    gherkin: "Feature: Cadastro de bancos\n\
-Scenario: Tentar criar banco com CNPJ inválido\n\
-  Given eu estou na tela de cadastro de bancos\n\
-  When eu preencho o campo 'CNPJ' com '12.345.678/0001-00'  # inválido\n\
-  And eu preencho o campo 'Código' com 'BAN002'\n\
-  And eu preencho o campo 'Descrição do Banco' com 'Banco do Teste'\n\
-  And eu preencho o campo 'Apelido' com 'Teste'\n\
-  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
-  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'CNPJ inválido. Por favor, informe um CNPJ válido.'\n"
-```
-
-```yaml
-titulo: Criação de um novo banco (US01)
+    nome: Tentar alterar o Código (campo não editável),
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Tentar alterar o Código (campo não editável)\n    Given existe um banco com \"Código\" = \"BN004\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN004\"\n    Then o campo \"Código\" é somente‑leitura\n    When o usuário tenta modificar o valor de \"Código\" para \"BN005\"\n    And clica em \"Salvar\"\n    Then a mensagem \"Código não pode ser alterado.\" é exibida\n    And o banco continua com \"Código\" = \"BN004\""
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar criar banco sem preencher campo obrigatório
-    tipo: negativo
-    gherkin: "Feature: Cadastro de bancos\n\
-Scenario: Tentar criar banco sem preencher campo obrigatório\n\
-  Given eu estou na tela de cadastro de bancos\n\
-  When eu deixo o campo 'Descrição do Banco' em branco\n\
-  And eu preencho o campo 'Código' com 'BAN003'\n\
-  And eu preencho o campo 'Apelido' com 'Teste'\n\
-  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
-  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
-  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'Descrição do Banco é obrigatória.'\n"
-```
-
-**User Story 2 – Edição de um banco existente (US02)**  
-
-```yaml
-titulo: Edição de um banco existente (US02)
+    nome: Erro ao salvar edição com campo obrigatório em branco (Apelido),
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Erro ao salvar edição com campo obrigatório em branco (Apelido)\n    Given existe um banco com \"Código\" = \"BN005\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN005\"\n    And deixa \"Apelido\" em branco\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Apelido é obrigatório.\" é exibida\n    And o banco não é alterado"
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Abrir tela de edição e verificar campo Código somente leitura
-    tipo: positivo
-    gherkin: "Feature: Edição de bancos\n\
-Scenario: Abrir tela de edição e verificar campo Código somente leitura\n\
-  Given eu estou na lista de bancos\n\
-  When eu seleciono o banco com código 'BAN001' e clico em 'Editar'\n\
-  Then a tela de cadastro deve abrir com os dados preenchidos\n\
-  And o campo 'Código' deve ser somente leitura\n"
-```
-
-```yaml
-titulo: Edição de um banco existente (US02)
+    nome: Erro ao salvar edição com Número de Inscrição no SBP inválido (não numérico),
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Erro ao salvar edição com Número de Inscrição no SBP inválido (não numérico)\n    Given existe um banco com \"Código\" = \"BN006\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN006\"\n    And altera \"Número de Inscrição no SBP\" para \"ABCDEF12\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"Número de Inscrição no SBP deve ser numérico e conter 8 dígitos.\" é exibida\n    And o banco não é alterado"
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Editar banco mantendo o código inalterado
-    tipo: positivo
-    gherkin: "Feature: Edição de bancos\n\
-Scenario: Editar banco mantendo o código inalterado\n\
-  Given eu estou na tela de cadastro do banco 'BAN001'\n\
-  When eu altero o campo 'Descrição do Banco' para 'Banco do Sul'\n\
-  And eu altero o campo 'Apelido' para 'Sul'\n\
-  And eu altero o campo 'Número de inscrição no SBP' para '87654321'\n\
-  And eu altero o campo 'Banco Controlador' para 'Banco Regional'\n\
-  And eu altero o campo 'CNPJ' para '98.765.432/0001-10'\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'Banco atualizado com sucesso.'\n\
-  And o banco na lista deve manter o mesmo Código 'BAN001'\n"
-```
-
-```yaml
-titulo: Edição de um banco existente (US02)
+    nome: Erro ao salvar edição com CNPJ inválido (formato),
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Erro ao salvar edição com CNPJ inválido (formato)\n    Given existe um banco com \"Código\" = \"BN007\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN007\"\n    And altera \"CNPJ\" para \"12345678/0001-90\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"CNPJ inválido. O formato deve ser 00.000.000/0000-00.\" é exibida\n    And o banco não é alterado"
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar alterar o código do banco
-    tipo: negativo
-    gherkin: "Feature: Edição de bancos\n\
-Scenario: Tentar alterar o código do banco\n\
-  Given eu estou na tela de cadastro do banco 'BAN001'\n\
-  When eu tento alterar o campo 'Código' para 'NOVOCOD'\n\
-  And eu clico em 'Salvar'\n\
-  Then o campo 'Código' permanece com valor original 'BAN001'\n\
-  And eu não vejo nenhuma mensagem de erro\n"
-```
-
-```yaml
-titulo: Edição de um banco existente (US02)
+    nome: Erro ao salvar edição com CNPJ não encontrado no cadastro,
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Erro ao salvar edição com CNPJ não encontrado no cadastro\n    Given existe um banco com \"Código\" = \"BN008\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN008\"\n    And altera \"CNPJ\" para \"12.345.678/0001-99\"\n    When o usuário clica em \"Salvar\"\n    Then a mensagem \"CNPJ não encontrado no cadastro.\" é exibida\n    And o banco não é alterado"
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar salvar banco com CNPJ inválido após edição
-    tipo: negativo
-    gherkin: "Feature: Edição de bancos\n\
-Scenario: Tentar salvar banco com CNPJ inválido após edição\n\
-  Given eu estou na tela de cadastro do banco 'BAN001'\n\
-  When eu altero o campo 'CNPJ' para '11.111.111/1111-11'  # inválido\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'CNPJ inválido. Por favor, informe um CNPJ válido.'\n"
-```
-
-```yaml
-titulo: Edição de um banco existente (US02)
+    nome: Tentar alterar Código via API (simulação),
+    tipo: negativo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Tentar alterar Código via API (simulação)\n    Given existe um banco com \"Código\" = \"BN009\"\n    When o usuário envia uma solicitação PUT para atualizar o banco com \"Código\" = \"BN010\"\n    Then a resposta tem status 400\n    And a mensagem \"Código não pode ser alterado.\" é retornada\n    And o banco continua com \"Código\" = \"BN009\""
+---
+titulo: US02 – Edição de Banco,
 cenario_bdd:
-    nome: Tentar salvar banco com campo obrigatório vazio após edição
-    tipo: negativo
-    gherkin: "Feature: Edição de bancos\n\
-Scenario: Tentar salvar banco com campo obrigatório vazio após edição\n\
-  Given eu estou na tela de cadastro do banco 'BAN001'\n\
-  When eu deixo o campo 'Apelido' em branco\n\
-  And eu clico em 'Salvar'\n\
-  Then devo ver a mensagem 'Apelido é obrigatório.'\n"
+    nome: Edição bem-sucedida usando valores mínimos permitidos,
+    tipo: positivo,
+    gherkin: "Feature: Edição de banco\n  Scenario: Edição bem-sucedida usando valores mínimos permitidos\n    Given existe um banco com \"Código\" = \"BN010\"\n    And o usuário está na lista de bancos\n    When o usuário clica em \"Editar\" do banco \"BN010\"\n    Then a tela de edição abre com dados pré‑preenchidos\n    And o campo \"Código\" está exibido como somente‑leitura\n    When o usuário altera \"Descrição\" para \"ABC\"\n    And altera \"Apelido\" para \"AB\"\n    And altera \"Número de Inscrição no SBP\" para \"87654321\"\n    And seleciona \"Banco Controlador\" como \"Controlador Y\"\n    And altera \"CNPJ\" para \"98.765.432/0001-01\"\n    When o usuário clica em \"Salvar\"\n    Then o banco \"BN010\" é atualizado no banco de dados\n    And a tela fecha\n    And a mensagem \"Banco atualizado com sucesso\" é exibida"
 ```
