@@ -1,205 +1,160 @@
-**US01 – Abrir a tela de cadastro**
+**User Story 1 – Criação de um novo banco (US01)**  
 
 ```yaml
-titulo: US01 - Abrir a tela de cadastro de banco
+titulo: Criação de um novo banco (US01)
 cenario_bdd:
-    nome: Usuário clica em "Novo" e visualiza a tela de cadastro
+    nome: Abrir tela de cadastro ao clicar em Novo
     tipo: positivo
-    gherkin: "Feature: Acesso à tela de cadastro de banco\n\
-Scenario: Usuário clica em \"Novo\" e visualiza a tela de cadastro\n\
-Given o usuário está na tela de lista de bancos\n\
-When ele clica no botão \"Novo\"\n\
-Then a tela de cadastro de banco deve aparecer\n\
-And os campos Código, Descrição do Banco, Apelido, Número de inscrição no SBP, Banco controlador e CNJP devem estar visíveis\n\
-And o título da tela deve ser \"Cadastro de Banco\"\n\
-And os botões \"Salvar\" e \"Cancelar\" devem estar habilitados"
+    gherkin: "Feature: Cadastro de bancos\n\
+Scenario: Abrir tela de cadastro ao clicar em Novo\n\
+  Given eu estou na lista de bancos\n\
+  When eu clico em 'Novo'\n\
+  Then a tela de cadastro de bancos deve ser exibida\n\
+  And os campos obrigatórios são marcados com '*'\n"
 ```
 
----
-
-**US02 – Campos obrigatórios**
-
 ```yaml
-titulo: US02 - Campos obrigatórios na tela de cadastro
+titulo: Criação de um novo banco (US01)
 cenario_bdd:
-    nome: Não há mensagens de erro quando todos os campos obrigatórios são preenchidos
+    nome: Registrar banco com todos os campos válidos
     tipo: positivo
-    gherkin: "Feature: Validação de campos obrigatórios\n\
-Scenario: Usuário preenche todos os campos obrigatórios e salva com sucesso\n\
-Given o usuário preenche o campo Código com \"B001\"\n\
-And o usuário preenche o campo \"Descrição do Banco\" com \"Banco Alfa\"\n\
-And o usuário preenche o campo Apelido com \"Alfa\"\n\
-And o usuário preenche o campo \"Número de inscrição no SBP\" com \"123456\"\n\
-And o usuário seleciona um Banco Controlador válido no dropdown\n\
-And o usuário preenche o campo CNJP com \"12.345.678/0001-90\"\n\
-When o usuário clica em \"Salvar\"\n\
-Then a mensagem de sucesso \"Banco cadastrado com sucesso\" deve ser exibida\n\
-And não devem existir mensagens de erro nos campos obrigatórios"
-
-cenario_bdd:
-    nome: Falha ao salvar quando um campo obrigatório está em branco
-    tipo: negativo
-    gherkin: "Feature: Validação de campos obrigatórios\n\
-Scenario Outline: Falha ao salvar com campo obrigatório ausente\n\
-Given o usuário preenche o campo \"<campo>\" com \"<valor>\"\n\
-And o usuário tenta salvar o registro\n\
-Then a mensagem \"<mensagem>\" deve ser exibida ao lado do campo \"<campo>\"\n\nExamples:\n| campo               | valor | mensagem                         |\n| Código              |       | Código é obrigatório             |\n| Descrição do Banco  |       | Descrição do Banco é obrigatória |\n| Apelido             |       | Apelido é obrigatório            |\n| Número de inscrição no SBP |  | Número de inscrição no SBP é obrigatório |\n| Banco controlador   |       | Banco controlador é obrigatório   |\n| CNJP                |       | CNJP é obrigatório                |"
+    gherkin: "Feature: Cadastro de bancos\n\
+Scenario: Registrar banco com todos os campos válidos\n\
+  Given eu estou na tela de cadastro de bancos\n\
+  When eu preencho o campo 'Código' com 'BAN001'\n\
+  And eu preencho o campo 'Descrição do Banco' com 'Banco do Norte'\n\
+  And eu preencho o campo 'Apelido' com 'Norte'\n\
+  And eu preencho o campo 'Número de inscrição no SBP' com '12345678'\n\
+  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
+  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'Banco cadastrado com sucesso.'\n\
+  And o banco com código 'BAN001' deve aparecer na lista de bancos\n"
 ```
 
----
-
-**US03 – Código único**
-
 ```yaml
-titulo: US03 - Código único
+titulo: Criação de um novo banco (US01)
 cenario_bdd:
-    nome: Código duplicado impede o salvamento
+    nome: Tentar criar banco com código já existente
     tipo: negativo
-    gherkin: "Feature: Validação de unicidade do Código\n\
-Scenario: Código duplicado impede o salvamento\n\
-Given existe um banco cadastrado com Código \"B001\"\n\
-And o usuário digita \"B001\" no campo Código\n\
-Then a mensagem \"Código já cadastrado\" deve ser exibida\n\
-And o botão \"Salvar\" deve permanecer desabilitado"
-
-cenario_bdd:
-    nome: Código único permite o salvamento
-    tipo: positivo
-    gherkin: "Feature: Validação de unicidade do Código\n\
-Scenario: Código único permite o salvamento\n\
-Given o usuário digita \"B002\" no campo Código\n\
-Then nenhum aviso de duplicidade deve aparecer\n\
-And o botão \"Salvar\" deve estar habilitado"
+    gherkin: "Feature: Cadastro de bancos\n\
+Scenario: Tentar criar banco com código já existente\n\
+  Given eu estou na tela de cadastro de bancos\n\
+  When eu preencho o campo 'Código' com 'BAN001'  # código já existente\n\
+  And eu preencho o campo 'Descrição do Banco' com 'Banco de Teste'\n\
+  And eu preencho o campo 'Apelido' com 'Teste'\n\
+  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
+  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
+  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'O código informado já está em uso. Por favor, informe outro.'\n"
 ```
 
----
-
-**US04 – Validação do CNJP**
-
 ```yaml
-titulo: US04 - Validação do CNJP
+titulo: Criação de um novo banco (US01)
 cenario_bdd:
-    nome: CNJP com formato inválido impede a validação
+    nome: Tentar criar banco com CNPJ inválido
     tipo: negativo
-    gherkin: "Feature: Validação do CNJP\n\
-Scenario: CNJP com formato inválido\n\
-Given o usuário digita \"12345678\" no campo CNJP\n\
-Then a mensagem \"Formato de CNJP inválido\" deve ser exibida\n\
-And o botão \"Salvar\" deve estar desabilitado"
-
-cenario_bdd:
-    nome: CNJP não existente impede o salvamento
-    tipo: negativo
-    gherkin: "Feature: Validação do CNJP\n\
-Scenario: CNJP não existente\n\
-Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
-And o sistema não encontra o CNJP em seu cadastro\n\
-Then a mensagem \"CNJP não encontrado\" deve ser exibida\n\
-And o botão \"Salvar\" deve estar desabilitado"
-
-cenario_bdd:
-    nome: CNJP válido e existente permite o salvamento
-    tipo: positivo
-    gherkin: "Feature: Validação do CNJP\n\
-Scenario: CNJP válido e existente\n\
-Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
-And o CNJP é encontrado no banco de dados\n\
-Then nenhuma mensagem de erro deve aparecer\n\
-And o botão \"Salvar\" deve estar habilitado"
+    gherkin: "Feature: Cadastro de bancos\n\
+Scenario: Tentar criar banco com CNPJ inválido\n\
+  Given eu estou na tela de cadastro de bancos\n\
+  When eu preencho o campo 'CNPJ' com '12.345.678/0001-00'  # inválido\n\
+  And eu preencho o campo 'Código' com 'BAN002'\n\
+  And eu preencho o campo 'Descrição do Banco' com 'Banco do Teste'\n\
+  And eu preencho o campo 'Apelido' com 'Teste'\n\
+  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
+  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'CNPJ inválido. Por favor, informe um CNPJ válido.'\n"
 ```
 
----
-
-**US05 – Seleção do Banco Controlador**
-
 ```yaml
-titulo: US05 - Seleção do Banco Controlador
+titulo: Criação de um novo banco (US01)
 cenario_bdd:
-    nome: Dropdown mostra bancos controladores disponíveis
-    tipo: positivo
-    gherkin: "Feature: Seleção do banco controlador\n\
-Scenario: Dropdown mostra bancos controladores disponíveis\n\
-Given há pelo menos um banco cadastrado como potencial controlador\n\
-When o usuário abre o dropdown \"Banco controlador\"\n\
-Then os bancos disponíveis devem ser listados"
-
-cenario_bdd:
-    nome: Nenhum banco controlador disponível desabilita o campo
+    nome: Tentar criar banco sem preencher campo obrigatório
     tipo: negativo
-    gherkin: "Feature: Seleção do banco controlador\n\
-Scenario: Nenhum banco controlador disponível\n\
-Given não há bancos cadastrados\n\
-Then o campo \"Banco controlador\" deve exibir \"Nenhum banco controlador disponível\"\n\
-And o campo deve estar desabilitado"
+    gherkin: "Feature: Cadastro de bancos\n\
+Scenario: Tentar criar banco sem preencher campo obrigatório\n\
+  Given eu estou na tela de cadastro de bancos\n\
+  When eu deixo o campo 'Descrição do Banco' em branco\n\
+  And eu preencho o campo 'Código' com 'BAN003'\n\
+  And eu preencho o campo 'Apelido' com 'Teste'\n\
+  And eu preencho o campo 'Número de inscrição no SBP' com '87654321'\n\
+  And eu seleciono o campo 'Banco Controlador' com o valor 'Banco Central'\n\
+  And eu preencho o campo 'CNPJ' com '12.345.678/0001-95'\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'Descrição do Banco é obrigatória.'\n"
 ```
 
----
-
-**US06 – Salvamento com sucesso**
+**User Story 2 – Edição de um banco existente (US02)**  
 
 ```yaml
-titulo: US06 - Salvamento de banco com sucesso
+titulo: Edição de um banco existente (US02)
 cenario_bdd:
-    nome: Cadastro completo e válido resulta em sucesso
+    nome: Abrir tela de edição e verificar campo Código somente leitura
     tipo: positivo
-    gherkin: "Feature: Salvamento de banco com sucesso\n\
-Scenario: Cadastro completo e válido\n\
-Given o usuário preenche todos os campos obrigatórios com valores válidos:\n\
-    | Campo                  | Valor                       |\n\
-    | Código                 | B003                        |\n\
-    | Descrição do Banco     | Banco Teste                 |\n\
-    | Apelido                | BT                          |\n\
-    | Número de inscrição no SBP | 123456               |\n\
-    | Banco controlador     | Banco Controlador Exemplo    |\n\
-    | CNJP                   | 12.345.678/0001-90          |\n\
-When o usuário clica em \"Salvar\"\n\
-Then o banco deve ser salvo no sistema\n\
-And a mensagem \"Banco cadastrado com sucesso\" deve ser exibida\n\
-And o usuário deve ser redirecionado para a lista de bancos\n\
-And o banco recém‑criado deve aparecer na lista"
+    gherkin: "Feature: Edição de bancos\n\
+Scenario: Abrir tela de edição e verificar campo Código somente leitura\n\
+  Given eu estou na lista de bancos\n\
+  When eu seleciono o banco com código 'BAN001' e clico em 'Editar'\n\
+  Then a tela de cadastro deve abrir com os dados preenchidos\n\
+  And o campo 'Código' deve ser somente leitura\n"
 ```
 
----
-
-**US07 – Mensagens de erro claras**
+```yaml
+titulo: Edição de um banco existente (US02)
+cenario_bdd:
+    nome: Editar banco mantendo o código inalterado
+    tipo: positivo
+    gherkin: "Feature: Edição de bancos\n\
+Scenario: Editar banco mantendo o código inalterado\n\
+  Given eu estou na tela de cadastro do banco 'BAN001'\n\
+  When eu altero o campo 'Descrição do Banco' para 'Banco do Sul'\n\
+  And eu altero o campo 'Apelido' para 'Sul'\n\
+  And eu altero o campo 'Número de inscrição no SBP' para '87654321'\n\
+  And eu altero o campo 'Banco Controlador' para 'Banco Regional'\n\
+  And eu altero o campo 'CNPJ' para '98.765.432/0001-10'\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'Banco atualizado com sucesso.'\n\
+  And o banco na lista deve manter o mesmo Código 'BAN001'\n"
+```
 
 ```yaml
-titulo: US07 - Mensagens de erro claras e específicas
+titulo: Edição de um banco existente (US02)
 cenario_bdd:
-    nome: Exibição de erro ao validar campo obrigatório vazio
+    nome: Tentar alterar o código do banco
     tipo: negativo
-    gherkin: "Feature: Mensagens de erro claras e específicas\n\
-Scenario Outline: Exibição de erro ao validar campo obrigatório vazio\n\
-Given o usuário preenche o campo \"<campo>\" com \"<valor>\"\n\
-And o usuário tenta salvar o registro\n\
-Then a mensagem \"<mensagem>\" deve ser exibida ao lado do campo \"<campo>\"\n\nExamples:\n| campo               | valor | mensagem                         |\n| Código              |       | Código é obrigatório             |\n| Descrição do Banco  |       | Descrição do Banco é obrigatória |\n| Apelido             |       | Apelido é obrigatório            |\n| Número de inscrição no SBP |  | Número de inscrição no SBP é obrigatório |\n| Banco controlador   |       | Banco controlador é obrigatório   |\n| CNJP                |       | CNJP é obrigatório                |"
+    gherkin: "Feature: Edição de bancos\n\
+Scenario: Tentar alterar o código do banco\n\
+  Given eu estou na tela de cadastro do banco 'BAN001'\n\
+  When eu tento alterar o campo 'Código' para 'NOVOCOD'\n\
+  And eu clico em 'Salvar'\n\
+  Then o campo 'Código' permanece com valor original 'BAN001'\n\
+  And eu não vejo nenhuma mensagem de erro\n"
+```
 
+```yaml
+titulo: Edição de um banco existente (US02)
 cenario_bdd:
-    nome: Exibição de erro de duplicidade de Código
+    nome: Tentar salvar banco com CNPJ inválido após edição
     tipo: negativo
-    gherkin: "Feature: Mensagens de erro claras e específicas\n\
-Scenario: Exibição de erro de duplicidade de Código\n\
-Given existe um banco cadastrado com Código \"B001\"\n\
-And o usuário digita \"B001\" no campo Código\n\
-When o usuário tenta salvar o registro\n\
-Then a mensagem \"Código já cadastrado\" deve ser exibida ao lado do campo \"Código\""
+    gherkin: "Feature: Edição de bancos\n\
+Scenario: Tentar salvar banco com CNPJ inválido após edição\n\
+  Given eu estou na tela de cadastro do banco 'BAN001'\n\
+  When eu altero o campo 'CNPJ' para '11.111.111/1111-11'  # inválido\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'CNPJ inválido. Por favor, informe um CNPJ válido.'\n"
+```
 
+```yaml
+titulo: Edição de um banco existente (US02)
 cenario_bdd:
-    nome: Exibição de erro de formato inválido do CNJP
+    nome: Tentar salvar banco com campo obrigatório vazio após edição
     tipo: negativo
-    gherkin: "Feature: Mensagens de erro claras e específicas\n\
-Scenario: Exibição de erro de formato inválido do CNJP\n\
-Given o usuário digita \"12345678\" no campo CNJP\n\
-When o usuário tenta salvar o registro\n\
-Then a mensagem \"Formato de CNJP inválido\" deve ser exibida ao lado do campo \"CNJP\""
-
-cenario_bdd:
-    nome: Exibição de erro de CNJP não encontrado
-    tipo: negativo
-    gherkin: "Feature: Mensagens de erro claras e específicas\n\
-Scenario: Exibição de erro de CNJP não encontrado\n\
-Given o usuário digita \"12.345.678/0001-90\" no campo CNJP\n\
-And o sistema não encontra o CNJP em seu cadastro\n\
-When o usuário tenta salvar o registro\n\
-Then a mensagem \"CNJP não encontrado\" deve ser exibida ao lado do campo \"CNJP\""
+    gherkin: "Feature: Edição de bancos\n\
+Scenario: Tentar salvar banco com campo obrigatório vazio após edição\n\
+  Given eu estou na tela de cadastro do banco 'BAN001'\n\
+  When eu deixo o campo 'Apelido' em branco\n\
+  And eu clico em 'Salvar'\n\
+  Then devo ver a mensagem 'Apelido é obrigatório.'\n"
 ```
