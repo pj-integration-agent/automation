@@ -1,4 +1,6 @@
-Seja um QA especialista e crie as user storys com requisitos e em seguida, os BDD's de cenários positivos e negativos, estando na primeira pessoa do imperativo considerando os critérios abaixo da funcionalidade da aplicação Bancos Nacionais:
+Seja um QA especialista e crie as user storys com requisitos e em seguida, os BDD's de cenários positivos e negativos, estando na primeira pessoa do imperativo considerando os critérios abaixo da funcionalidade da aplicação:
+A tela que desejo que você analise é de um sistema legado desenvolvido em VB6, pertencente ao Banco BMG.
+
 A tela que desejo que você analise é de um sistema legado desenvolvido em VB6, pertencente ao Banco BMG.
 
 O nome que aparece no topo da janela é “Pesquisa de Recebimento”.
@@ -39,3 +41,4 @@ Com base nessa descrição, elabore:
 ✅ Um resumo de cobertura QA, mostrando as categorias de teste cobertas (validação de campos, filtros, exportação, etc.).
 O objetivo é gerar um documento de QA funcional e de testes BDD completo, baseado unicamente nessa descrição textual da tela, como se você estivesse vendo a interface.
  
+
