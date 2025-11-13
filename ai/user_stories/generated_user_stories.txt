@@ -1,1 +1,215 @@
+**Título da Tela**  
+*Pesquisa de Recebimento*  
 
+--------------------------------------------------------------------
+## 1. Análise Funcional e Visual
+
+| Elemento | Descrição | Propósito | Interação Principal |
+|----------|-----------|-----------|---------------------|
+| **Filtro de pesquisa** | Radio button: *Pessoa Física (CPF)* / *Pessoa Jurídica (CNPJ)* | Define o tipo de entidade que será pesquisada | O usuário escolhe o tipo e o campo de entrada abaixo recebe máscara de CPF/CNPJ. |
+| **Campo CPF/CNPJ** | Campo de texto | Permite digitar o número de identificação da pessoa | O usuário digita o número, que deve seguir a formatação correta. |
+| **Campos de número** | *Recebimento*, *Cessão*, *Contrato* | Busca específica por número de referência | Campo opcional; quando preenchido, o filtro fica ativo. |
+| **Produto** | Dropdown obrigatório | Seleciona o tipo de operação financeira | O usuário deve escolher um produto antes de executar a consulta. |
+| **Cód. Entidade + botão lupa** | Campo de texto + ícone de busca | Permite localizar entidade via tela de pesquisa | Ao clicar na lupa, abre-se uma janela modal com busca por entidade. |
+| **Matrícula + botão lupa** | Campo de texto + ícone de busca | Localiza servidor/funcionário | Similar ao campo de entidade. |
+| **Status** | Dropdown | Filtra por situação do recebimento | Opções típicas: Pendente, Liquidado, Cancelado. |
+| **Período** | Dois campos de data *De* e *A* | Define intervalo de data da pesquisa | O usuário deve inserir uma data válida e a data final não pode ser anterior à inicial. |
+| **Contrato Cedido JV / Contrato Cedido** | Dropdown | Filtra por contratos cedidos ou repassados | Opcional. |
+| **Tipo Receb.** | Dropdown (Todos por padrão) | Refina a pesquisa por tipo de recebimento | Permite selecionar tipos específicos. |
+| **Informações do Produto** | *Folha* (MM) + *Ano* (AAAA) | Complementa a busca por período fiscal | Campo obrigatório ao escolher “15B – CDC – SERV FED CIVIL OUTROS”. |
+| **Botões** | *Consultar* (lupa) | Executa a busca com os filtros atuais | Resultados são exibidos abaixo na tela (não visíveis no screenshot). |
+| | *Excel* (verde) | Exporta a lista de resultados para Excel | Deve gerar um arquivo .xlsx contendo todos os registros da consulta atual. |
+
+**Fluxo de interação típico**
+
+1. O usuário escolhe entre CPF/CNPJ.  
+2. Preenche o campo de identificação.  
+3. Opcionalmente, adiciona números de recebimento/cessão/contrato.  
+4. Seleciona um produto (obrigatório).  
+5. Define entidade/matrícula se necessário, e status.  
+6. Define o período e os campos *Folha* e *Ano*.  
+7. Clique em **Consultar** → Tela exibe a grade de resultados.  
+8. Se desejar, clique em **Excel** → Arquivo Excel é baixado.
+
+--------------------------------------------------------------------
+## 2. User Stories (US)
+
+| ID | Como | Quero | Para | Descrição Detalhada | Critérios de Aceite |
+|----|------|-------|------|---------------------|---------------------|
+| **US01** | Usuário BMG | filtrar por CPF ou CNPJ | validar e refinar a pesquisa | O usuário seleciona *Pessoa Física* ou *Pessoa Jurídica*, insere o número e o sistema valida o formato e o tamanho. | - Campo aceita apenas números e a máscara correta.<br>- CPF: 11 dígitos, CNPJ: 14 dígitos.<br>- Se o número não for válido, exibe mensagem de erro. |
+| **US02** | Usuário BMG | filtrar por números de recebimento, cessão ou contrato | localizar registros específicos | Campos opcionais permitem digitar números de referência. | - Quando preenchido, o filtro restringe a busca ao número informado.<br>- Se não existir registro, exibe “Nenhum registro encontrado”. |
+| **US03** | Usuário BMG | selecionar produto | garantir que a consulta seja realizada com contexto de operação | Dropdown obrigatório, exibe todos os produtos disponíveis. | - Produto é obrigatório.<br>- Se não selecionado, botão *Consultar* fica desabilitado ou gera aviso. |
+| **US04** | Usuário BMG | procurar entidade ou matrícula via janela de busca | evitar erro de digitação e melhorar usabilidade | O botão lupa abre modal; usuário escolhe entidade/matrícula que preenche o campo automaticamente. | - Modal retorna dados corretos.<br>- Campo fica preenchido com código e nome. |
+| **US05** | Usuário BMG | filtrar por status de recebimento | reduzir resultados irrelevantes | Dropdown com opções de status. | - Ao selecionar, apenas registros com o status escolhido são retornados. |
+| **US06** | Usuário BMG | filtrar por período de data | limitar resultados por data de transação | Dois campos de data, validação de intervalo. | - Data “De” deve ser menor ou igual a “A”.<br>- Se inválido, exibe mensagem. |
+| **US07** | Usuário BMG | filtrar por contratos cedidos | refinar pesquisa de cedências | Dropdowns opcionais *Contrato Cedido JV* e *Contrato Cedido*. | - Se selecionado, somente registros pertencentes ao contrato são listados. |
+| **US08** | Usuário BMG | selecionar tipo de recebimento | personalizar a pesquisa | Dropdown com opção *Todos* (padrão). | - Quando outro tipo for escolhido, o filtro aplica-se. |
+| **US09** | Usuário BMG | visualizar os resultados da consulta | analisar dados retornados | Após *Consultar*, grade aparece com todos os registros que atendem aos filtros. | - Grade exibe colunas relevantes (ex.: Nº Recebimento, Data, Valor, Status).<br>- Se não houver registros, exibe mensagem de “Nenhum resultado”. |
+| **US10** | Usuário BMG | exportar resultados para Excel | gerar relatório externo | Botão *Excel* gera arquivo .xlsx. | - Arquivo contém todas as linhas da grade atual.<br>- Título do arquivo segue padrão “Recebimentos_YYYYMMDD.xlsx”. |
+
+--------------------------------------------------------------------
+## 3. Cenários de Teste BDD
+
+### US01 – Filtragem por CPF/CNPJ
+```
+Feature: Filtragem por CPF/CNPJ
+
+  Scenario: Usuário insere CPF válido
+    Given o usuário selecionou “Pessoa Física”
+    When o usuário digita “12345678901” no campo CPF
+    Then o sistema aceita o número
+    And o campo exibe “123.456.789-01”
+
+  Scenario: Usuário insere CPF inválido
+    Given o usuário selecionou “Pessoa Física”
+    When o usuário digita “12345” no campo CPF
+    Then o sistema exibe a mensagem “CPF inválido”
+    And o botão Consultar permanece desabilitado
+
+  Scenario: Usuário insere CNPJ válido
+    Given o usuário selecionou “Pessoa Jurídica”
+    When o usuário digita “12345678000199” no campo CNPJ
+    Then o sistema aceita o número
+    And o campo exibe “12.345.678/0001-99”
+
+  Scenario: Usuário insere CNPJ inválido
+    Given o usuário selecionou “Pessoa Jurídica”
+    When o usuário digita “123” no campo CNPJ
+    Then o sistema exibe a mensagem “CNPJ inválido”
+```
+
+### US02 – Filtros por número
+```
+Feature: Filtro por número de referência
+
+  Scenario: Busca por número de recebimento existente
+    Given o usuário preenche “Recebimento” com “123456”
+    When o usuário clica em Consultar
+    Then a grade mostra registros com Recebimento = 123456
+    And nenhuma mensagem de “Nenhum resultado” é exibida
+
+  Scenario: Busca por número inexistente
+    Given o usuário preenche “Recebimento” com “000000”
+    When o usuário clica em Consultar
+    Then a grade permanece vazia
+    And exibe a mensagem “Nenhum registro encontrado”
+```
+
+### US03 – Seleção de produto
+```
+Feature: Seleção obrigatória de produto
+
+  Scenario: Produto selecionado
+    Given o usuário escolhe “15B - CDC - SERV FED CIVIL OUTROS” no dropdown
+    When o usuário clica em Consultar
+    Then a consulta é executada sem erros
+
+  Scenario: Produto não selecionado
+    Given o usuário não seleciona produto
+    When o usuário tenta clicar em Consultar
+    Then o sistema exibe “Selecione um produto” e impede a ação
+```
+
+### US04 – Busca de entidade/matrícula
+```
+Feature: Busca de entidade via modal
+
+  Scenario: Usuário encontra entidade
+    Given o usuário clica no ícone de lupa ao lado de “Cód. Entidade”
+    And seleciona “Entidade X” na janela modal
+    Then o campo “Cód. Entidade” preenche com “00123”
+    And o campo exibe “Entidade X”
+
+  Scenario: Usuário não encontra entidade
+    Given o usuário clica no ícone de lupa ao lado de “Cód. Entidade”
+    And pesquisa por “ZZZ” que não existe
+    Then o modal exibe “Nenhum resultado encontrado”
+```
+
+### US05 – Filtro de status
+```
+Feature: Filtragem por status
+
+  Scenario: Seleciona status “Pendente”
+    Given o usuário escolhe “Pendente” no dropdown Status
+    When o usuário clica em Consultar
+    Then todos os registros exibidos têm Status = Pendente
+```
+
+### US06 – Período de data
+```
+Feature: Validação de período
+
+  Scenario: Data inicial maior que data final
+    Given o usuário insere “2024-12-31” em “De”
+    And o usuário insere “2024-01-01” em “A”
+    When o usuário clica em Consultar
+    Then o sistema exibe “Data inicial não pode ser posterior à data final”
+```
+
+### US07 – Contrato cedido
+```
+Feature: Filtro por contrato cedido
+
+  Scenario: Seleciona contrato cedido “JV123”
+    Given o usuário escolhe “JV123” em “Contrato Cedido JV”
+    When o usuário clica em Consultar
+    Then a grade lista apenas contratos cedidos JV123
+```
+
+### US08 – Tipo de recebimento
+```
+Feature: Seleção do tipo de recebimento
+
+  Scenario: Seleciona “Entrada”
+    Given o usuário escolhe “Entrada” no dropdown Tipo Receb.
+    When o usuário clica em Consultar
+    Then a grade exibe apenas registros do tipo Entrada
+```
+
+### US09 – Visualização da grade
+```
+Feature: Exibição de resultados
+
+  Scenario: Consulta retorna resultados
+    Given o usuário executa uma consulta válida
+    When a grade carrega
+    Then cada linha exibe colunas: Nº Recebimento, Data, Valor, Status
+
+  Scenario: Consulta não retorna resultados
+    Given o usuário executa uma consulta que não encontra registros
+    When a grade carrega
+    Then exibe a mensagem “Nenhum registro encontrado”
+```
+
+### US10 – Exportação para Excel
+```
+Feature: Exportar resultados para Excel
+
+  Scenario: Exportação de registros ativos
+    Given o usuário tem resultados na grade
+    When o usuário clica em “Excel”
+    Then um arquivo .xlsx é baixado
+    And o arquivo contém todas as linhas exibidas
+    And o nome segue “Recebimentos_YYYYMMDD.xlsx”
+
+  Scenario: Exportação sem resultados
+    Given a grade está vazia
+    When o usuário clica em “Excel”
+    Then o sistema exibe “Não há dados para exportar”
+```
+
+--------------------------------------------------------------------
+## 4. Resumo de Cobertura QA
+
+| Categoria | Testes Cobertos | Observação |
+|-----------|-----------------|------------|
+| **Validação de campos obrigatórios** | US03, US01 | Garantia de que produto é obrigatório; CPF/CNPJ formatado. |
+| **Validação de formatos** | US01, US06 | CPF/CNPJ, datas, número de recebimento. |
+| **Filtro de pesquisa** | US02, US04, US05, US06, US07, US08 | Combinação de filtros e interações entre eles. |
+| **Resultado de consulta** | US09 | Grade vazia / cheia; exibição de colunas. |
+| **Exportação** | US10 | Arquivo gerado, conteúdo, nome, condição de vazio. |
+| **UX & Navegação** | US04 | Modal de busca, retorno de dados. |
+| **Mensagens de erro** | Todos | Feedback claro ao usuário. |
+
+Este documento fornece todos os artefatos necessários para a equipe de QA validar a tela **Pesquisa de Recebimento** de forma estruturada, cobrindo requisitos, cenários de teste BDD e uma visão geral de cobertura.
