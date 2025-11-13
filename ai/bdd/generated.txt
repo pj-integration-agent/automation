@@ -1,1 +1,123 @@
+**US01 – Filtragem por CPF/CNPJ**  
+titulo: US01 – Filtragem por CPF ou CNPJ,  
+cenario_bdd:
+    nome: CPF válido inserido  
+    tipo: positivo  
+    gherkin: "Feature: Filtragem por CPF/CNPJ\n  Scenario: Usuário insere CPF válido\n    Given o usuário selecionou \"Pessoa Física\"\n    When o usuário digita \"12345678901\" no campo CPF\n    Then o sistema aceita o número\n    And o campo exibe \"123.456.789-01\"\n"  
 
+cenario_bdd:
+    nome: CPF inválido por tamanho  
+    tipo: negativo  
+    gherkin: "Feature: Filtragem por CPF/CNPJ\n  Scenario: Usuário insere CPF inválido\n    Given o usuário selecionou \"Pessoa Física\"\n    When o usuário digita \"12345\" no campo CPF\n    Then o sistema exibe a mensagem \"CPF inválido\"\n    And o botão Consultar permanece desabilitado\n"  
+
+cenario_bdd:
+    nome: CNPJ válido inserido  
+    tipo: positivo  
+    gherkin: "Feature: Filtragem por CPF/CNPJ\n  Scenario: Usuário insere CNPJ válido\n    Given o usuário selecionou \"Pessoa Jurídica\"\n    When o usuário digita \"12345678000199\" no campo CNPJ\n    Then o sistema aceita o número\n    And o campo exibe \"12.345.678/0001-99\"\n"  
+
+cenario_bdd:
+    nome: CNPJ inválido por tamanho  
+    tipo: negativo  
+    gherkin: "Feature: Filtragem por CPF/CNPJ\n  Scenario: Usuário insere CNPJ inválido\n    Given o usuário selecionou \"Pessoa Jurídica\"\n    When o usuário digita \"123\" no campo CNPJ\n    Then o sistema exibe a mensagem \"CNPJ inválido\"\n"  
+
+
+**US02 – Filtros por número de recebimento, cessão ou contrato**  
+titulo: US02 – Filtro por números de recebimento, cessão ou contrato,  
+cenario_bdd:
+    nome: Busca por número de recebimento existente  
+    tipo: positivo  
+    gherkin: "Feature: Filtro por número de referência\n  Scenario: Busca por número de recebimento existente\n    Given o usuário preenche \"Recebimento\" com \"123456\"\n    When o usuário clica em Consultar\n    Then a grade mostra registros com Recebimento = 123456\n    And nenhuma mensagem de \"Nenhum resultado\" é exibida\n"  
+
+cenario_bdd:
+    nome: Busca por número inexistente  
+    tipo: negativo  
+    gherkin: "Feature: Filtro por número de referência\n  Scenario: Busca por número inexistente\n    Given o usuário preenche \"Recebimento\" com \"000000\"\n    When o usuário clica em Consultar\n    Then a grade permanece vazia\n    And exibe a mensagem \"Nenhum registro encontrado\"\n"  
+
+
+**US03 – Seleção de produto**  
+titulo: US03 – Seleção obrigatória de produto,  
+cenario_bdd:
+    nome: Produto selecionado  
+    tipo: positivo  
+    gherkin: "Feature: Seleção obrigatória de produto\n  Scenario: Produto selecionado\n    Given o usuário escolhe \"15B – CDC – SERV FED CIVIL OUTROS\" no dropdown\n    When o usuário clica em Consultar\n    Then a consulta é executada sem erros\n"  
+
+cenario_bdd:
+    nome: Produto não selecionado  
+    tipo: negativo  
+    gherkin: "Feature: Seleção obrigatória de produto\n  Scenario: Produto não selecionado\n    Given o usuário não seleciona produto\n    When o usuário tenta clicar em Consultar\n    Then o sistema exibe \"Selecione um produto\" e impede a ação\n"  
+
+
+**US04 – Busca de entidade ou matrícula**  
+titulo: US04 – Busca de entidade ou matrícula via modal,  
+cenario_bdd:
+    nome: Usuário encontra entidade  
+    tipo: positivo  
+    gherkin: "Feature: Busca de entidade via modal\n  Scenario: Usuário encontra entidade\n    Given o usuário clica no ícone de lupa ao lado de \"Cód. Entidade\"\n    And seleciona \"Entidade X\" na janela modal\n    Then o campo \"Cód. Entidade\" preenche com \"00123\"\n    And o campo exibe \"Entidade X\"\n"  
+
+cenario_bdd:
+    nome: Usuário não encontra entidade  
+    tipo: negativo  
+    gherkin: "Feature: Busca de entidade via modal\n  Scenario: Usuário não encontra entidade\n    Given o usuário clica no ícone de lupa ao lado de \"Cód. Entidade\"\n    And pesquisa por \"ZZZ\" que não existe\n    Then o modal exibe \"Nenhum resultado encontrado\"\n"  
+
+
+**US05 – Filtro de status**  
+titulo: US05 – Filtro por status de recebimento,  
+cenario_bdd:
+    nome: Seleciona status Pendente  
+    tipo: positivo  
+    gherkin: "Feature: Filtragem por status\n  Scenario: Seleciona status \"Pendente\"\n    Given o usuário escolhe \"Pendente\" no dropdown Status\n    When o usuário clica em Consultar\n    Then todos os registros exibidos têm Status = Pendente\n"  
+
+
+**US06 – Período de data**  
+titulo: US06 – Filtro por período de data,  
+cenario_bdd:
+    nome: Periodo válido  
+    tipo: positivo  
+    gherkin: "Feature: Validação de período\n  Scenario: Data inicial menor ou igual a data final\n    Given o usuário insere \"2024-01-01\" em \"De\"\n    And o usuário insere \"2024-12-31\" em \"A\"\n    When o usuário clica em Consultar\n    Then a grade exibe os registros dentro do intervalo\n"  
+
+cenario_bdd:
+    nome: Data inicial posterior à final  
+    tipo: negativo  
+    gherkin: "Feature: Validação de período\n  Scenario: Data inicial maior que data final\n    Given o usuário insere \"2024-12-31\" em \"De\"\n    And o usuário insere \"2024-01-01\" em \"A\"\n    When o usuário clica em Consultar\n    Then o sistema exibe \"Data inicial não pode ser posterior à data final\"\n"  
+
+
+**US07 – Contrato cedido**  
+titulo: US07 – Filtro por contratos cedidos,  
+cenario_bdd:
+    nome: Seleciona contrato cedido JV  
+    tipo: positivo  
+    gherkin: "Feature: Filtro por contrato cedido\n  Scenario: Seleciona contrato cedido \"JV123\"\n    Given o usuário escolhe \"JV123\" em \"Contrato Cedido JV\"\n    When o usuário clica em Consultar\n    Then a grade lista apenas contratos cedidos JV123\n"  
+
+
+**US08 – Tipo de recebimento**  
+titulo: US08 – Seleção do tipo de recebimento,  
+cenario_bdd:
+    nome: Seleciona tipo Entrada  
+    tipo: positivo  
+    gherkin: "Feature: Seleção do tipo de recebimento\n  Scenario: Seleciona \"Entrada\"\n    Given o usuário escolhe \"Entrada\" no dropdown Tipo Receb.\n    When o usuário clica em Consultar\n    Then a grade exibe apenas registros do tipo Entrada\n"  
+
+
+**US09 – Visualização da grade**  
+titulo: US09 – Visualização dos resultados da consulta,  
+cenario_bdd:
+    nome: Consulta retorna resultados  
+    tipo: positivo  
+    gherkin: "Feature: Exibição de resultados\n  Scenario: Consulta retorna resultados\n    Given o usuário executa uma consulta válida\n    When a grade carrega\n    Then cada linha exibe colunas: Nº Recebimento, Data, Valor, Status\n"  
+
+cenario_bdd:
+    nome: Consulta sem resultados  
+    tipo: negativo  
+    gherkin: "Feature: Exibição de resultados\n  Scenario: Consulta não retorna resultados\n    Given o usuário executa uma consulta que não encontra registros\n    When a grade carrega\n    Then exibe a mensagem \"Nenhum registro encontrado\"\n"  
+
+
+**US10 – Exportação para Excel**  
+titulo: US10 – Exportar resultados para Excel,  
+cenario_bdd:
+    nome: Exportação com dados presentes  
+    tipo: positivo  
+    gherkin: "Feature: Exportar resultados para Excel\n  Scenario: Exportação de registros ativos\n    Given o usuário tem resultados na grade\n    When o usuário clica em \"Excel\"\n    Then um arquivo .xlsx é baixado\n    And o arquivo contém todas as linhas exibidas\n    And o nome segue \"Recebimentos_YYYYMMDD.xlsx\"\n"  
+
+cenario_bdd:
+    nome: Exportação sem dados  
+    tipo: negativo  
+    gherkin: "Feature: Exportar resultados para Excel\n  Scenario: Exportação sem resultados\n    Given a grade está vazia\n    When o usuário clica em \"Excel\"\n    Then o sistema exibe \"Não há dados para exportar\"\n"
