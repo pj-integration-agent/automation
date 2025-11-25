@@ -63,6 +63,5 @@ jobs:
 
   executar-testes:
     if: ${{ inputs.execucao-testes }}
-    needs: testes
     uses: pj-integration-agent/reusable-workflows/.github/workflows/execucao-testes.yaml@main
     secrets: inherit
