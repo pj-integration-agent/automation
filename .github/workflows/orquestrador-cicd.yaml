@@ -31,6 +31,12 @@ on:
         required: true
         default: false
 
+      execucao-testes:
+        description: "Executar testes?"
+        type: boolean
+        required: true
+        default: false
+
 permissions:
   contents: write
   pull-requests: write
@@ -54,3 +60,9 @@ jobs:
     secrets: inherit
     with:
       tipo-prompt: ${{ inputs.tipo-prompt }}
+
+  executar-testes:
+    if: ${{ inputs.execucao-testes }}
+    needs: testes
+    uses: pj-integration-agent/reusable-workflows/.github/workflows/execucao-testes.yaml@main
+    secrets: inherit
