@@ -1,107 +1,117 @@
-## 1. Quais testes falharam?
+**1. Testes que falharam**
 
-| # | Nome do teste | Status |
-|---|----------------|--------|
-| 1 | **Login inválido** | **Falhou** |
-| 2 | **Usuário deve atualizar telefone com campo vazio** | **Falhou** |
-
-## 2. Motivo de cada falha
-
-### Teste 1 – *Login inválido falhou*
-| Item | Detalhe |
-|------|---------|
-| **Erro gerado** | `expect(locator).toContainText(expected)` falhou. |
-| **Localizador usado** | `locator('.error')` |
-| **Texto esperado** | `"An internal error has occurred and has been logged."` (texto foi registrado com `color: green` no log). |
-| **Texto realmente encontrado** | `"The username and password could not be verified."` (exibido no elemento `<p class="error">`). |
-| **Conclusão** | O teste está esperando a mensagem de erro **errada**. O sistema, na verdade, mostra a mensagem “The username and password could not be verified.” Quando o usuário insere credenciais inválidas. O motivo do erro é, portanto, um *mismatch* entre o texto que o teste espera e o texto que o aplicativo realmente exibe. |
+| Teste | Resultado do log | Motivo resumido |
+|-------|-----------------|-----------------|
+| `Login inválido falhou` | *expect(...).toContainText failed* | Mensagem de erro não bateu com o que o teste esperava. |
+| `Usuário deve atualizar telefone com campo vazio falhou` | *element(s) not found* | O elemento que deveria exibir a mensagem de erro “Phone is required.” não apareceu na página. |
 
 ---
 
-### Teste 2 – *Usuário deve atualizar telefone com campo vazio falhou*
+## 2. Motivo de cada falha
+
+### 2.1 `Login inválido falhou`
+
 | Item | Detalhe |
 |------|---------|
-| **Erro gerado** | `expect(locator).toContainText(expected)` falhou porque o elemento não foi encontrado dentro de 5 s. |
-| **Localizador usado** | `locator('//*[@id="phone-error"]')` (XPATH). |
-| **Texto esperado** | `"Phone is required."` |
-| **Resultado** | Nenhum elemento com `id="phone-error"` apareceu na página. |
-| **Causas prováveis** |
-| 1. O campo de telefone não está sendo validado (o script de validação pode não estar acionado). |
-| 2. O erro de campo pode estar em outro local/seletores (por exemplo, uma classe ou um container diferente). |
-| 3. O elemento pode estar sendo exibido somente após uma ação adicional (por exemplo, o clique em “Atualizar” que não foi disparado). |
-| 4. Pode haver um atraso maior que 5 s; o timeout pode estar curto. |
+| **Expectativa** | O teste procurava o texto: `An internal error has occurred and has been logged.` (note a palavra *logged* e o acento em “occured”) |
+| **Resultado real** | O elemento `<p class="error">The username and password could not be verified.</p>` foi encontrado. |
+| **Erro** | O texto esperado **não estava** presente no elemento. O test timeout de 5000 ms expirou enquanto o elemento estava lá, mas continha conteúdo diferente. |
+
+#### Por que isso acontece?
+
+* O **código da aplicação** devolve uma mensagem de erro genérica “The username and password could not be verified.” (talvez após uma validação de login falha).  
+* O teste foi escrito com base em uma mensagem diferente – possivelmente uma mensagem interna de erro (`An internal error…`) que não corresponde à mensagem real do front‑end.  
+* Pode ser também que a aplicação mudou sem que o teste fosse atualizado.
+
+---
+
+### 2.2 `Usuário deve atualizar telefone com campo vazio falhou`
+
+| Item | Detalhe |
+|------|---------|
+| **Expectativa** | Procurar o elemento com **id** `phone-error` e verificar se contém “Phone is required.” |
+| **Resultado** | Nenhum elemento correspondido a `//*[@id="phone-error"]` foi encontrado dentro de 5000 ms. |
+| **Erro** | O elemento simplesmente não existe, então o `toContainText` falha logo. |
+
+#### Possíveis causas
+
+| Causa | Indicação |
+|-------|-----------|
+| **Validação não disparada** | O formulário pode estar enviando mesmo com o campo vazio, ou a validação está no lado do cliente e não foi acionada. |
+| **Alteração de ID ou estrutura** | O atributo `id="phone-error"` pode ter sido renomeado, movido ou removido no HTML. |
+| **Renderização assíncrona** | O elemento pode aparecer depois de mais do que 5 s, mas o teste tem timeout curto. |
+| **Erros de CSS/JS** | Um erro no script de validação impede a exibição da mensagem. |
 
 ---
 
 ## 3. Sugestões de correção
 
-### 3.1 Correção do teste de login inválido
+### 3.1 Corrigir o teste de login
 
-1. **Alinhar a expectativa ao texto real**  
+1. **Verificar a mensagem atual**  
+   ```js
+   const errorText = await page.textContent('.error');
+   console.log('Mensagem real:', errorText);
+   ```
+   Isso garante que você veja a mensagem que a aplicação está realmente retornando.
+
+2. **Atualizar a expectativa**  
+   Se a mensagem correta for “The username and password could not be verified.”, altere o teste:
    ```js
    await expect(page.locator('.error')).toContainText(
      'The username and password could not be verified.'
    );
    ```
 
-2. **Uso de variáveis de teste**  
-   Se o texto pode variar (por ex.: internacionalização), extraia o texto esperado de um arquivo de recursos ou de uma constante de teste.
-
-3. **Verificar se o erro interno pode aparecer em casos especiais**  
-   Se o seu aplicativo realmente pode exibir o texto “An internal error…”, crie um teste separado que valide esse caminho, mas não o misture com o teste de credenciais inválidas.
-
-4. **Adicionar comentários explicativos**  
-   Documentar no próprio teste a diferença entre “erro interno” e “credenciais inválidas” ajuda a evitar futuras confusões.
-
-### 3.2 Correção do teste de telefone vazio
-
-1. **Confirmar o seletor correto**  
-   - Abra o aplicativo em modo de desenvolvimento (DevTools) e verifique o elemento que contém a mensagem de erro.  
-   - Se o `id="phone-error"` não existir, use o atributo correto (ex.: `.phone-error`, `data-testid="phone-error"`, etc.).
-
-2. **Ajustar o timeout**  
-   Se a validação demorar mais que 5 s, aumente o timeout ou use `waitForSelector` antes do `expect`.  
+3. **Usar regex ou parcial**  
+   Para evitar falhas futuras por pequenos trechos alterados, você pode usar uma expressão regular ou apenas uma parte da mensagem:
    ```js
-   await page.waitForSelector('#phone-error', { timeout: 10000 });
-   await expect(page.locator('#phone-error')).toContainText('Phone is required.');
+   await expect(page.locator('.error')).toContainText(/username and password.*verified/);
    ```
 
-3. **Acionar a validação**  
-   Assegure que o formulário está realmente submetido antes de verificar o erro.  
+4. **Isolar o cenário**  
+   Certifique-se de que o teste está realmente provocando um login inválido (usuário ou senha inexistente) e não algum erro interno da aplicação.
+
+### 3.2 Corrigir o teste de telefone
+
+1. **Confirmar o ID correto**  
+   Abra a página em um browser devtools e procure a mensagem de erro. Talvez o id seja `#phoneError`, `#error-phone`, ou até um elemento `<span class="error">` sem id.  
    ```js
-   await page.fill('#phone', '');          // campo vazio
-   await page.click('#saveButton');        // botão de submit
+   const locator = page.locator('#phone-error'); // ou usar data-attribute
    ```
 
-4. **Verificar se o erro aparece dentro de um modal ou outro container**  
-   Se o erro estiver dentro de um modal que abre apenas quando há validação, primeiro aguarde o modal aparecer:
+2. **Verificar se a validação é client‑side**  
+   - Tente enviar o formulário com o campo vazio e veja se o erro aparece manualmente.  
+   - Se não aparecer, verifique o console JS para mensagens de erro.
+
+3. **Aumentar o timeout se necessário**  
+   Se a mensagem leva mais tempo para aparecer, aumente o timeout:
    ```js
-   await expect(page.locator('.modal')).toBeVisible();
-   await expect(page.locator('#phone-error')).toHaveText('Phone is required.');
+   await expect(locator).toContainText('Phone is required.', { timeout: 10000 });
    ```
 
-5. **Escreva o teste em etapas claras**  
+4. **Adicionar espera explícita antes de verificar**  
    ```js
-   // 1. Preencha o formulário com telefone vazio
-   await page.fill('#phone', '');
-
-   // 2. Tente salvar
-   await page.click('#saveButton');
-
-   // 3. Verifique a mensagem de erro
-   await expect(page.locator('#phone-error')).toContainText('Phone is required.');
+   await page.waitForSelector('#phone-error', { state: 'visible', timeout: 10000 });
    ```
 
-6. **Capturar screenshot em caso de falha**  
-   Use `await page.screenshot({ path: 'failure.png' });` no bloco `catch` para ter uma imagem da tela quando o erro ocorrer. Isso facilita identificar se o erro está realmente ausente ou apenas não visível.
+5. **Caso o ID tenha mudado**  
+   - Use um seletor mais robusto:  
+     ```js
+     await expect(page.locator('text=Phone is required.')).toBeVisible();
+     ```
+   - Ou use `data-testid="phone-error"` se existir.
+
+6. **Revisar o fluxo de negócio**  
+   Se a regra de negócio mudou (por exemplo, agora o campo pode ficar vazio sem erro), atualize o teste para refletir a nova expectativa.
 
 ---
 
 ## Resumo rápido
 
-| Teste | Falha | Ação recomendada |
-|-------|-------|-------------------|
-| Login inválido | Texto esperado diferente do real | Atualizar `expect` para o texto que o app realmente mostra, ou criar teste separado para “erro interno”. |
-| Telefone vazio | Elemento de erro não encontrado | Validar seletor correto, garantir que a validação ocorre, ajustar timeout, e refazer a expectativa. |
+| Teste | Falha | Solução resumida |
+|-------|-------|------------------|
+| Login inválido | Texto de erro diferente | Atualizar expectativa ou usar regex parcial. |
+| Telefone vazio | Elemento não encontrado | Verificar ID correto, validar validação client‑side, aumentar timeout ou usar seletor robusto. |
 
-Com esses ajustes os testes deverão passar e refletir corretamente o comportamento da aplicação. Boa sorte!
+Depois de aplicar essas correções, rode os testes novamente. Se os falharem novamente, use o console do Playwright (`page.screenshot`, `page.content`) para investigar o estado da página no momento da falha. Isso costuma revelar se há algum erro de renderização ou de lógica que o teste não capturou. Boa sorte!
