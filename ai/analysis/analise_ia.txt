@@ -1,54 +1,109 @@
-## 1. Quais testes falharam?
+## 1. Testes que falharam
 
-| Data/Hora | Nome do teste | Status |
-|-----------|---------------|--------|
-| 2025‑11‑25 15:52:49.173 | **Login inválido falhou** | ❌ Falhou |
-| 2025‑11‑25 15:52:51.080 | **Usuário deve atualizar telefone com campo vazio falhou** | ❌ Falhou |
+| # | Identificação do teste | Data/horário | Por que é “falhou” |
+|---|------------------------|--------------|--------------------|
+| 1 | **Login inválido falhou** | 2025‑11‑25 16:03:48.790 | Aserção `toContainText` não encontrou a mensagem de erro esperada. |
+| 2 | **Usuário deve atualizar telefone com campo vazio falhou** | 2025‑11‑25 16:03:50.826 | Aserção `toContainText` não encontrou o elemento que deveria exibir “Phone is required.”. |
+
+> **Obs.**  
+> Ambos os testes falharam por **mismatch de texto** (o que o script esperava) e/ou **elemento não encontrado** (o que o script tentou localizar).
 
 ---
 
-## 2. Por que cada teste falhou?
+## 2. Motivo de cada falha
 
-### 2.1 `Login inválido falhou`
+### 2.1 Teste “Login inválido falhou”
 
-| Item | Informação |
-|------|------------|
-| **Expectativa** | `locator('.error').toContainText("An internal error has occurred and has been logged.")` |
-| **Resultado real** | `<p class="error">The username and password could not be verified.</p>` |
-| **Mensagem recebida** | `"The username and password could not be verified."` |
-| **Tempo máximo** | 5000 ms |
-| **Análise** |  
-O teste aguardava uma mensagem de erro interno, mas a aplicação devolveu a mensagem padrão de “credenciais inválidas”. Isso pode acontecer se: <br>1. O teste está escrito para um cenário que não corresponde ao comportamento atual da aplicação.<br>2. O endpoint de login foi alterado (ex.: a API agora retorna “User & password could not be verified” em vez de “internal error”).<br>3. O elemento `.error` foi repintado ou o texto foi alterado sem atualizar o teste. |
+- **O que o teste fazia**:  
+  1. Preenche os campos de usuário/senha com dados inválidos.  
+  2. Submete o formulário.  
+  3. Espera que apareça um `<p class="error">` contendo a mensagem de erro.
 
-### 2.2 `Usuário deve atualizar telefone com campo vazio falhou`
+- **Erro**:  
+  ```text
+  Expected substring: "An internal error has occurred and has been logged."
+  Received string: "The username and password could not be verified."
+  ```
+  - **Causa provável**:  
+    *O texto que o sistema está exibindo mudou* (ou foi traduzido) e não corresponde mais ao valor que o teste codificou.  
+    - O teste está esperando a mensagem “An internal error has occurred and has been logged.” – provavelmente uma mensagem genérica que a API retornou em um ambiente anterior.  
+    - A página atual devolveu “The username and password could not be verified.” – mensagem de autenticação específica.
 
-| Item | Informação |
-|------|------------|
-| **Expectativa** | `locator('//*[@id="phone-error"]').toContainText("Phone is required.")` |
-| **Resultado real** | Elemento **não encontrado** dentro dos 5 s. |
-| **Mensagem de erro** | `element(s) not found` |
-| **Análise** |  
-O seletor XPath `//*[@id="phone-error"]` não encontrou nenhum elemento no DOM. Possíveis causas: <br>1. O id mudou (ex.: `phone-error` → `phoneError` ou `phone_error`).<br>2. O erro não é renderizado dentro de um elemento com id, mas sim em outro atributo ou dentro de um componente diferente. <br>3. O formulário não foi submetido ou a validação não foi acionada antes do `expect`. <br>4. O elemento existe, mas está invisível e o Playwright não o encontra sem `force: true`. |
+- **Resultado**: Aserção falhou porque o **substring** não foi encontrado.  
+
+### 2.2 Teste “Usuário deve atualizar telefone com campo vazio falhou”
+
+- **O que o teste fazia**:  
+  1. Acessa a tela de atualização de telefone.  
+  2. Deixa o campo de telefone vazio e submete.  
+  3. Espera um `<p id="phone-error">` contendo “Phone is required.”.
+
+- **Erro**:  
+  ```text
+  Timeout: 5000ms
+  Error: element(s) not found
+  ```
+  - **Causa provável**:  
+    *O elemento não foi encontrado dentro do tempo de espera*.  
+    Possíveis razões:
+    - O seletor XPath (`//*[@id="phone-error"]`) está incorreto ou mudou.
+    - O erro de validação não está sendo renderizado na página (ex.: JavaScript bloqueou a submissão, ou a validação está no lado do servidor e a página não atualizou o DOM).
+    - O elemento está dentro de um iframe ou shadow DOM que não está sendo acessado.
+    - O teste está rodando antes da página ter terminado de carregar ou o componente de formulário não foi inicializado.
+
+- **Resultado**: Aserção falhou porque o elemento `<p id="phone-error">` não apareceu (ou não pôde ser localizado) dentro do tempo de espera.
 
 ---
 
 ## 3. Sugestões de correção
 
-| Teste | Problema identificado | Como corrigir |
-|-------|-----------------------|---------------|
-| **Login inválido falhou** | Mensagem de erro esperada não corresponde ao que a aplicação realmente devolve. | 1. **Atualizar a expectativa**: <br>```js<br>await expect(page.locator('.error')).toContainText('The username and password could not be verified.');<br>``` <br>2. Se a intenção for testar um erro interno, garanta que o mock/seed de dados realmente provoque esse erro (ex.: use um usuário inválido que faça a aplicação cair em “internal error”). <br>3. Se a mensagem deve variar (ex.: depende do ambiente), use uma **regex** ou uma verificação parciais:<br>```js<br>await expect(page.locator('.error')).toContainText(/verified|internal error/);<br>``` |
-| **Usuário deve atualizar telefone com campo vazio falhou** | Seletor XPath inválido / elemento não encontrado. | 1. **Verificar a estrutura real do DOM**: abra o dev‑tools na página de teste e procure por um elemento que mostre a mensagem “Phone is required.”<br>2. **Usar um seletor mais robusto**:<br>   - Se o elemento tem id `phone-error`: `locator('#phone-error')` <br>   - Se a mensagem aparece em um `<span>` ou `<p>` com classe `error` dentro do campo de telefone: `locator('#phone-input + .error')` <br>   - Se a mensagem é exibida como tooltip: `text=Phone is required.`<br>3. **Garantir que a validação seja acionada**: antes da assertiva, faça o submit do formulário ou chame a função de validação explicitamente.<br>4. **Aumentar o timeout** caso a mensagem demore a aparecer: `await expect(locator).toContainText('Phone is required.', { timeout: 8000 });`<br>5. Se o elemento pode estar invisível, use `force:true` ou verifique a visibilidade:<br>```js<br>await expect(locator).toBeVisible();<br>await expect(locator).toContainText('Phone is required.');<br>``` |
-| **Geral** | Ambos os testes falharam antes do tempo limite. | 1. **Log adicional**: Use `page.on('console', msg => console.log(msg.text()));` ou `page.on('requestfailed', request => console.log(request.failure()));` para capturar erros de rede que possam impedir a renderização do erro. <br>2. **Verificação de estado**: Use `await page.waitForSelector('.error', { state: 'visible', timeout: 8000 });` antes do `expect`. <br>3. **Consistência de dados**: Certifique-se de que os dados de login ou telefone estão corretos/integros; testes de fronte‑end dependem de dados que devem estar em sincronia com a aplicação. |
+### 3.1 Corrigir o teste de login inválido
+
+| Estratégia | Como implementar |
+|------------|------------------|
+| **Ajustar a mensagem esperada** | Atualize o texto no teste para refletir a nova mensagem: `<p class="error">The username and password could not be verified.</p>`. Se o site tem múltiplas mensagens (erro interno vs. credenciais inválidas), use um *array* de strings ou um *regex* que aceite ambas. |
+| **Usar regex em vez de substring fixa** | Exemplo: `await expect(locator('.error')).toContainText(/(An internal error|The username and password could not be verified)/);` – isso permite que o teste passe se qualquer um dos textos aparecer. |
+| **Verificar a origem do erro** | Se o sistema pode retornar diferentes mensagens de erro (interno vs. credencial), crie dois testes distintos ou use `expect.soft` para verificar ambos. |
+| **Verificar o status HTTP** | Se a API está retornando `500` ou `401`, garanta que o teste inspecione o código de status ou o body da resposta além do texto de erro. |
+| **Logs do servidor** | Se o erro interno for esperado, certifique‑se de que o backend realmente logou o erro e que a mensagem de erro está correta. |
+
+### 3.2 Corrigir o teste de telefone vazio
+
+| Estratégia | Como implementar |
+|------------|------------------|
+| **Revisar o seletor** | Verifique se `id="phone-error"` realmente existe. Use a ferramenta de inspeção do navegador para confirmar. Se o elemento for `<p id="phone_error">` ou `<span class="phone-error">`, ajuste o seletor para `#phone_error` ou `.phone-error`. |
+| **Remover XPath** | XPath costuma ser mais propenso a erros. Prefira CSS: `await expect(page.locator('#phone-error')).toHaveText('Phone is required.');`. |
+| **Aguardar o elemento aparecer** | Se o elemento só aparece após a submissão, use `await expect(page.locator('#phone-error')).toBeVisible({ timeout: 10000 });` para dar mais tempo. |
+| **Verificar validação no cliente** | Se a validação é feita por JavaScript, certifique‑se de que o script não está bloqueando a submissão ou que a página está atualizando o DOM. Use `await page.waitForResponse` ou `await page.waitForFunction(() => document.querySelector('#phone-error'))`. |
+| **Verificar iframes/shadow DOM** | Se o componente de telefone está dentro de um `<iframe>` ou shadow DOM, primeiro faça `const frame = page.frame({ name: '...'});` ou `const shadowRoot = await page.locator('#root').evaluateHandle(el => el.shadowRoot);`. Depois aplique o locator dentro do contexto adequado. |
+| **Uso de `soft` assertions** | Se você quer continuar a execução do teste mesmo se o elemento não aparecer, use `await expect(locator).toContainText('Phone is required.', { timeout: 10000, force: true }).catch(()=>{ /* log */});`. |
+| **Mockar a API** | Se o teste depende de uma chamada ao backend que pode falhar, considere mockar a resposta com `page.route` para garantir que o erro de validação será exibido. |
+| **Logs e debug** | Use `await page.screenshot({ path: 'debug.png' });` logo antes da asserção para capturar o estado atual da página. |
+
+### 3.3 Boas práticas gerais
+
+1. **Centralizar textos de erro**  
+   - Armazene mensagens de erro em arquivos de constantes ou em recursos de internacionalização. Assim, quando a mensagem mudar, você atualiza apenas um lugar em vez de todos os testes.
+
+2. **Timeouts mais longos em ambientes de CI**  
+   - Se o CI tem latência de rede ou CPU, aumente os timeouts (`{ timeout: 20000 }`) ou use `waitForLoadState('networkidle')` antes de fazer asserções.
+
+3. **Logs detalhados**  
+   - Adicione `page.on('console', msg => console.log(msg.text()));` e `page.on('requestfailed', request => console.error(request.url(), request.failure()));` para capturar falhas de rede ou erros de console que possam explicar o porquê do elemento não aparecer.
+
+4. **Testes idempotentes**  
+   - Sempre limpe o estado do usuário (logout, delete temporariamente) antes de testar login inválido. Isso evita que um usuário “logado” anterior afete o resultado.
+
+5. **Validação de elementos com `toBeVisible` + `toContainText`**  
+   - Combine as duas asserções para garantir que o elemento existe e está visível antes de validar seu texto.
 
 ---
 
-### Checklist rápido antes de refatorar
+## 4. Resumo rápido
 
-1. **Revisar documentação** (ou mock) para confirmar a mensagem de erro esperada.  
-2. **Abrir a página em modo debug** (`node test.spec.js --debug`) e inspecionar os elementos.  
-3. **Confirmar que o fluxo de validação** (submit, API call, feedback no UI) está realmente ocorrendo no teste.  
-4. **Executar os testes individualmente** e observar a saída de console/erro de rede.  
-5. **Atualizar as mensagens de erro** ou **adicionar regex** para tolerar variações.  
-6. **Revisar o código de testes** para usar seletores mais simples e legíveis (`#id`, `.class`, `text=`) em vez de XPath, a menos que seja estritamente necessário.  
+| Teste | Falha | Motivo | Correção sugerida |
+|-------|-------|--------|-------------------|
+| Login inválido | Texto diferente | Mensagem mudou | Atualizar `expected` ou usar regex |
+| Telefone vazio | Elemento não encontrado | Seletor errado / tempo | Corrigir seletor, esperar visibilidade, lidar com iframes/shadow |
 
-Com esses ajustes, os testes devem passar de forma confiável e refletir fielmente o comportamento da aplicação. Boa codificação!
+Depois de aplicar as correções, re‑execute os testes e verifique se eles passam. Se algum ainda falhar, use os logs e screenshots para diagnosticar a causa específica. Boa sorte!
