@@ -1,9 +1,10 @@
 name: JMeter Load Test
 
 on:
-  workflow_dispatch:
+  push:
     branches:
       - stress-test
+
 
 jobs:
   load_test:
