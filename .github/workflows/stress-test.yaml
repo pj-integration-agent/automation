@@ -1,9 +1,10 @@
 name: JMeter Load Test
 
 on:
-  workflow_dispatch:
+  push:
     branches:
       - stress-test
+  workflow_dispatch:
 
 jobs:
   load_test:
@@ -55,3 +56,11 @@ jobs:
                 }")
 
           echo "$RESPONSE" | jq -r '.choices[0].message.content' > results/analise-ia.html
+
+      - name: Salvar relatórios como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-report
+          path: |
+            results/report
+            results/analise-ia.html
