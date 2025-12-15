@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # permite commits automáticos
+  contents: write 
 
 jobs:
   load_test:

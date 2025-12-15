@@ -28,7 +28,7 @@
         </HeaderManager>
         <hashTree/>
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Requisição HTTP">
-          <stringProp name="HTTPSampler.domain">44.200.83.209</stringProp>
+          <stringProp name="HTTPSampler.domain">35.170.81.221</stringProp>
           <stringProp name="HTTPSampler.port">8080</stringProp>
           <stringProp name="HTTPSampler.path">/paises</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
