@@ -1,53 +1,154 @@
-**US01 – Cadastrar Novo Banco**  
-```
-titulo: US01 - Cadastrar Novo Banco,
+**User Story: US01 – Cadastro de Novo Banco**  
+```  
+titulo: US01 – Cadastro de Novo Banco,
 cenario_bdd:
-  - nome: Cadastro bem-sucedido
-    tipo: positivo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: Cadastro bem-sucedido\n  Given eu estou na tela de cadastro de bancos\n  When eu preencher o campo 'Código' com 'B001'\n  And eu preencher o campo 'Descrição do Banco' com 'Banco Nacional ABC'\n  And eu preencher o campo 'Apelido' com 'ABC'\n  And eu preencher o campo 'Número de inscrição no SBP' com '1234567'\n  And eu selecionar 'Banco XYZ' no campo 'Banco Controlador'\n  And eu inserir um CNPJ válido '12.345.678/0001-95' que existe no cadastro oficial\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem 'Banco cadastrado com sucesso'\n  And eu devo ser redirecionado para a lista de bancos"
-
-  - nome: Código já existente
-    tipo: negativo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: Código já existente\n  Given já existe um banco cadastrado com o Código 'B001'\n  When eu abrir a tela de cadastro de bancos\n  And eu preencher o campo 'Código' com 'B001'\n  And eu preencher os demais campos obrigatórios com valores válidos\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'O Código informado já existe. Por favor, escolha outro.'"
-
-  - nome: Campo obrigatório em branco
-    tipo: negativo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: Campo obrigatório em branco\n  Given eu estou na tela de cadastro de bancos\n  When eu preencher somente o campo 'Código' com 'B004'\n  And eu deixar os demais campos obrigatórios vazios\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'Todos os campos obrigatórios devem ser preenchidos.'"
-
-  - nome: CNPJ inválido (formato)
-    tipo: negativo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: CNPJ inválido (formato)\n  Given eu estou na tela de cadastro de bancos\n  When eu preencher o campo 'Código' com 'B002'\n  And eu preencher os demais campos obrigatórios com valores válidos\n  And eu inserir um CNPJ inválido '12.345.678/0001-00' (dígito verificador incorreto)\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'O CNPJ informado é inválido.'"
-
-  - nome: CNPJ inexistente no cadastro oficial
-    tipo: negativo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: CNPJ inexistente no cadastro oficial\n  Given eu estou na tela de cadastro de bancos\n  When eu preencher o campo 'Código' com 'B003'\n  And eu preencher os demais campos obrigatórios com valores válidos\n  And eu inserir um CNPJ válido em formato, porém inexistente no cadastro oficial '98.765.432/0001-10'\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'O CNPJ informado não está registrado no cadastro oficial.'"
-
-  - nome: Banco Controlador não selecionado
-    tipo: negativo
-    gherkin: "Feature: US01 – Cadastro de Bancos\nScenario: Banco Controlador não selecionado\n  Given eu estou na tela de cadastro de bancos\n  When eu preencher todos os campos obrigatórios, exceto 'Banco Controlador'\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'Selecione um Banco Controlador válido.'"
+    nome: Cadastro completo e válido,
+    tipo: positivo,
+    gherkin: "Feature: Cadastro de Novo Banco\n\
+Scenario: Cadastro completo e válido\n\
+  Given que eu esteja na tela de lista de bancos\n\
+  When eu clico em \"Novo\"\n\
+  And preencho \"Código\" com \"BAN001\"\n\
+  And preencho \"Descrição do Banco\" com \"Banco Teste Nacional\"\n\
+  And preencho \"Apelido\" com \"BTN\"\n\
+  And preencho \"Número de inscrição no SBP\" com \"123456\"\n\
+  And seleciono \"Banco Controlador\" com \"Banco Central\"\n\
+  And preencho \"CNPJ\" com \"12.345.678/0001-90\"\n\
+  Then eu clico em \"Salvar\"\n\
+  And vejo o registro \"BAN001\" na lista de bancos\n\
+  And a mensagem \"Cadastro concluído com sucesso\" é exibida"
 ```
 
-**US02 – Editar Banco Existente**  
-```
-titulo: US02 - Editar Banco Existente,
+```  
 cenario_bdd:
-  - nome: Edição bem-sucedida
-    tipo: positivo
-    gherkin: "Feature: US02 – Edição de Bancos\nScenario: Edição bem-sucedida\n  Given existe um banco cadastrado com Código 'B005' e Descrição 'Banco Original'\n  And eu estou na lista de bancos\n  When eu clico em 'Editar' no registro 'B005'\n  And eu altero o campo 'Descrição do Banco' para 'Banco Alterado'\n  And eu altero o campo 'Apelido' para 'Alterado'\n  And eu altero o campo 'Número de inscrição no SBP' para '7654321'\n  And eu altero o campo 'Banco Controlador' para 'Banco XYZ'\n  And eu altero o campo 'CNPJ' para '23.456.789/0001-56' (válido e existente)\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem 'Banco atualizado com sucesso'\n  And eu devo ser redirecionado para a lista de bancos\n  And o registro 'B005' deve refletir as alterações feitas."
-
-  - nome: Código não pode ser alterado
-    tipo: negativo
-    gherkin: "Feature: US02 – Edição de Bancos\nScenario: Código não pode ser alterado\n  Given existe um banco cadastrado com Código 'B006'\n  And eu estou na lista de bancos\n  When eu clico em 'Editar' no registro 'B006'\n  And eu tento mudar o campo 'Código' de 'B006' para 'B007'\n  And eu clicar em 'Salvar'\n  Then o campo 'Código' permanece com valor 'B006'\n  And nenhuma mensagem de erro é exibida\n  And o banco continua com Código 'B006'"
-
-  - nome: Campo obrigatório em branco na edição
-    tipo: negativo
-    gherkin: "Feature: US02 – Edição de Bancos\nScenario: Campo obrigatório em branco na edição\n  Given existe um banco cadastrado com Código 'B008'\n  And eu estou na lista de bancos\n  When eu clico em 'Editar' no registro 'B008'\n  And eu limpo os campos 'Descrição do Banco', 'Apelido', 'Número de inscrição no SBP' e 'Banco Controlador'\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'Todos os campos obrigatórios devem ser preenchidos.'"
-
-  - nome: CNPJ inválido na edição
-    tipo: negativo
-    gherkin: "Feature: US02 – Edição de Bancos\nScenario: CNPJ inválido na edição\n  Given existe um banco cadastrado com Código 'B007'\n  And eu estou na lista de bancos\n  When eu clico em 'Editar' no registro 'B007'\n  And eu inserir um CNPJ inválido '11.111.111/1111-11' no campo 'CNPJ'\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'O CNPJ informado é inválido.'"
-
-  - nome: Banco Controlador inválido na edição
-    tipo: negativo
-    gherkin: "Feature: US02 – Edição de Bancos\nScenario: Banco Controlador inválido na edição\n  Given existe um banco cadastrado com Código 'B009'\n  And eu estou na lista de bancos\n  When eu clico em 'Editar' no registro 'B009'\n  And eu selecionar um valor inexistente no campo 'Banco Controlador'\n  And eu clicar em 'Salvar'\n  Then eu devo ver a mensagem de erro 'Selecione um Banco Controlador válido.'"
+    nome: Código em branco,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de Novo Banco – Validação de Campos Obrigatórios\n\
+Scenario: Código em branco\n\
+  Given que eu esteja na tela de cadastro\n\
+  When eu deixo o campo \"Código\" em branco\n\
+  And preencho os demais campos com valores válidos\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"Código é obrigatório\" aparece"
 ```
+
+```  
+cenario_bdd:
+    nome: Código duplicado,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de Novo Banco – Validação de Campos Obrigatórios\n\
+Scenario: Código duplicado\n\
+  Given que exista já um banco cadastrado com Código \"BAN001\"\n\
+  When eu clico em \"Novo\" e preencho \"Código\" com \"BAN001\"\n\
+  And preencho os demais campos com valores válidos\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"Código já cadastrado\" aparece"
+```
+
+```  
+cenario_bdd:
+    nome: CNPJ inválido (formato),
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de Novo Banco – Validação de Campos Obrigatórios\n\
+Scenario: CNPJ inválido (formato)\n\
+  Given que eu esteja na tela de cadastro\n\
+  When eu preencho \"CNPJ\" com \"123\"\n\
+  And preencho os demais campos com valores válidos\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"CNPJ inválido\" aparece"
+```
+
+```  
+cenario_bdd:
+    nome: CNPJ não existente no cadastro oficial,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de Novo Banco – Validação de Campos Obrigatórios\n\
+Scenario: CNPJ não existente no cadastro oficial\n\
+  Given que eu esteja na tela de cadastro\n\
+  When eu preencho \"CNPJ\" com \"99.999.999/9999-99\"\n\
+  And preencho os demais campos com valores válidos\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"CNPJ não encontrado no cadastro oficial\" aparece"
+```
+
+```  
+cenario_bdd:
+    nome: Banco Controlador não selecionado,
+    tipo: negativo,
+    gherkin: "Feature: Cadastro de Novo Banco – Validação de Campos Obrigatórios\n\
+Scenario: Banco Controlador não selecionado\n\
+  Given que eu esteja na tela de cadastro\n\
+  When eu deixo o campo \"Banco Controlador\" sem seleção\n\
+  And preencho os demais campos com valores válidos\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"Banco Controlador é obrigatório\" aparece"
+```
+
+---
+
+**User Story: US02 – Edição de Banco Existente**  
+```  
+titulo: US02 – Edição de Banco Existente,
+cenario_bdd:
+    nome: Editar descrição e CNPJ de forma válida,
+    tipo: positivo,
+    gherkin: "Feature: Edição de Banco\n\
+Scenario: Editar descrição e CNPJ de forma válida\n\
+  Given que exista um banco cadastrado com Código \"BAN001\"\n\
+  And eu esteja na lista de bancos\n\
+  When eu clico no registro \"BAN001\" e seleciono \"Editar\"\n\
+  And altero \"Descrição do Banco\" para \"Banco Teste Editado\"\n\
+  And altero \"CNPJ\" para \"12.345.678/0001-91\"\n\
+  Then eu clico em \"Salvar\"\n\
+  And vejo as alterações refletidas na lista de bancos\n\
+  And a mensagem \"Alterações salvas com sucesso\" é exibida"
+```
+
+```  
+cenario_bdd:
+    nome: Tentar alterar Código (não permitido),
+    tipo: negativo,
+    gherkin: "Feature: Edição de Banco – Validação de Campos\n\
+Scenario: Tentar alterar Código (não permitido)\n\
+  Given que exista um banco cadastrado com Código \"BAN001\"\n\
+  When eu clico em \"Editar\" no registro \"BAN001\"\n\
+  Then o campo \"Código\" é exibido mas está desabilitado"
+```
+
+```  
+cenario_bdd:
+    nome: Deixar campo obrigatório vazio na edição,
+    tipo: negativo,
+    gherkin: "Feature: Edição de Banco – Validação de Campos\n\
+Scenario: Deixar campo obrigatório vazio na edição\n\
+  Given que exista um banco cadastrado com Código \"BAN001\"\n\
+  When eu clico em \"Editar\" e deixo \"Apelido\" em branco\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"Apelido é obrigatório\" aparece"
+```
+
+```  
+cenario_bdd:
+    nome: Inserir CNPJ inválido na edição,
+    tipo: negativo,
+    gherkin: "Feature: Edição de Banco – Validação de Campos\n\
+Scenario: Inserir CNPJ inválido na edição\n\
+  Given que exista um banco cadastrado com Código \"BAN001\"\n\
+  When eu clico em \"Editar\" e altero \"CNPJ\" para \"111\"\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"CNPJ inválido\" aparece"
+```
+
+```  
+cenario_bdd:
+    nome: Inserir CNPJ que não existe no cadastro oficial,
+    tipo: negativo,
+    gherkin: "Feature: Edição de Banco – Validação de Campos\n\
+Scenario: Inserir CNPJ que não existe no cadastro oficial\n\
+  Given que exista um banco cadastrado com Código \"BAN001\"\n\
+  When eu clico em \"Editar\" e altero \"CNPJ\" para \"99.999.999/9999-99\"\n\
+  Then eu clico em \"Salvar\"\n\
+  And a mensagem \"CNPJ não encontrado no cadastro oficial\" aparece"
+```
+
+---
