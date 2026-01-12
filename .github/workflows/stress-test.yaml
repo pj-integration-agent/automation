@@ -1,0 +1,82 @@
+name: JMeter Load Test
+
+on:
+  push:
+    branches:
+      - stress-test
+  workflow_dispatch:
+
+permissions:
+  contents: write 
+
+jobs:
+  load_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # =============================
+      # Checkout
+      # =============================
+      - name: Checkout do repositório
+        uses: actions/checkout@v3
+        with:
+          ref: stress-test
+
+      # =============================
+      # Dependências do sistema
+      # =============================
+      - name: Instalar Java e Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre python3 python3-pip
+
+      # =============================
+      # Dependências Python
+      # =============================
+      - name: Instalar dependências Python
+        run: |
+          pip3 install groq
+
+      # =============================
+      # Instalar JMeter
+      # =============================
+      - name: Instalar JMeter
+        run: |
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
+
+      # =============================
+      # Criar diretórios
+      # =============================
+      - name: Criar diretórios
+        run: mkdir -p results ai/analysis
+
+      # =============================
+      # Executar JMeter
+      # =============================
+      - name: Executar JMeter
+        run: |
+          apache-jmeter-5.6.3/bin/jmeter \
+            -n \
+            -t stress/stress-test.jmx \
+            -l results/resultado.jtl
+
+      # =============================
+      # Gerar análise de stress com IA
+      # =============================
+      - name: Gerar análise de stress com IA (Groq)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python3 ai/generate/generate_analise_stress_test.py
+
+      # =============================
+      # Commit e push da análise
+      # =============================
+      - name: Commit e push da análise
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ai/analysis/stress_analysis.txt
+          git commit -m "Análise automática de stress-test (Groq)" || echo "Nada para commitar"
+          git push origin stress-test
