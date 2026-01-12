@@ -50,6 +50,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Análise automática de stress-test (Groq)" || echo "Nada para commitar"
+          git add ai/analysis/stress_analysis.txt
+          git commit -m "Análise automática dos resultados do stress-test (Groq)"
           git push 
