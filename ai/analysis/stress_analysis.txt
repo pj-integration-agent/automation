@@ -1,67 +1,41 @@
-Relatório Técnico – Análise de Teste de Stress
+Relatório Técnico – Análise de Stress‑Test (JTL)
 
-Resumo do Cenário
-O teste foi executado contra a URL https://pokeapi.co/api/v2/pokemon/ditto utilizando 20 solicitações GET. As execuções foram realizadas em um único processo JMeter, alternando entre duas threads nos primeiros dois ciclos e uma thread nas demais. Todas as respostas retornaram código HTTP 200 OK.
+Resumo do cenário de teste  
+O teste foi conduzido contra a API pública “https://pokeapi.co/api/v2/pokemon/ditto” utilizando 2 threads de execução, com 20 requisições do tipo GET. Todas as requisições foram realizadas em um intervalo de 9 000 ms (9 s), resultando em 20 chamadas bem-sucedidas (código HTTP 200).
 
-Volume Total de Requisições
-20 requisições foram registradas no arquivo JTL.
+Volume total de requisições  
+Total de solicitações registradas: 20.
 
-Throughput Estimado
-A duração efetiva do teste é a diferença entre o primeiro e o último timestamp: 1768238292353 ms – 1768238282949 ms ≈ 9 404 ms (9,404 s). O throughput médio é então:
+Throughput estimado  
+Throughput = total de requisições / duração do teste = 20 / 9 s ≈ 2,22 requisições por segundo. Esse valor reflete a taxa de produção das requisições no ambiente de teste.
 
-Throughput = 20 requerimentos / 9,404 s ≈ **2,12 requisições por segundo**.
+Latência (p50, p90, p95, p99)  
+Os valores de latência (coluna “Latency”) foram os seguintes, em ordem crescente: 39 ms, 41 ms, 41 ms, 42 ms, 42 ms, 43 ms, 43 ms, 43 ms, 44 ms, 44 ms, 45 ms, 45 ms, 45 ms, 46 ms, 48 ms, 48 ms, 48 ms, 49 ms, 357 ms, 761 ms.  
+Com base nesses dados:  
+- p50 (mediana) ≈ 44,5 ms  
+- p90 ≈ 49 ms  
+- p95 ≈ 357 ms  
+- p99 ≈ 761 ms  
 
-Latência
-Os valores de Latency (ms) foram:
+Taxa de erros  
+Nenhum erro foi registrado; taxa de falhas = 0 %. Todos os 20 requests retornaram HTTP 200.
 
-884, 481, 77, 77, 72, 70, 72, 75, 72, 72, 70, 73, 71, 73, 87, 69, 70, 68, 68, 68
+Principais gargalos identificados  
+1. Latências atípicas de 357 ms e 761 ms, que elevam significativamente o p95 e p99, indicando possíveis gargalos de rede ou de processamento da API externa.  
+2. O throughput baixo (≈ 2,2 req/s) sugere que a configuração de threads ou o limite de conexão não foram adequados ao objetivo de carga.  
+3. Falta de variabilidade nas métricas de latência entre as primeiras duas requisições (conexões ativas) e as demais (conexões fechadas), indicando que a manutenção de conexão (keep‑alive) pode estar contribuindo para a discrepância.
 
-Percentis calculados:
+Impacto potencial em ambiente de produção  
+Mesmo que a taxa de erro seja nula, os p95 e p99 elevados implicam em experiências de usuário degradadas quando a aplicação dependerá de respostas da API em intervalos críticos. Se o tráfego real atingir centenas ou milhares de requisições por segundo, esses picos de latência podem se multiplicar, resultando em tempos de espera excessivos, timeouts em downstream services e aumento de custos de rede e infra‑estrutura.
 
-- p50 (50 %) = 72 ms  
-- p90 (90 %) = (87 + 481)/2 = **284 ms**  
-- p95 (95 %) = 864 ms (interpolado)  
-- p99 (99 %) = 884 ms  
+Recomendações técnicas claras e acionáveis  
+1. **Otimização de conexão** – habilitar e configurar corretamente keep‑alive na camada HTTP/1.1 ou HTTP/2. Isso reduzirá o overhead de estabelecimento de conexão e poderá mitigar latências elevadas em requisições subsequentes.  
+2. **Pool de conexões** – configurar um pool de conexões no cliente HTTP (ex.: Apache HttpClient, OkHttp, etc.) para reutilizar sockets e reduzir latência de conexão inicial.  
+3. **Balanceamento de carga e redundância** – se possível, distribuir as chamadas entre múltiplos nós da API ou usar um serviço de proxy que balanceie a carga, diminuindo a probabilidade de gargalos concentrados.  
+4. **Cache de respostas** – a API retorna dados estáticos sobre o Pokémon “ditto”; implementar caching no lado cliente ou em um proxy reverso (ex.: Varnish, CloudFront) pode eliminar chamadas repetidas e reduzir a latência observada.  
+5. **Aumentar o número de threads** – para simular cenários de produção, elevar o número de usuários virtuais (threads) e manter o mesmo número de requisições por usuário. Isso permitirá observar o comportamento de throughput em condições de carga mais realista.  
+6. **Monitoramento de métricas** – integrar ferramentas de observabilidade (Prometheus, Grafana, New Relic, etc.) para acompanhar em tempo real latência, throughput e taxa de erros, permitindo detecção precoce de degradação.  
+7. **Testes de carga adicionais** – repetir o teste com cargas progressivas (50, 100, 200 requisições simultâneas) para mapear o ponto de saturação e validar a eficácia das otimizações implementadas.  
+8. **Análise de logs da API** – se possível, acessar logs internos da API (ou solicitar métricas ao provedor) para identificar se os picos de latência são originados no endpoint ou em camadas externas (DNS, firewall, CDN).  
 
-Taxa de Erros
-Todas as requisições foram marcadas como success = true. Assim, a taxa de erros é **0 %**.
-
-Principais Gargalos Identificados
-1. **Latência extrema** – dois picos de 884 ms e 481 ms, muito acima do pico de 200 ms que costuma ser considerado aceitável para serviços REST.  
-2. **Tempo de conexão elevado** – o campo Connect registra valores de 849 ms e 447 ms nos picos, sugerindo que o estabelecimento de conexões TCP está contribuindo fortemente para a latência.  
-3. **Baixa concorrência** – apenas duas threads no início e uma thread depois, limitando a capacidade de geração de carga e mascarando possíveis gargalos de concorrência no servidor.  
-4. **Falta de Keep‑Alive** – a ausência de reutilização de conexões HTTP aumenta o overhead de conexão em cada requisição.
-
-Impacto Potencial em Ambiente de Produção
-- A latência média de 72 ms pode ser aceitável, porém os picos de quase 900 ms podem levar a time‑outs de clientes, especialmente em aplicações móveis ou em navegadores que esperam respostas rápidas.  
-- O throughput de 2,12 rps indica que, sob carga semelhante, o serviço não atenderá volumes maiores, o que pode resultar em fila de requisições ou degradação de desempenho em picos de tráfego.  
-- Conexões TCP repetidas geram maior carga na camada de transporte, elevando a utilização de recursos do servidor (CPU, sockets) e potencialmente aumentando a latência de todas as requisições subsequentes.
-
-Recomendações Técnicas
-
-1. **Habilitar Keep‑Alive e Reutilização de Conexões**  
-   Configure o JMeter para usar HTTPClient4 com conexão persistente (keep‑alive). Isso reduzirá drasticamente o tempo de conexão e a sobrecarga de estabelecimento de TCP.
-
-2. **Aumentar a Concurrency e Ramp‑Up**  
-   Execute testes com 50, 100 ou 200 threads em um ramp‑up de 60 s para identificar o ponto de saturação do servidor. Isso permitirá observar o comportamento de latência em condições de carga realista.
-
-3. **Monitorar Recursos do Servidor**  
-   Coletar métricas de CPU, memória, I/O de disco e utilização de rede durante o teste. Se houver aumento de 80 %+ de CPU ou I/O, pode ser necessário balancear a carga ou otimizar a lógica de negócio.
-
-4. **Analisar o Código de Backend**  
-   Verificar consultas SQL, chamadas externas ou processamento intensivo que pode estar ocorrendo nos picos. Implementar cache, otimizar índices e reduzir chamadas externas pode diminuir a latência.
-
-5. **Limitar e Monitorar Latência**  
-   Definir alertas de SLA que dispararão quando a latência ultrapassar 200 ms. Utilizar ferramentas como Grafana + Prometheus para monitoramento em tempo real.
-
-6. **Usar Testes Distribuídos**  
-   Se a aplicação for hospedada em múltiplos servidores, usar JMeter distribuído para gerar carga de forma mais realista e reduzir a dependência de um único nó de teste.
-
-7. **Validar Configuração de Rede**  
-   Verificar roteamento, MTU, qualidade de serviço (QoS) e firewalls que podem estar introduzindo atrasos. Reduzir o número de hops ou melhorar a largura de banda pode diminuir o Connect time.
-
-8. **Implementar Retry e Timeout Adequado**  
-   Definir timeouts de conexão e leitura adequados (por exemplo, 500 ms) e implementar lógica de retry com back‑off exponencial para melhorar a resiliência.
-
-Conclusão
-O teste atual demonstra que o serviço responde rapidamente na maioria das requisições, mas apresenta latências extremas e throughput insuficiente para cargas maiores. As recomendações acima visam reduzir a latência de conexão, aumentar a capacidade de processamento e garantir que o serviço atenda aos requisitos de desempenho em produção. Um novo ciclo de testes, seguindo essas orientações, permitirá validar a eficácia das correções implementadas.
+Implementação dessas ações reduzirá as latências atípicas, aumentará o throughput e garantirá maior confiabilidade e desempenho em produção.
