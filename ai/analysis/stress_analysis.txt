@@ -1,41 +1,42 @@
-Relatório Técnico – Teste de Stress JMeter
+Resumo do cenário de teste  
+O teste foi executado em ambiente de Integração Contínua (CI) utilizando o Apache JMeter. O objetivo era avaliar a capacidade de resposta da API externa PokéAPI ao receber requisições GET do endpoint /pokemon/ditto. Foram configuradas duas threads simultâneas, cada uma executando 10 requisições, totalizando 20 chamadas HTTP. O teste foi curto, com duração de aproximadamente 9 segundos, e não houve falhas de conexão nem de resposta HTTP (código 200) em nenhuma das 20 solicitações.
 
-Resumo do Cenário de Teste  
-O teste foi executado com uma única thread que enviou 20 requisições GET ao endpoint https://pokeapi.co/api/v2/pokemon/ditto, simulando um cenário de carga leve em que o objetivo era avaliar a estabilidade e latência de respostas. Todas as requisições foram realizadas em sequência, sem paralelismo, e os resultados foram coletados num arquivo JTL resumido contendo tempo de execução, latência e dados de conexão.
+Volume total de requisições  
+O conjunto de dados contém exatamente 20 requisições.
 
-Volume Total de Requisições  
-Foram registradas 20 requisições HTTP durante o período de teste. O volume total de dados retornados somou aproximadamente 523.000 bytes, enquanto 2.660 bytes foram enviados.
-
-Throughput Estimado  
-O intervalo entre o primeiro e o último registro foi de 9.422 milissegundos (9,422 segundos). Assim, o throughput médio foi de 20 / 9,422 ≈ 2,12 requisições por segundo (RPS). Esse valor representa a taxa média de entrega de respostas na configuração de teste atual.
+Throughput estimado  
+O throughput calculado é de 2,22 requisições por segundo (20 solicitações / 8,998 s). Esse valor reflete o mínimo de carga aplicada e pode ser significativamente inferior ao que a aplicação suportará em produção.
 
 Latência  
-Os valores de latência (ms) registrados foram: 334, 33, 32, 20, 31, 29, 28, 24, 28, 47, 23, 22, 27, 21, 23, 18, 25, 24, 26, 23.  
-- p50 (mediana): 24 ms  
-- p90: 33 ms  
-- p95: 334 ms  
-- p99: 334 ms  
+A coluna “Latency” corresponde ao tempo até a primeira resposta. Os percentis foram calculados a partir dos 20 valores disponíveis.  
+- p50: 48,5 ms  
+- p90: 441 ms  
+- p95: 816 ms  
+- p99: 816 ms  
 
-O pico de latência de 334 ms ocorre em apenas uma requisição e inflaciona os percentis superiores. A maioria das respostas permanece abaixo de 35 ms, indicando boa performance sob carga mínima.
+A maioria das requisições apresenta latência inferior a 100 ms. No entanto, duas chamadas apresentaram latências muito superiores (441 ms e 816 ms), elevando os percentis 90, 95 e 99. Esses valores indicam que, mesmo sob carga leve, existe possibilidade de picos de latência que podem degradar a experiência do usuário.
 
-Taxa de Erros  
-Todas as 20 requisições retornaram código 200 e foram marcadas como success=true. Portanto, a taxa de erros foi 0 %. Não há falhas de rede ou de aplicação detectadas nesse conjunto de dados.
+Taxa de erros  
+Todas as respostas foram bem‑sucedidas (código 200 e flag success = true). A taxa de erros é 0 %. Entretanto, não foram verificadas as mensagens de resposta nem a validade do corpo, o que pode mascarar falhas de lógica de negócio.
 
-Principais Gargalos Identificados  
-1. Latência de conexão excepcional (Connect = 318 ms na primeira requisição). O tempo de estabelecimento de conexão é significativamente maior que o restante dos valores, sugerindo problemas de TCP handshake ou de resolução de DNS.  
-2. Outlier de latência total de 334 ms que eleva os percentis p95 e p99. Esse ponto pode indicar um gargalo no servidor ou no caminho de rede.  
-3. A configuração atual usa apenas uma thread; embora isso não gere sobrecarga, ele limita a taxa de requisições e não reflete um cenário de alto tráfego.
+Principais gargalos identificados  
+1. Conexões de rede inconstantes – Os valores de “Connect” revelam dois tempos de conexão muito elevados (417 ms e 816 ms). Esses picos são responsáveis pelos altos valores de latência observados nos percentis 90/95/99.  
+2. Baixa paralelização – Apenas duas threads foram utilizadas, o que limita drasticamente a carga e impede a detecção de gargalos de concorrência.  
+3. Falta de análise de resposta – A ausência de assertivas sobre o conteúdo da resposta impede a identificação de erros lógicos que não geram falha HTTP.
 
-Impacto Potencial em Ambiente de Produção  
-Em produção, onde a carga pode ser dezenas ou centenas de vezes maior, a conexão lenta pode se tornar um fator crítico. Se o tempo de handshake for recorrente, a aplicação pode enfrentar limites de throughput e, em picos de tráfego, pode ocorrer time‑out ou queda de sessão. Além disso, a presença de latências elevadas pode degradar a experiência do usuário final e aumentar a taxa de rejeição de clientes.
+Impacto potencial em ambiente de produção  
+Em produção, a aplicação provavelmente enfrentará um número muito maior de usuários simultâneos. Se os gargalos de conexão persistirem, o tempo médio de resposta pode subir de forma não linear, causando gargalos de rede e aumentando a taxa de timeout em clientes. A baixa paralelização no teste também significa que o comportamento de escalonamento, concorrência de banco de dados e limites de conexões não foram avaliados. Assim, há risco de subdimensionamento de recursos, especialmente de rede e CPU, resultando em degradação de performance e possível queda de disponibilidade.
 
-Recomendações Técnicas e Acionáveis  
-- Ativar o recurso Keep‑Alive no sampler HTTP para reutilizar conexões TCP, reduzindo o custo de handshake.  
-- Configurar JMeter para usar HTTPClient4 com pool de conexões, definindo “Use concurrent pool” e ajustando o tamanho do pool para o número esperado de conexões simultâneas.  
-- Verificar a resolução de DNS local; se o domínio for resolvido via servidor DNS remoto, considerar um cache local ou resolver antes de iniciar o teste.  
-- Analisar os logs do servidor para a requisição com 334 ms; verificar se há gargalos de processamento interno ou bloqueios de banco de dados.  
-- Implementar métricas de monitoramento em tempo real (CPU, memória, I/O de rede) para correlacionar latências altas com possíveis saturações de recursos.  
-- Repetir o teste com múltiplas threads (ex.: 10, 20, 50) para avaliar a escalabilidade e identificar limites de throughput.  
-- Se o serviço for crítico, considerar a adoção de CDN ou cache de respostas estáticas para reduzir a carga nas instâncias de back‑end.
+Recomendações técnicas claras e acionáveis  
+1. **Aumentar a carga de teste** – Execute o JMeter com 50–100 threads e ramp-up de 30–60 s para simular um cenário mais próximo da produção.  
+2. **Habilitar keep‑alive e pooling de conexões** – Configure o JMeter para reutilizar conexões TCP/SSL, reduzindo os tempos de “Connect” e a sobrecarga de handshake.  
+3. **Melhorar o DNS caching** – Configure o sistema operacional ou JMeter para cachear resoluções DNS, eliminando latências de DNS que podem contribuir para os picos de conexão.  
+4. **Adicionar assertions de validação** – Verifique o corpo da resposta, códigos de status e headers para garantir que não ocorram falhas lógicas mesmo com respostas 200.  
+5. **Monitorar métricas de infraestrutura** – Coleta de CPU, memória, throughput de rede e tempo de resposta do servidor alvo. Utilize ferramentas como Grafana ou Prometheus para identificar pontos de contenção.  
+6. **Isolar a API externa** – Caso o gargalo esteja na PokéAPI, considere implementar cache local (Redis ou memcached) ou um serviço de proxy que reduza chamadas externas.  
+7. **Revisar a arquitetura de rede** – Se os tempos de conexão permanecerem altos, analise a rota de rede, possíveis firewalls, balanceadores de carga e políticas de QoS.  
+8. **Implementar limites de taxa (rate limiting)** – Defina políticas no servidor para controlar o número de requisições simultâneas, evitando sobrecarga.  
+9. **Documentar e repetir** – Registre os resultados em um banco de dados de desempenho e execute o teste periodicamente (por exemplo, cada release) para acompanhar regressões.  
+10. **Planejar escalonamento horizontal** – Se a carga for maior que o throughput atual, adicione instâncias do serviço de backend e balanceador de carga para distribuir a carga.
 
-Essas ações permitirão reduzir a latência de conexão, aumentar o throughput e garantir que a aplicação suporte picos de tráfego sem comprometer a qualidade do serviço.
+Seguindo essas recomendações, será possível detectar e mitigar os gargalos identificados, garantindo que a aplicação mantenha desempenho aceitável sob cargas realistas em ambiente de produção.
