@@ -14,7 +14,7 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v3
         with:
-          ref: stress-test
+          ref: main
 
       - name: Instalar Java e Python
         run: |
