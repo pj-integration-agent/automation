@@ -1,12 +1,15 @@
 import os
-import google.generativeai as genai
+from google import genai
 
 
 def generate_user_stories_from_criterios():
-    # Configuração da API Gemini via Secrets (CI/CD)
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    api_key = os.getenv("GEMINI_API_KEY")
 
-    model = genai.GenerativeModel("gemini-1.5-pro")
+    if not api_key:
+        raise RuntimeError("❌ GEMINI_API_KEY não definida")
+
+    # Cliente Gemini (SDK novo e oficial)
+    client = genai.Client(api_key=api_key)
 
     with open(
         "ai/requirements/criterios.md",
@@ -18,33 +21,22 @@ def generate_user_stories_from_criterios():
     prompt = f"""
 Você é um especialista em análise de requisitos e criação de User Stories ágeis.
 
-Com base nos seguintes critérios de aceite, gere um conjunto de User Stories
-**completas, claras e consistentes**.
+Com base nos critérios abaixo, gere User Stories completas.
 
-Cada User Story deve:
-- Seguir o formato:
-  "Como [tipo de usuário], eu quero [objetivo] para [benefício/valor de negócio]"
-- Conter uma **descrição detalhada**
-- Incluir **critérios de aceite objetivos**
-- Ser **realista, testável e coerente**
-- Evitar sobreposição de escopo
-- Conter **rastreabilidade**, exemplo: (US01, US02...)
+Regras:
+- Formato: "Como [tipo de usuário], eu quero [objetivo] para [benefício]"
+- Descrição detalhada
+- Critérios de aceite objetivos
+- Rastreabilidade (US01, US02...)
 
-Retorne no formato abaixo:
-
-US01
-Título:
-Descrição:
-Critérios de Aceite:
-- ...
-
-Critérios fornecidos:
+Critérios:
 {all_contents}
 """
 
-    response = model.generate_content(prompt)
-
-    user_stories = response.text
+    response = client.models.generate_content(
+        model="gemini-1.5-pro",
+        contents=prompt
+    )
 
     os.makedirs("ai/user_stories", exist_ok=True)
     with open(
@@ -52,7 +44,7 @@ Critérios fornecidos:
         "w",
         encoding="utf-8"
     ) as f:
-        f.write(user_stories)
+        f.write(response.text)
 
 
 if __name__ == "__main__":
