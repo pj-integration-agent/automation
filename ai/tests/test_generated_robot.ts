@@ -1,386 +1,281 @@
-**BancoTests.robot**  
-*(Robot Framework – SeleniumLibrary, estrutura modular, comentários explicativos e melhores práticas de automação)*  
-
 ```robot
 *** Settings ***
-Documentation     Automatização dos testes de Cadastro, Edição e Validação de Bancos (US01‑US05)
 Library           SeleniumLibrary
-Library           OperatingSystem
-Library           String
-Suite Setup       Abrir Navegador
-Suite Teardown    Fechar Navegador
+Library           Collections
+Suite Setup       Open Application
+Suite Teardown    Close Browser
+Test Setup        Reset Test Data
+Test Teardown     Capture Page Screenshot
 
 *** Variables ***
-${URL}                        https://example.com/bancos
-${BROWSER}                    Chrome
-${TIMEOUT}                    10s
+${BROWSER}                 Chrome
+${URL}                     http://app.example.com
+${WAIT}                    5s
 
-# ---------- Locators ----------
-${CODE_INPUT}                 id=bankCode
-${DESC_INPUT}                 id=bankDescription
-${APELIDO_INPUT}              id=bankNickname
-${SBP_INPUT}                  id=bankSBP
-${CONTROLADOR_DDL}            id=bankController
-${CNJP_INPUT}                 id=bankCnpj
-${SAVE_BUTTON}                xpath=//button[normalize-space()='Salvar']
-${SUCCESS_MSG}                css=.alert-success
-${ERROR_MSG}                  css=.alert-danger
-${CODE_DUP_MSG}               xpath=//div[contains(@class,'alert') and contains(text(),'Código já cadastrado')]
-${CNJP_ERR_MSG}               xpath=//span[@id='cnpjError']
-${APELIDO_ERR_MSG}            xpath=//span[@id='apelidoError']
-${CONTROLADOR_ERR_MSG}        xpath=//span[@id='controllerError']
-${BANK_LIST}                  xpath=//table[@id='bankTable']/tbody
-${BANK_ROW}                   xpath=//tr[td[text()="${BANK_CODE}"]]
-${BANK_SEARCH_INPUT}          id=bankSearch
-${BANK_SEARCH_BTN}            id=searchBtn
-${BANK_EDIT_BTN}              xpath=//tr[td[text()="${BANK_CODE}"]]//button[@class='edit']
+# Test‑data used by the scenarios
+${B001_CODE}               B001
+${B002_CODE}               B002
+${B003_CODE}               B003
+${B001_DESC}               Banco Nacional S/A
+${B001_ALIAS}              BNASA
+${B001_SBP}                12345678
+${B001_CNPJ}               12.345.678/0001-90
+${INVALID_CNPJ}            11.222.333/4444-55
+${NEW_CNPJ}                98.765.432/0001-10
+${INVALID_DESC_MSG}        O campo Descrição do Banco é obrigatório
+${INVALID_CODE_MSG}        O campo Código é obrigatório
+${CODE_DUP_MSG}            Código já existe, escolha outro
+${CNPJ_ERR_MSG}            CNPJ inválido ou não encontrado
+${SUCCESS_MSG}             Banco cadastrado com sucesso
+${UPDATE_SUCCESS_MSG}      Banco atualizado com sucesso
+${READONLY_MSG}            Campo “Código” está em read‑only
 
-# ---------- Test Data ----------
-&{BANK_VALID}                  code=BNK001  description=Banco Nacional ABC  nickname=ABC  sbp=123456789  controller=Banco Controlador X  cnpj=12.345.678/0001-90
-&{BANK_DUPLICATE}              code=BNK001  description=Banco Duplicado  nickname=Dup  sbp=987654321  controller=Banco Controlador X  cnpj=23.456.789/0001-10
-&{BANK_CNJP_INVALID}           code=BNK002  description=Banco Inválido CNJP  nickname=Inválido  sbp=123456789  controller=Banco Controlador X  cnpj=00.000.000/0000-00
-&{BANK_NO_NICKNAME}            code=BNK003  description=Banco Sem Apelido  nickname=  sbp=123456789  controller=Banco Controlador X  cnpj=12.345.678/0001-90
-&{BANK_INVALID_CONTROLLER}     code=BNK004  description=Banco Sem Controlador Válido  nickname=SemCtrl  sbp=123456789  controller=Banco Inexistente  cnpj=12.345.678/0001-90
-&{BANK_EDIT}                   code=BNK005  description=Banco X  nickname=BX  sbp=123456789  controller=Banco Controlador Y  cnpj=98.765.432/0001-11
-&{BANK_EDIT_NEW_DESC}          description=Banco X Atualizado  nickname=X Upd  sbp=987654321  controller=Banco Controlador Y  cnpj=98.765.432/0001-11
-&{BANK_EDIT_CNJP_INVALID}      code=BNK008  cnpj=00.000.000/0000-00
-&{BANK_EDIT_NO_CONTROLLER}     code=BNK009  controller=Banco Inexistente
-
-*** Test Cases ***
-US01 - Cadastro com Dados Válidos
-    [Tags]    US01    Positive
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com ${BANK_VALID}
-    Then O botão Salvar deve estar habilitado
-    When Clico em Salvar
-    Then Devo ver a mensagem "Banco cadastrado com sucesso"
-    And A lista de bancos deve incluir um registro com Código ${BANK_VALID['code']}
-
-US01 - Código Duplicado
-    [Tags]    US01    Negative
-    Given Já existe um banco com Código ${BANK_DUPLICATE['code']}
-    When Preencho Os Campos com ${BANK_DUPLICATE}
-    Then O botão Salvar deve estar habilitado
-    When Clico em Salvar
-    Then Devo ver a mensagem "Código já cadastrado"
-    And O registro não deve ser salvo
-
-US01 - CNJP Inválido
-    [Tags]    US01    Negative
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com ${BANK_CNJP_INVALID}
-    Then Devo ver a mensagem "CNJP inválido" ao lado do campo CNJP
-    And O botão Salvar permanece desabilitado
-
-US01 - Campo Obrigatório em Branco (Apelido)
-    [Tags]    US01    Negative
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com ${BANK_NO_NICKNAME}
-    Then Devo ver a mensagem "Apelido é obrigatório" ao lado do campo Apelido
-    And O botão Salvar permanece desabilitado
-
-US01 - Banco Controlador Inexistente
-    [Tags]    US01    Negative
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com ${BANK_INVALID_CONTROLLER}
-    Then Devo ver a mensagem "Banco Controlador inválido" ao lado do campo Banco Controlador
-    And O botão Salvar permanece desabilitado
-
-US02 - Edição com Sucesso
-    [Tags]    US02    Positive
-    Given Existe um banco com Código ${BANK_EDIT['code']} e Descrição "${BANK_EDIT['description']}"
-    When Abro a tela de edição de ${BANK_EDIT['code']}
-    And Altero "Descrição" para ${BANK_EDIT_NEW_DESC['description']}
-    And Altero "Apelido" para ${BANK_EDIT_NEW_DESC['nickname']}
-    And Altero "Número de inscrição no SBP" para ${BANK_EDIT_NEW_DESC['sbp']}
-    And Seleciono "Banco Controlador" como ${BANK_EDIT_NEW_DESC['controller']}
-    And Altero "CNJP" para ${BANK_EDIT_NEW_DESC['cnpj']}
-    Then O botão Salvar deve estar habilitado
-    When Clico em Salvar
-    Then Devo ver a mensagem "Banco atualizado com sucesso"
-    And A lista de bancos deve refletir a nova descrição e CNJP
-
-US02 - Tentativa de Alteração do Código (Somente Leitura)
-    [Tags]    US02    Negative
-    Given Existe um banco com Código ${BANK_EDIT['code']}
-    When Abro a tela de edição de ${BANK_EDIT['code']}
-    And Tento alterar o campo "Código" para "BNK007"
-    Then O campo "Código" permanece não editável
-
-US02 - CNJP Inválido na Edição
-    [Tags]    US02    Negative
-    Given Existe um banco com Código ${BANK_EDIT_CNJP_INVALID['code']}
-    When Abro a tela de edição de ${BANK_EDIT_CNJP_INVALID['code']}
-    And Altero "CNJP" para ${BANK_EDIT_CNJP_INVALID['cnpj']}
-    And Preencho os demais campos com valores válidos
-    Then Devo ver a mensagem "CNJP inválido" ao lado do campo CNJP
-    And O botão Salvar permanece desabilitado
-
-US02 - Banco Controlador Inexistente na Edição
-    [Tags]    US02    Negative
-    Given Existe um banco com Código ${BANK_EDIT_NO_CONTROLLER['code']}
-    When Abro a tela de edição de ${BANK_EDIT_NO_CONTROLLER['code']}
-    And Seleciono "Banco Controlador" como ${BANK_EDIT_NO_CONTROLLER['controller']}
-    And Preencho os demais campos com valores válidos
-    Then Devo ver a mensagem "Banco Controlador inválido" ao lado do campo Banco Controlador
-    And O botão Salvar permanece desabilitado
-
-US03 - Mensagem Instantânea de Campo Obrigatório
-    [Tags]    US03    Positive
-    Given Estou na tela de cadastro de bancos
-    When Deixo em branco o campo "Apelido"
-    Then A mensagem "Apelido é obrigatório" aparece imediatamente
-    And O botão Salvar fica desabilitado
-    When Escrevo "Banco Teste" no campo "Apelido"
-    Then A mensagem desaparece
-    And O botão Salvar fica habilitado (se demais campos válidos)
-
-US03 - Mensagem CNJP Inválido em Tempo Real
-    [Tags]    US03    Negative
-    Given Estou na tela de cadastro de bancos
-    When Preencho "CNJP" com "00.000.000/0000-00"
-    Then A mensagem "CNJP inválido" aparece imediatamente
-    And O botão Salvar permanece desabilitado
-
-US04 - Botão Habilitado Quando Todos os Campos Válidos
-    [Tags]    US04    Positive
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com
-    ...    code=BNK010
-    ...    description=Banco Y
-    ...    nickname=Y
-    ...    sbp=987654321
-    ...    controller=Banco Controlador Z
-    ...    cnpj=12.345.678/0001-90
-    Then O botão Salvar deve estar habilitado
-
-US04 - Botão permanece desabilitado se houver campo inválido
-    [Tags]    US04    Negative
-    Given Estou na tela de cadastro de bancos
-    When Deixo em branco o campo "Número de inscrição no SBP"
-    And Preencho os demais campos com valores válidos
-    Then O botão Salvar permanece desabilitado
-
-US04 - Botão desabilitado após remoção de valor de campo previamente válido
-    [Tags]    US04    Negative
-    Given Estou na tela de cadastro de bancos
-    When Preencho Os Campos com
-    ...    code=BNK011
-    ...    description=Banco Z
-    ...    nickname=Z
-    ...    sbp=123456789
-    ...    controller=Banco Controlador W
-    ...    cnpj=12.345.678/0001-90
-    Then O botão Salvar deve estar habilitado
-    When Deixo em branco o campo "Apelido"
-    Then O botão Salvar permanece desabilitado
-
-US05 - Seleção Válida de Banco Controlador
-    [Tags]    US05    Positive
-    Given Estou na tela de cadastro de bancos
-    And A lista "Banco Controlador" contém "Banco Controlador X"
-    When Seleciono "Banco Controlador" como "Banco Controlador X"
-    Then O campo "Banco Controlador" reflete a seleção
-    And O botão Salvar permanece habilitado (se demais campos válidos)
-
-US05 - Lista vazia de Banco Controlador
-    [Tags]    US05    Negative
-    Given A tabela de Bancos Controladores está vazia
-    When Abro a tela de cadastro de bancos
-    Then Devo ver a mensagem "Nenhum Banco Controlador disponível"
-    And O botão Salvar permanece desabilitado
+# XPath helpers – locate elements relative to their label
+#   Useful for stable selectors that do not change even if the UI layout does
+#   The `following-sibling::input[1]` pattern assumes the form layout is
+#   label → input/select. Adjust the XPath if the actual markup differs.
+${FIELD_LABEL_XPATH}        //label[normalize-space()='${label}']/following-sibling::input[1]
+${DROPDOWN_LABEL_XPATH}    //label[normalize-space()='${label}']/following-sibling::select[1]
+${BANK_TABLE_ROW_XPATH}    //table//tr[td[contains(text(),'${code}')]]
 
 *** Keywords ***
-Abrir Navegador
-    [Documentation]    Inicializa o navegador e navega até a página de bancos.
+Open Application
+    [Documentation]    Start a browser and open the application URL
     Open Browser    ${URL}    ${BROWSER}
     Maximize Browser Window
-    Set Selenium Speed    0.5s
-    Set Selenium Implicit Wait    ${TIMEOUT}
+    Wait Until Page Contains Element    ${BANKS_SCREEN}    timeout=${WAIT}
 
-Fechar Navegador
-    [Documentation]    Fecha o navegador.
-    Close Browser
+Reset Test Data
+    [Documentation]    Make sure the test starts with a known state
+    # This is a placeholder – implement any required test‑data cleanup here
+    # e.g., delete banks created in previous runs or reset the DB.
 
-# ---------- Navegação ----------
-Estou na tela de cadastro de bancos
-    [Documentation]    Navega até a tela de cadastro.
-    Click Element    xpath=//a[normalize-space()='Cadastrar Banco']
-    Wait Until Page Contains Element    ${CODE_INPUT}    ${TIMEOUT}
+# Generic helper to locate an input field by its label text
+Fill Field By Label
+    [Arguments]    ${label}    ${value}
+    ${locator}=    Set Variable    ${FIELD_LABEL_XPATH}
+    ${locator}=    Replace String    ${locator}    ${label}    ${label}
+    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
+    Clear Element Text    ${locator}
+    Input Text    ${locator}    ${value}
 
-# ---------- Preenchimento ----------
-Preencho Os Campos com    ${fields}
-    [Arguments]    ${fields}
-    # Campos obrigatórios
-    ${value}=    Get From Dictionary    ${fields}    code
-    Preencha Campo    ${CODE_INPUT}    ${value}
-    ${value}=    Get From Dictionary    ${fields}    description
-    Preencha Campo    ${DESC_INPUT}    ${value}
-    ${value}=    Get From Dictionary    ${fields}    nickname
-    Preencha Campo    ${APELIDO_INPUT}    ${value}
-    ${value}=    Get From Dictionary    ${fields}    sbp
-    Preencha Campo    ${SBP_INPUT}    ${value}
-    ${value}=    Get From Dictionary    ${fields}    controller
-    Seleciona Banco Controlador    ${value}
-    ${value}=    Get From Dictionary    ${fields}    cnpj
-    Preencha Campo    ${CNJP_INPUT}    ${value}
+# Generic helper to select an option in a dropdown by its visible text
+Select Dropdown By Label
+    [Arguments]    ${label}    ${option}
+    ${locator}=    Set Variable    ${DROPDOWN_LABEL_XPATH}
+    ${locator}=    Replace String    ${locator}    ${label}    ${label}
+    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
+    Select From List By Label    ${locator}    ${option}
 
-Preencha Campo
-    [Arguments]    ${locator}    ${valor}
-    [Documentation]    Preenche um campo de texto e espera pelo input ser processado.
-    Input Text    ${locator}    ${valor}
-    # Espera explícita de debounce (ex.: 0.3s) para validação em tempo real
-    Sleep    0.5s
+# Click a button whose visible text matches the argument
+Click Button By Text
+    [Arguments]    ${button_text}
+    ${locator}=    xpath=//button[normalize-space()='${button_text}']
+    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
+    Click Button    ${locator}
+    Sleep    1s    # Wait for UI to react
 
-Seleciona Banco Controlador
-    [Arguments]    ${valor}
-    [Documentation]    Seleciona um item de um dropdown (combobox) de Banco Controlador.
-    Click Element    ${CONTROLADOR_DDL}
-    Wait Until Element Is Visible    xpath=//li[normalize-space()='${valor}']    ${TIMEOUT}
-    Click Element    xpath=//li[normalize-space()='${valor}']
+# Verify a toast / message appears on the screen
+Verify Message
+    [Arguments]    ${expected_msg}
+    Wait Until Page Contains    ${expected_msg}    timeout=${WAIT}
 
-# ---------- Interações ----------
-Clico em Salvar
-    [Documentation]    Clica no botão Salvar.
-    Click Element    ${SAVE_BUTTON}
-    Wait Until Page Does Not Contain Element    ${SAVE_BUTTON}    ${TIMEOUT}
+# Verify that a bank with a given code appears in the list
+Verify Bank In List
+    [Arguments]    ${bank_code}
+    ${row_locator}=    Set Variable    ${BANK_TABLE_ROW_XPATH}
+    ${row_locator}=    Replace String    ${row_locator}    ${bank_code}    ${bank_code}
+    Wait Until Page Contains Element    ${row_locator}    timeout=${WAIT}
 
-# ---------- Validações ----------
-O botão Salvar deve estar habilitado
-    [Documentation]    Verifica que o botão Salvar está habilitado.
-    Element Should Be Visible    ${SAVE_BUTTON}
-    Element Should Be Enabled    ${SAVE_BUTTON}
+# Verify that a bank with a given code does NOT appear in the list
+Verify Bank Not In List
+    [Arguments]    ${bank_code}
+    ${row_locator}=    Set Variable    ${BANK_TABLE_ROW_XPATH}
+    ${row_locator}=    Replace String    ${row_locator}    ${bank_code}    ${bank_code}
+    Page Should Not Contain Element    ${row_locator}
 
-O botão Salvar permanece desabilitado
-    [Documentation]    Verifica que o botão Salvar está desabilitado.
-    Element Should Be Visible    ${SAVE_BUTTON}
-    Element Should Not Be Enabled    ${SAVE_BUTTON}
+# Verify a field is read‑only
+Verify Field Readonly
+    [Arguments]    ${label}
+    ${locator}=    Set Variable    ${FIELD_LABEL_XPATH}
+    ${locator}=    Replace String    ${locator}    ${label}    ${label}
+    Element Should Have Attribute    ${locator}    readonly
 
-Devo ver a mensagem
-    [Arguments]    ${locator}    ${texto}
-    [Documentation]    Confirma que a mensagem está presente e contém o texto esperado.
-    Wait Until Page Contains Element    ${locator}    ${TIMEOUT}
-    Page Should Contain    ${texto}
+*** Test Cases ***
+US01 – Cadastro de Novo Banco – Cadastro completo e válido
+    [Tags]    US01    Positivo
+    # 1️⃣  Navigate to Bancos Nacionais screen
+    Go To Bancos Nacionais Screen
 
-Devo ver a mensagem "Banco cadastrado com sucesso"
-    Deve Ver Mensagem    ${SUCCESS_MSG}    Banco cadastrado com sucesso
+    # 2️⃣  Click the “Novo” button
+    Click Button By Text    Novo
 
-Devo ver a mensagem "Código já cadastrado"
-    Deve Ver Mensagem    ${CODE_DUP_MSG}    Código já cadastrado
+    # 3️⃣  Fill in all required fields
+    Fill Field By Label    Código                ${B001_CODE}
+    Fill Field By Label    Descrição do Banco    ${B001_DESC}
+    Fill Field By Label    Apelido               ${B001_ALIAS}
+    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
+    Select Dropdown By Label    Banco Controlador    Banco Central
+    Fill Field By Label    CNPJ                  ${B001_CNPJ}
 
-Devo ver a mensagem "CNJP inválido" ao lado do campo CNJP
-    Deve Ver Mensagem    ${CNJP_ERR_MSG}    CNJP inválido
+    # 4️⃣  Submit the form
+    Click Button By Text    Salvar
 
-Devo ver a mensagem "Apelido é obrigatório" ao lado do campo Apelido
-    Deve Ver Mensagem    ${APELIDO_ERR_MSG}    Apelido é obrigatório
+    # 5️⃣  Verify success message
+    Verify Message    ${SUCCESS_MSG}
 
-Devo ver a mensagem "Banco Controlador inválido" ao lado do campo Banco Controlador
-    Deve Ver Mensagem    ${CONTROLADOR_ERR_MSG}    Banco Controlador inválido
+    # 6️⃣  Verify the new bank appears in the list
+    Verify Bank In List    ${B001_CODE}
 
-A lista de bancos deve incluir um registro com Código ${BANK_CODE}
-    [Arguments]    ${BANK_CODE}
-    [Documentation]    Confirma que a tabela de bancos contém a linha recém‑criada.
-    Wait Until Page Contains Element    ${BANK_ROW}    ${TIMEOUT}
-    Page Should Contain    ${BANK_CODE}
+US01 – Cadastro de Novo Banco – Código em branco
+    [Tags]    US01    Negativo
+    Go To Bancos Nacionais Screen
+    Click Button By Text    Novo
+    # Leave "Código" empty
+    Fill Field By Label    Código                ${EMPTY}
+    Fill Field By Label    Descrição do Banco    ${B001_DESC}
+    Fill Field By Label    Apelido               ${B001_ALIAS}
+    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
+    Select Dropdown By Label    Banco Controlador    Banco Central
+    Fill Field By Label    CNPJ                  ${B001_CNPJ}
+    Click Button By Text    Salvar
+    Verify Message    ${INVALID_CODE_MSG}
+    Verify Bank Not In List    ${B001_CODE}
 
-Registro Não Deve Ser Salvo
-    [Arguments]    ${BANK_CODE}
-    [Documentation]    Confirma que a linha não está presente na lista.
-    Wait Until Page Does Not Contain    ${BANK_CODE}    timeout=5s
+US01 – Cadastro de Novo Banco – Código duplicado
+    [Tags]    US01    Negativo
+    # Pre‑condition: bank with code B001 already exists
+    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
+    Go To Bancos Nacionais Screen
+    Click Button By Text    Novo
+    Fill Field By Label    Código                ${B001_CODE}
+    Fill Field By Label    Descrição do Banco    ${B001_DESC}
+    Fill Field By Label    Apelido               ${B001_ALIAS}
+    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
+    Select Dropdown By Label    Banco Controlador    Banco Central
+    Fill Field By Label    CNPJ                  ${B001_CNPJ}
+    Click Button By Text    Salvar
+    Verify Message    ${CODE_DUP_MSG}
+    Verify Bank Not In List    ${B001_CODE}
 
-# ---------- Operações de Edição ----------
-Abro a tela de edição de    ${BANK_CODE}
-    [Arguments]    ${BANK_CODE}
-    # Busca o banco e clica no botão Editar
-    Input Text    ${BANK_SEARCH_INPUT}    ${BANK_CODE}
-    Click Button    ${BANK_SEARCH_BTN}
-    Wait Until Page Contains Element    ${BANK_EDIT_BTN}    ${TIMEOUT}
-    Click Element    ${BANK_EDIT_BTN}
-    Wait Until Page Contains Element    ${CODE_INPUT}    ${TIMEOUT}
+US01 – Cadastro de Novo Banco – CNPJ inválido
+    [Tags]    US01    Negativo
+    Go To Bancos Nacionais Screen
+    Click Button By Text    Novo
+    Fill Field By Label    Código                ${B002_CODE}
+    Fill Field By Label    Descrição do Banco    ${B001_DESC}
+    Fill Field By Label    Apelido               ${B001_ALIAS}
+    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
+    Select Dropdown By Label    Banco Controlador    Banco Central
+    Fill Field By Label    CNPJ                  ${INVALID_CNPJ}
+    Click Button By Text    Salvar
+    Verify Message    ${CNPJ_ERR_MSG}
+    Verify Bank Not In List    ${B002_CODE}
 
-Altero
-    [Arguments]    ${field}    ${new_value}
-    [Documentation]    Alteração de campo de texto.
-    ${locator}=    Get Locator By Field    ${field}
-    Preencha Campo    ${locator}    ${new_value}
+US01 – Cadastro de Novo Banco – Descrição em branco
+    [Tags]    US01    Negativo
+    Go To Bancos Nacionais Screen
+    Click Button By Text    Novo
+    Fill Field By Label    Código                ${B003_CODE}
+    # Leave "Descrição do Banco" empty
+    Fill Field By Label    Descrição do Banco    ${EMPTY}
+    Fill Field By Label    Apelido               ${B001_ALIAS}
+    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
+    Select Dropdown By Label    Banco Controlador    Banco Central
+    Fill Field By Label    CNPJ                  ${B001_CNPJ}
+    Click Button By Text    Salvar
+    Verify Message    ${INVALID_DESC_MSG}
+    Verify Bank Not In List    ${B003_CODE}
 
-Get Locator By Field
-    [Arguments]    ${field}
-    Switch    ${field}
-    CASE    Descrição
-        [Return]    ${DESC_INPUT}
-    CASE    Apelido
-        [Return]    ${APELIDO_INPUT}
-    CASE    Número de inscrição no SBP
-        [Return]    ${SBP_INPUT}
-    CASE    CNJP
-        [Return]    ${CNJP_INPUT}
-    CASE    Banco Controlador
-        [Return]    ${CONTROLADOR_DDL}
-    ELSE
-        Fail    Campo desconhecido: ${field}
+US02 – Edição de Banco Existente – Alteração de campos permitidos
+    [Tags]    US02    Positivo
+    # Pre‑condition
+    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
+    Go To Bancos Nacionais Screen
+    # 1️⃣  Select the existing bank from the list
+    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
+    # 2️⃣  Verify pre‑filled form
+    Page Should Contain Element    ${FIELD_LABEL_XPATH.replace('${label}', 'Código')}
+    # 3️⃣  Alter allowed fields
+    Fill Field By Label    Apelido               BNASA1
+    Fill Field By Label    CNPJ                  ${NEW_CNPJ}
+    # 4️⃣  Save
+    Click Button By Text    Salvar
+    Verify Message    ${UPDATE_SUCCESS_MSG}
+    Verify Bank In List    ${B001_CODE}
 
-Tento alterar o campo "Código" para ${new_code}
-    [Arguments]    ${new_code}
-    Preencha Campo    ${CODE_INPUT}    ${new_code}
-    # Verifica se o campo permanece editável
-    ${editable}=    Run Keyword And Return Status    Element Should Be Enabled    ${CODE_INPUT}
-    Should Be False    ${editable}    msg=Campo Código deveria ser somente leitura
+US02 – Edição de Banco Existente – Tentativa de alterar Código
+    [Tags]    US02    Negativo
+    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
+    Go To Bancos Nacionais Screen
+    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
+    Verify Field Readonly    Código
+    # Attempt to change the code – should have no effect
+    Fill Field By Label    Código                ${B002_CODE}
+    Element Attribute Should Be    ${FIELD_LABEL_XPATH.replace('${label}', 'Código')}    readonly    true
 
-# ---------- Dados de Apoio ----------
-Já existe um banco com Código ${code}
-    [Arguments]    ${code}
-    [Documentation]    Garantir que exista um registro para o teste de duplicidade.
-    # Se o banco já existir, nada a fazer; caso contrário, cria‑o.
-    # Implementação simplificada – assume que a API ou a UI está disponível.
-    # Placeholder: Chamar API ou usar UI para criar o banco.
+US02 – Edição de Banco Existente – CNPJ inválido na edição
+    [Tags]    US02    Negativo
+    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
+    Go To Bancos Nacionais Screen
+    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
+    Fill Field By Label    CNPJ                  ${INVALID_CNPJ}
+    Click Button By Text    Salvar
+    Verify Message    ${CNPJ_ERR_MSG}
+    Verify Bank In List    ${B001_CODE}
 
-Existe um banco com Código ${code} e Descrição "${desc}"
-    [Arguments]    ${code}    ${desc}
-    [Documentation]    Garante que o banco exista antes de entrar na tela de edição.
-    Já existe um banco com Código ${code}
-    # Após a criação, valida a descrição (caso seja necessário).
+US02 – Edição de Banco Existente – Campo obrigatório deixado em branco
+    [Tags]    US02    Negativo
+    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
+    Go To Bancos Nacionais Screen
+    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
+    # Clear required field "Apelido"
+    Fill Field By Label    Apelido               ${EMPTY}
+    Click Button By Text    Salvar
+    Verify Message    O campo Apelido é obrigatório
+    Verify Bank In List    ${B001_CODE}
 
-A lista "Banco Controlador" contém "${value}"
-    [Arguments]    ${value}
-    [Documentation]    Confirma que o valor aparece na dropdown.
-    Wait Until Element Is Visible    ${CONTROLADOR_DDL}    ${TIMEOUT}
-    Click Element    ${CONTROLADOR_DDL}
-    Wait Until Page Contains Element    xpath=//li[normalize-space()='${value}']    ${TIMEOUT}
-    Click Element    ${CONTROLADOR_DDL}    # Re‑fechar dropdown
+*** Keywords ***
+Go To Bancos Nacionais Screen
+    [Documentation]    Navigate to the “Bancos Nacionais” page
+    Click Link    xpath=//nav//a[normalize-space()='Bancos Nacionais']
+    Wait Until Page Contains Element    ${BANKS_SCREEN}    timeout=${WAIT}
 
-A tabela de Bancos Controladores está vazia
-    [Documentation]    Garante que não exista nenhum Banco Controlador na lista.
-    # Placeholder: usar API ou UI para limpar a tabela.
+# Helper for creating a bank directly (e.g., via API or DB seeding)
+Precreate Bank
+    [Arguments]    ${code}    ${desc}    ${alias}    ${sbp}    ${controller}    ${cnpj}
+    # Implement the real pre‑creation logic here – this is a stub
+    # For example, call a REST endpoint or run a DB script.
+    # The keyword should leave the UI in a clean state before each test.
+    Log    Pre‑creating bank: ${code}
+    # ... implementation goes here ...
 
-# ---------- Validação em Tempo Real ----------
-Escrevo ${text} no campo ${field}
-    [Arguments]    ${text}    ${field}
-    Altero    ${field}    ${text}
-
-# ---------- Comentários de Intenção ----------
-# Cada bloco acima contém explicação detalhada do que faz:
-# • "Given" prepara o ambiente (navegação, dados).
-# • "When" executa ações do usuário (preencher, clicar).
-# • "Then" valida resultados esperados (mensagens, estados de botões, conteúdo de lista).
-# • Esperas explícitas (Wait Until ...) evitam flakiness e são preferíveis a sleeps genéricos.
-# • Os locators usam atributos estáveis (id, nome, css classes) para garantir robustez.
-# • As palavras-chave são altamente reutilizáveis e isolam a lógica de negócio do teste.
+# Dummy locator for the page header – replace with actual selector
+${BANKS_SCREEN}    xpath=//h1[normalize-space()='Bancos Nacionais']
 ```
 
-> **Como usar**  
-> 1. Instale as dependências:  
->    ```bash  
->    pip install robotframework selenium  
->    ```  
-> 2. Ajuste os *locators* (id, xpath, css) para refletir o seu ambiente real.  
-> 3. Se precisar de dados de apoio (ex.: criar banco via API), implemente os *placeholders* em cada keyword.  
-> 4. Execute:  
->    ```bash  
->    robot BancoTests.robot  
->    ```  
+### Explicação rápida
 
-> **Próximos passos**  
-> * Adicionar testes de API para criar/atualizar bancos e validar os dados na camada de back‑end.  
-> * Expandir o *resource* `BancoKeywords.robot` para separar ainda mais a lógica de navegação da lógica de teste.  
-> * Implementar *data‑driven* (CSV/Excel) para testar múltiplas combinações de dados sem duplicar código.
+1. **Estrutura**  
+   * **Settings**: importa as bibliotecas, define setup/teardown.  
+   * **Variables**: contém os valores usados em todos os testes, facilitando alterações futuras.  
+   * **Keywords**: encapsulam ações repetitivas (preencher campo, selecionar dropdown, clicar botão, etc.).  
+   * **Test Cases**: cada cenário Gherkin vira um caso legível, com comentários claros antes de cada bloco de ações.
+
+2. **Seletores estáveis**  
+   * Os *locators* são baseados em rótulos (`label`) e não em posições relativas ao DOM, reduzindo a fragilidade do teste.  
+   * Se o HTML mudar, basta ajustar um único XPath em vez de vários testes.
+
+3. **Sincronização**  
+   * `Wait Until Element Is Visible` e `Wait Until Page Contains` garantem que o teste só prossegue quando os elementos estão prontos.  
+   * Um pequeno `Sleep` após ações que provocam mudança de estado (ex.: `Click Button By Text`) evita flutuações.
+
+4. **Manutenção**  
+   * Cada passo tem um comentário que explica a intenção.  
+   * Palavras‑chave reutilizáveis permitem que mudanças de UI sejam refletidas em poucos pontos.
+
+5. **Pre‑e‑condições**  
+   * O keyword `Precreate Bank` é um placeholder para criar um banco antes de testar a edição ou duplicidade.  
+   * Implementar essa lógica com chamadas de API ou scripts de banco garante que os testes são independentes e repetíveis.
+
+Com essa estrutura, os testes permanecem claros, fáceis de manter e extensíveis para novas funcionalidades.
