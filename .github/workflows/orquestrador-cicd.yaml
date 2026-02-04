@@ -37,6 +37,12 @@ on:
         required: true
         default: false
 
+      execucao-testes-de-carga:
+        description: "Executar testes de carga?"
+        type: boolean
+        required: true
+        default: false
+
 permissions:
   contents: write
   pull-requests: write
@@ -66,4 +72,9 @@ jobs:
   executar-testes:
     if: ${{ inputs.execucao-testes }}
     uses: pj-integration-agent/reusable-workflows/.github/workflows/execucao-testes.yaml@main
+    secrets: inherit
+
+  execucao-testes-de-carga:
+    if: ${{ inputs.criacao-testes }}
+    uses: pj-integration-agent/automation/.github/workflows/stress-test.yaml@main
     secrets: inherit
