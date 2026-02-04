@@ -1,16 +1,12 @@
 import os
-from groq import Groq
- 
+import google.generativeai as genai
+
+
 def generate_tests_from_bdd():
+    # Configuração da API Gemini via Secrets
+    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-     # Utilização do CICD usando secrets
-    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
-
-    # Geração utilizando front end usando .env
-    # client = Groq(api_key=("API_GROQ"))
-
-  # GROQ
-    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
+    model = genai.GenerativeModel("gemini-1.5-pro")
 
     prompt_tipo = os.getenv("PROMPT_TIPO", "default").lower()
     prompt_path = f"ai/prompts/{prompt_tipo}.txt"
@@ -20,31 +16,29 @@ def generate_tests_from_bdd():
 
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt_base = f.read()
- 
+
     with open("ai/bdd/generated.txt", "r", encoding="utf-8") as f:
         bdd_content = f.read()
- 
- 
-    prompt = f"{prompt_base}\n\nArquivo BDD fornecido:\n{bdd_content}"
 
+    prompt = f"""
+{prompt_base}
 
-# GROQ
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
-        messages=[{"role": "user", "content": prompt}]
-    )
+Arquivo BDD fornecido:
+{bdd_content}
+"""
 
-# GEMINI
-   # model = genai.GenerativeModel("gemini-1.5-pro")
-   #  response = model.generate_content(prompt)
- 
-    tests_code = response.choices[0].message.content
- 
+    response = model.generate_content(prompt)
+
+    tests_code = response.text
+
     os.makedirs("ai/tests", exist_ok=True)
-    with open(f"ai/tests/test_generated_{prompt_tipo}.ts", "w", encoding="utf-8") as f:
+    with open(
+        f"ai/tests/test_generated_{prompt_tipo}.ts",
+        "w",
+        encoding="utf-8"
+    ) as f:
         f.write(tests_code)
- 
- 
+
+
 if __name__ == "__main__":
     generate_tests_from_bdd()
- 
