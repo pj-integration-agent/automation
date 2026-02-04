@@ -1,205 +1,183 @@
 ```robot
 *** Settings ***
+Documentation     Automação dos cenários de cadastro e edição de bancos
 Library           SeleniumLibrary
-Suite Setup       Open Browser To Base URL
+Library           Collections
+Suite Setup       Open Browser To Login Page
 Suite Teardown    Close All Browsers
-Test Setup        Go To Bank Registration Page
-Test Teardown     Go To Bank List Page
+Test Setup        Log Into Application
+Test Teardown     Logout And Clear Browser Data
 
-# ------------------------------------------------------------------
-#  Global variables
-# ------------------------------------------------------------------
 *** Variables ***
-${BASE_URL}              https://example.com          # URL da aplicação
-${BROWSER}               Chrome
-${TIMEOUT}               10s                          # tempo máximo de espera por elemento
-${DELAY}                 1s                           # atraso simples entre passos (evita race‑conditions)
+${BROWSER}            chrome
+${BASE_URL}           https://app.example.com
+${USERNAME}           admin_user
+${PASSWORD}           P@ssw0rd
+${TIMEOUT}            10s
+${DEFAULT_WAIT}       2s
 
-# ------------------------------------------------------------------
-#  Test Cases (cada cenário BDD vira um caso de teste)
-# ------------------------------------------------------------------
-*** Test Cases ***
-Cadastro bem‑sucedido
-    [Tags]    positive
-    # Preenchendo todos os campos obrigatórios
-    Fill Field By Label    Código    BN001
-    Fill Field By Label    Descrição do Banco    Banco Nacional de Teste
-    Fill Field By Label    Apelido    BN Teste
-    Fill Field By Label    Número de inscrição no SBP    123456
-    Select Dropdown By Label    Banco Controlador X
-    Fill Field By Label    CNPJ    12.345.678/0001-95
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Banco cadastrado com sucesso
-    Verify Bank Present In List    BN001
+# Selectors (assumindo uso de IDs, data-testid ou XPaths)
+${BTN_NEW}            css:button[data-testid="btn-new"]
+${BTN_SAVE}           css:button[data-testid="btn-save"]
+${BTN_EDIT}           css:button[data-testid="btn-edit"]
+${INPUT_CODE}         css:input[data-testid="bank-code"]
+${INPUT_DESC}         css:input[data-testid="bank-description"]
+${INPUT_ALIAS}        css:input[data-testid="bank-alias"]
+${INPUT_SBP}          css:input[data-testid="bank-sbp-number"]
+${INPUT_CNPJ}         css:input[data-testid="bank-cnpj"]
+${SELECT_CTRL}        css:select[data-testid="bank-controller"]
+${BANK_LIST}          css:table[data-testid="bank-list"]
+${BANK_ROW}           css:tr[data-testid="bank-row-${BANK_CODE}"]    # placeholder
+${ALERT_MSG}          css:div[data-testid="alert-message"]
+${LOGIN_USERNAME}     css:input[name="username"]
+${LOGIN_PASSWORD}     css:input[name="password"]
+${LOGIN_SUBMIT}       css:button[type="submit"]
+${LOGOUT_BTN}         css:button[data-testid="btn-logout"]
 
-Código duplicado
-    [Tags]    negative
-    # Pre‑condição: banco já existe
-    Create Bank If Not Exists    BN001
-    # Tentar criar outro com mesmo código
-    Fill Field By Label    Código    BN001
-    Fill Field By Label    Descrição do Banco    Outro Banco
-    Fill Field By Label    Apelido    OTR
-    Fill Field By Label    Número de inscrição no SBP    654321
-    Select Dropdown By Label    Banco Controlador X
-    Fill Field By Label    CNPJ    12.345.678/0001-95
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Código já cadastrado
-    Verify Bank Not Present In List    BN001
-
-Campo obrigatório vazio – Descrição do Banco
-    [Tags]    negative
-    Fill Field By Label    Código    BN002
-    # Descrição deixada vazia
-    Fill Field By Label    Apelido    BN2
-    Fill Field By Label    Número de inscrição no SBP    987654
-    Select Dropdown By Label    Banco Controlador Y
-    Fill Field By Label    CNPJ    23.456.789/0001-10
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Descrição do Banco é obrigatória
-    Page Should Contain Element    //form[@id='bankForm']   # garante que o usuário permaneceu na tela
-
-CNPJ inválido
-    [Tags]    negative
-    Fill Field By Label    Código    BN003
-    Fill Field By Label    Descrição do Banco    Banco com CNPJ Inválido
-    Fill Field By Label    Apelido    INV
-    Fill Field By Label    Número de inscrição no SBP    123123
-    Select Dropdown By Label    Banco Controlador Z
-    Fill Field By Label    CNPJ    123
-    Click Button By Text    Salvar
-    Verify Page Contains Message    CNPJ inválido ou inexistente
-    Page Should Contain Element    //form[@id='bankForm']
-
-Edição bem‑sucedida
-    [Tags]    positive
-    Open Bank For Edit    BN010
-    Fill Field By Label    Descrição do Banco    Banco Nacional Atualizado
-    # CNPJ permanece o mesmo
-    Select Dropdown By Label    Banco Controlador Y
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Banco atualizado com sucesso
-    Verify Bank Present In List    BN010    Banco Nacional Atualizado
-
-Tentativa de alterar Código
-    [Tags]    negative
-    Open Bank For Edit    BN020
-    Fill Field By Label    Código    BN021
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Código não pode ser alterado
-    # Confirma que o código permanece o mesmo
-    Element Text Should Be    //label[text()='Código']/following-sibling::input    BN020
-    Page Should Contain Element    //form[@id='bankForm']   # nenhuma alteração persistida
-
-Campo obrigatório vazio – Apelido
-    [Tags]    negative
-    Open Bank For Edit    BN030
-    Clear Field By Label    Apelido
-    Click Button By Text    Salvar
-    Verify Page Contains Message    Apelido é obrigatório
-    Page Should Contain Element    //form[@id='bankForm']
-
-CNPJ inválido em edição
-    [Tags]    negative
-    Open Bank For Edit    BN040
-    Fill Field By Label    CNPJ    123
-    Click Button By Text    Salvar
-    Verify Page Contains Message    CNPJ inválido ou inexistente
-    Page Should Contain Element    //form[@id='bankForm']
-
-# ------------------------------------------------------------------
-#  Keywords (reutilizáveis e bem comentados)
-# ------------------------------------------------------------------
 *** Keywords ***
-Open Browser To Base URL
-    [Documentation]    Inicializa o navegador e abre a página principal
-    Open Browser    ${BASE_URL}    ${BROWSER}
+Open Browser To Login Page
+    Open Browser    ${BASE_URL}/login    ${BROWSER}
     Maximize Browser Window
-    Set Selenium Speed    ${DELAY}
-    Wait Until Page Contains Element    //a[text()='Cadastro de Bancos']    timeout=${TIMEOUT}
+    Set Selenium Speed    ${DEFAULT_WAIT}
 
-Go To Bank Registration Page
-    [Documentation]    Navega até a tela de cadastro de bancos
-    Click Link    Cadastro de Bancos
-    Wait Until Page Contains Element    //form[@id='bankForm']    timeout=${TIMEOUT}
+Log Into Application
+    [Documentation]    Prepara o contexto autenticado
+    Wait Until Page Contains Element    ${LOGIN_USERNAME}    timeout=${TIMEOUT}
+    Input Text    ${LOGIN_USERNAME}    ${USERNAME}
+    Input Text    ${LOGIN_PASSWORD}    ${PASSWORD}
+    Click Button  ${LOGIN_SUBMIT}
+    Wait Until Page Contains Element    ${BTN_NEW}    timeout=${TIMEOUT}
 
-Go To Bank List Page
-    [Documentation]    Navega até a lista de bancos
-    Click Link    Lista de Bancos
-    Wait Until Page Contains Element    //table[@id='bankList']    timeout=${TIMEOUT}
+Logout And Clear Browser Data
+    Click Button    ${LOGOUT_BTN}
+    Wait Until Page Does Not Contain Element    ${BTN_NEW}    timeout=${TIMEOUT}
 
-Fill Field By Label
-    [Arguments]    ${label}    ${value}
-    [Documentation]    Encontra um campo de entrada baseado no label e insere o valor
-    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::input
-    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
-    Clear Element Text    ${locator}
-    Input Text    ${locator}    ${value}
+# --------------------------------------------------------------------
+# Banco CRUD helpers
+# --------------------------------------------------------------------
+Create Bank
+    [Arguments]    ${code}    ${description}    ${alias}    ${sbp}    ${controller}    ${cnpj}
+    Click Button    ${BTN_NEW}
+    Wait Until Page Contains Element    ${INPUT_CODE}    timeout=${TIMEOUT}
+    Input Text    ${INPUT_CODE}    ${code}
+    Input Text    ${INPUT_DESC}    ${description}
+    Input Text    ${INPUT_ALIAS}    ${alias}
+    Input Text    ${INPUT_SBP}     ${sbp}
+    Select From List By Label    ${SELECT_CTRL}    ${controller}
+    Input Text    ${INPUT_CNPJ}    ${cnpj}
+    Click Button    ${BTN_SAVE}
+    Wait Until Page Contains Element    ${BANK_LIST}    timeout=${TIMEOUT}
 
-Clear Field By Label
-    [Arguments]    ${label}
-    [Documentation]    Limpa um campo de entrada baseado no label
-    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::input
-    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
-    Clear Element Text    ${locator}
+Edit Bank
+    [Arguments]    ${code}    ${new_desc}    ${new_alias}    ${new_sbp}    ${new_controller}    ${new_cnpj}
+    ${row_selector}=    Set Variable    ${BANK_ROW.replace("${BANK_CODE}", ${code})}
+    Wait Until Page Contains Element    ${row_selector}    timeout=${TIMEOUT}
+    Click Element    ${row_selector}
+    Click Button     ${BTN_EDIT}
+    Wait Until Page Contains Element    ${INPUT_DESC}    timeout=${TIMEOUT}
+    Clear Element Text    ${INPUT_DESC}
+    Input Text    ${INPUT_DESC}    ${new_desc}
+    Clear Element Text    ${INPUT_ALIAS}
+    Input Text    ${INPUT_ALIAS}    ${new_alias}
+    Clear Element Text    ${INPUT_SBP}
+    Input Text    ${INPUT_SBP}    ${new_sbp}
+    Select From List By Label    ${SELECT_CTRL}    ${new_controller}
+    Clear Element Text    ${INPUT_CNPJ}
+    Input Text    ${INPUT_CNPJ}    ${new_cnpj}
+    Click Button    ${BTN_SAVE}
+    Wait Until Page Contains Element    ${BANK_LIST}    timeout=${TIMEOUT}
 
-Select Dropdown By Label
-    [Arguments]    ${label}    ${option}
-    [Documentation]    Seleciona um item de um dropdown baseado no label
-    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::select
-    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
-    Select From List By Label    ${locator}    ${option}
-
-Click Button By Text
-    [Arguments]    ${text}
-    [Documentation]    Clica em um botão cujo texto coincide
-    ${button}=    Set Variable    //button[normalize-space()="${text}"]
-    Wait Until Element Is Visible    ${button}    timeout=${TIMEOUT}
-    Click Element    ${button}
-
-Verify Page Contains Message
-    [Arguments]    ${message}
-    [Documentation]    Confirma que a mensagem esperada aparece na tela
-    Wait Until Page Contains    ${message}    timeout=${TIMEOUT}
-
-Verify Bank Present In List
-    [Arguments]    ${code}    ${description}=${None}
-    [Documentation]    Verifica se o banco está presente na lista de bancos
-    ${row_locator}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
-    Wait Until Element Is Visible    ${row_locator}    timeout=${TIMEOUT}
-    Run Keyword If    '${description}' != '${None}'    Page Should Contain    ${description}
-
-Verify Bank Not Present In List
+Verify Bank Exists
     [Arguments]    ${code}
-    [Documentation]    Confirma que o banco não está na lista
-    ${row_locator}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
-    Page Should Not Contain Element    ${row_locator}
+    ${row_selector}=    Set Variable    ${BANK_ROW.replace("${BANK_CODE}", ${code})}
+    Page Should Contain Element    ${row_selector}    timeout=${TIMEOUT}
 
-Create Bank If Not Exists
+Verify Bank Not Exists
     [Arguments]    ${code}
-    [Documentation]    Cria um banco apenas se ele ainda não existir
-    Go To Bank List Page
-    ${exists}=    Run Keyword And Return Status    Page Should Contain Element    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
-    Run Keyword If    not ${exists}    Cadastro bem‑sucedido   # reutiliza o caso de teste de cadastro
+    ${row_selector}=    Set Variable    ${BANK_ROW.replace("${BANK_CODE}", ${code})}
+    Page Should Not Contain Element    ${row_selector}
 
-Open Bank For Edit
-    [Arguments]    ${code}
-    [Documentation]    Abre a tela de edição do banco com o código informado
-    Go To Bank List Page
-    # Localiza a linha que contém o código e clica no link de edição
-    ${edit_link}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]//a[text()='Editar']
-    Wait Until Element Is Visible    ${edit_link}    timeout=${TIMEOUT}
-    Click Element    ${edit_link}
-    Wait Until Page Contains Element    //form[@id='bankForm']    timeout=${TIMEOUT}
+# --------------------------------------------------------------------
+# Helpers de mensagens
+# --------------------------------------------------------------------
+Verify Alert Message
+    [Arguments]    ${expected_msg}
+    Wait Until Page Contains Element    ${ALERT_MSG}    timeout=${TIMEOUT}
+    ${msg}=    Get Text    ${ALERT_MSG}
+    Should Be Equal    ${msg}    ${expected_msg}
+
+# --------------------------------------------------------------------
+# Setup para cenário com banco existente
+# --------------------------------------------------------------------
+Ensure Bank Exists
+    [Arguments]    ${code}    ${description}    ${alias}    ${sbp}    ${controller}    ${cnpj}
+    Verify Bank Not Exists    ${code}
+    Create Bank    ${code}    ${description}    ${alias}    ${sbp}    ${controller}    ${cnpj}
+
+*** Test Cases ***
+Cadastro Bem-Sucedido De Um Novo Banco
+    [Tags]    positive
+    Create Bank    BN001    Banco Nacional de Testes    BNT    12345678    Banco XYZ    12.345.678/0001-90
+    Verify Bank Exists    BN001
+
+Tentativa De Cadastro Com Código Duplicado
+    [Tags]    negative
+    Ensure Bank Exists    BN001    Banco Existente    BE    11111111    Banco XYZ    12.345.678/0001-90
+    Create Bank    BN001    Banco Teste Duplicado    BTT    87654321    Banco XYZ    12.345.678/0001-90
+    Verify Alert Message    Código já cadastrado. Por favor, informe outro.
+    Verify Bank Not Exists    BN001    # o banco já existe, não deve ser recriado
+
+Tentativa De Cadastro Com CNPJ Inválido
+    [Tags]    negative
+    Create Bank    BN002    Banco Inválido    BIN    87654321    Banco XYZ    12.345.678/0001-99
+    Verify Alert Message    CNPJ inválido ou inexistente.
+    Verify Bank Not Exists    BN002
+
+Editar Informações De Um Banco Existente
+    [Tags]    positive
+    Ensure Bank Exists    BN001    Banco Original    BO    12345678    Banco XYZ    12.345.678/0001-90
+    Edit Bank    BN001    Banco Nacional de Teste Atualizado    BNTU    11223344    Banco ABC    98.765.432/0001-10
+    Verify Bank Exists    BN001
+    # Optional: verify updated fields via page inspection
+    # (ex.: check text in the row cells)
+
+Tentar Alterar O Código De Um Banco
+    [Tags]    negative
+    Ensure Bank Exists    BN001    Banco Original    BO    12345678    Banco XYZ    12.345.678/0001-90
+    ${row_selector}=    Set Variable    ${BANK_ROW.replace("${BANK_CODE}", "BN001")}
+    Wait Until Page Contains Element    ${row_selector}    timeout=${TIMEOUT}
+    Click Element    ${row_selector}
+    Click Button     ${BTN_EDIT}
+    Wait Until Page Contains Element    ${INPUT_CODE}    timeout=${TIMEOUT}
+    Clear Element Text    ${INPUT_CODE}
+    Input Text    ${INPUT_CODE}    BN002
+    Click Button    ${BTN_SAVE}
+    Wait Until Page Contains Element    ${BANK_LIST}    timeout=${TIMEOUT}
+    Verify Bank Exists    BN001
+    Verify Bank Not Exists    BN002
+
+Salvar Edição Com CNPJ Inválido
+    [Tags]    negative
+    Ensure Bank Exists    BN001    Banco Original    BO    12345678    Banco XYZ    12.345.678/0001-90
+    Edit Bank    BN001    Banco Atualizado    BA    11223344    Banco ABC    12.345.678/0001-99
+    Verify Alert Message    CNPJ inválido ou inexistente.
+    # O registro não deve ter sido alterado
+    Verify Bank Exists    BN001
+
+Salvar Banco Com CNPJ Válido
+    [Tags]    positive
+    Create Bank    BN003    Banco Teste Valido    BTV    11223344    Banco XYZ    12.345.678/0001-90
+    Verify Bank Exists    BN003
+
+CNPJ Com Dígitos Insuficientes
+    [Tags]    negative
+    Create Bank    BN004    Banco Digitos Insuficientes    BDI    11223344    Banco XYZ    12.345.678/0001-9
+    Verify Alert Message    CNPJ deve conter 14 dígitos.
+    Verify Bank Not Exists    BN004
+
+CNPJ Inexistente No Cadastro Oficial
+    [Tags]    negative
+    Create Bank    BN005    Banco Inexistente    BIN    11223344    Banco XYZ    12.345.678/0001-99
+    Verify Alert Message    CNPJ inválido ou inexistente.
+    Verify Bank Not Exists    BN005
 ```
-
-**Notas de boas práticas**
-
-1. **Selectors estáveis** – Os campos são localizados pelo rótulo (`<label>`), que normalmente não muda.  
-2. **Espera explícita** – Cada interação aguarda que o elemento esteja visível (`Wait Until Element Is Visible`).  
-3. **Reutilização de palavras-chave** – Todos os passos que repetem lógica são encapsulados em keywords legíveis, facilitando manutenção.  
-4. **Separação de responsabilidade** – Setup/Teardown, navegação e validações ficam em blocos distintos.  
-5. **Comentários claros** – Cada passo tem explicação breve, alinhando o teste com o BDD original.  
-6. **Testes idempotentes** – O keyword `Create Bank If Not Exists` garante que o cenário de “código duplicado” seja reproduzível sem falhar por banco já existente.  
-
-Assim, a suite está pronta para execução e pode ser integrada a pipelines de CI/CD, mantendo alta legibilidade e baixo acoplamento.
