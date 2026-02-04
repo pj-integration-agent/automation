@@ -5,7 +5,7 @@ from groq import Groq
 def generate_user_stories_from_criterios():
 
  # Utilização do CICD usando secrets
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
 
     # Geração utilizando front end usando .env
     # client = Groq(api_key=("API_GROQ"))

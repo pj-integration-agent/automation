@@ -6,7 +6,7 @@ def generate_stress_analysis():
     # ==============================
     # GROQ (via CI/CD secrets)
     # ==============================
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
 
     # ==============================
     # Leitura do resultado do JMeter

@@ -7,7 +7,7 @@ def generated_analysis():
     # client = Groq(api_key=("API_GROQ"))
     
     # Utilização do CICD usando secrets
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
  
     with open("erros.txt", "r", encoding="utf-8") as f:
         erros = f.read()

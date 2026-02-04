@@ -4,13 +4,13 @@ from groq import Groq
 def generate_tests_from_bdd():
 
      # Utilização do CICD usando secrets
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
 
     # Geração utilizando front end usando .env
     # client = Groq(api_key=("API_GROQ"))
 
   # GROQ
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
 
     prompt_tipo = os.getenv("PROMPT_TIPO", "default").lower()
     prompt_path = f"ai/prompts/{prompt_tipo}.txt"
