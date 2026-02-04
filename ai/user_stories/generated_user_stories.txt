@@ -1,193 +1,270 @@
-**User Story 1 – Cadastro de Novo Banco (US01)**  
-> **Como** usuário autorizado ao sistema de bancos nacionais,  
-> **eu quero** cadastrar um novo banco preenchendo “Código”, “Descrição do Banco”, “Apelido”, “Número de inscrição no SBP”, “Banco Controlador” (lista) e “CNPJ”,  
-> **para** que o banco fique disponível na base de dados e possa ser consultado e editado pelos usuários autorizados.  
+**User Stories – Sistema de Bancos Nacionais**
 
-**Descrição detalhada**  
-- O botão “Novo” abre a tela de cadastro.  
-- Todos os campos listados são obrigatórios.  
-- “Código” deve ser único; o sistema impede salvar se existir outro registro com o mesmo valor.  
-- “Banco Controlador” é selecionado de uma lista carregada do banco de dados.  
-- “CNPJ” deve ser válido (formato 14 dígitos) e existir em cadastro oficial (consulta a API de CNPJ).  
-- Ao clicar em “Salvar”, o sistema valida todos os requisitos e persiste o registro.  
-- Caso a validação falhe, mensagens de erro específicas são exibidas ao usuário.
+| ID | Tipo de usuário | Objetivo | Benefício / Valor |
+|----|-----------------|----------|-------------------|
+| **US01** | Gestor de Bancos | Cadastrar um novo banco | Registro de bancos com dados completos, precisos e únicos |
+| **US02** | Gestor de Bancos | Editar um banco já cadastrado | Atualização de dados relevantes (ex.: descrição, CNJP, controlador) mantendo integridade |
+| **US03** | Gestor de Bancos | Receber feedback de validação | Redução de erros e garantia de qualidade dos dados inseridos |
+| **US04** | Gestor de Bancos | Habilitar o botão “Salvar” apenas quando dados forem válidos | Evitar envios parciais ou inválidos |
+| **US05** | Gestor de Bancos | Selecionar Banco Controlador a partir de lista | Garantir que a relação de controle seja correta e consistente |
 
-**Critérios de Aceitação**  
-1. O botão “Novo” abre a tela de cadastro vazia.  
-2. Todos os campos são exibidos e marcados como obrigatórios.  
-3. Ao tentar salvar com um “Código” já existente, o sistema mostra a mensagem *“Código já cadastrado. Por favor, informe outro.”*  
-4. Ao enviar um “CNPJ” inválido ou inexistente, o sistema mostra a mensagem *“CNPJ inválido ou inexistente.”*  
-5. Ao preencher todos os campos corretamente, ao clicar em “Salvar” o registro é salvo e o usuário volta para a lista de bancos com o novo registro visível.  
-6. O campo “Código” permanece inalterável após o registro.  
+---
 
-**BDD – Cenários Positivos**  
+## US01 – Cadastrar um novo banco  
+**Como** usuário da aplicação de bancos nacionais,  
+**eu quero** cadastrar um novo banco preenchendo os campos obrigatórios,  
+**para** que eu possa registrar bancos com dados completos, válidos e únicos.
+
+### Descrição detalhada  
+Ao clicar em **Novo**, a tela de cadastro deve aparecer.  
+Campos obrigatórios:  
+- **Código** (texto, único em todos os registros)  
+- **Descrição do Banco** (texto)  
+- **Apelido** (texto)  
+- **Número de inscrição no SBP** (texto, formato padrão)  
+- **Banco Controlador** (dropdown com valores previamente carregados)  
+- **CNJP** (campo numérico, deve ser válido e existente no cadastro oficial)  
+
+O usuário deve ser capaz de preencher esses campos, clicar em **Salvar** e o sistema validar e persistir o registro. Se algum campo obrigatório estiver vazio ou inválido, o registro não deve ser salvo e a aplicação deve exibir a mensagem de erro apropriada.
+
+### Critérios de aceite
+
+| # | Critério | Resultado esperado |
+|---|----------|--------------------|
+| 1 | A tela “Novo Banco” deve exibir todos os campos obrigatórios listados. | Todos os campos visíveis e marcados como obrigatórios. |
+| 2 | O campo **Código** deve ser único. | Tentativa de salvar com código duplicado gera erro “Código já cadastrado”. |
+| 3 | O campo **CNJP** deve passar na validação de existência e formato. | CNJP inválido ou inexistente gera erro “CNJP inválido”. |
+| 4 | O campo **Banco Controlador** deve apresentar uma lista de opções carregada do banco de dados. | Dropdown mostra todas as opções existentes. |
+| 5 | Ao clicar em **Salvar** com todos os campos válidos, o banco é persistido e a tela volta para a lista de bancos com o novo registro visível. | Registro aparece na lista; mensagem de sucesso “Banco cadastrado com sucesso”. |
+| 6 | Se algum campo obrigatório estiver vazio ou inválido, a tela não deve salvar e deve exibir mensagem de erro específica para cada campo. | Mensagens de erro aparecem ao lado dos campos inválidos. |
+
+### BDD – Cenários
+
+#### Cenário positivo – Cadastro com sucesso
 ```gherkin
-Feature: Cadastro de Novo Banco
-
-Scenario: Cadastro bem-sucedido de um novo banco
-  Given eu estou autenticado como usuário autorizado
-  When eu clico em "Novo"
-  And eu preencho o campo "Código" com "BN001"
-  And eu preencho o campo "Descrição do Banco" com "Banco Nacional de Testes"
-  And eu preencho o campo "Apelido" com "BNT"
-  And eu preencho o campo "Número de inscrição no SBP" com "12345678"
-  And eu seleciono "Banco XYZ" na lista "Banco Controlador"
-  And eu preencho o campo "CNPJ" com "12.345.678/0001-90"
-  And eu clico em "Salvar"
-  Then o sistema deve persistir o novo registro
-  And a lista de bancos deve exibir um banco com "Código" BN001
+Dado que estou na tela de cadastro de bancos
+Quando eu preencho "Código" com "BNK001"
+E preencho "Descrição do Banco" com "Banco Nacional ABC"
+E preencho "Apelido" com "ABC"
+E preencho "Número de inscrição no SBP" com "123456789"
+E seleciono "Banco Controlador" como "Banco Controlador X"
+E preencho "CNJP" com "12.345.678/0001-90"  # CNJP válido
+Então o botão "Salvar" deve estar habilitado
+Quando eu clico em "Salvar"
+Então devo ver a mensagem "Banco cadastrado com sucesso"
+E a lista de bancos deve incluir um registro com Código "BNK001"
 ```
 
-**BDD – Cenários Negativos**  
+#### Cenário negativo – Código duplicado
 ```gherkin
-Scenario: Tentar cadastrar com Código duplicado
-  Given eu estou autenticado como usuário autorizado
-  And já existe um banco com Código "BN001"
-  When eu clico em "Novo"
-  And eu preencho o campo "Código" com "BN001"
-  And preencho os demais campos corretamente
-  And eu clico em "Salvar"
-  Then o sistema deve exibir a mensagem "Código já cadastrado. Por favor, informe outro."
-  And o banco não é salvo
+Dado que já existe um banco com Código "BNK001"
+Quando eu tento cadastrar outro banco com Código "BNK001"
+E preencho os demais campos válidos
+Então o botão "Salvar" deve estar habilitado
+Quando eu clico em "Salvar"
+Então devo ver a mensagem de erro "Código já cadastrado"
+E o registro não deve ser salvo
+```
 
-Scenario: Tentar cadastrar com CNPJ inválido
-  Given eu estou autenticado como usuário autorizado
-  When eu clico em "Novo"
-  And eu preencho o campo "Código" com "BN002"
-  And eu preencho o campo "Descrição do Banco" com "Banco Inválido"
-  And eu preencho o campo "Apelido" com "BIN"
-  And eu preencho o campo "Número de inscrição no SBP" com "87654321"
-  And eu seleciono "Banco XYZ" na lista "Banco Controlador"
-  And eu preencho o campo "CNPJ" com "12.345.678/0001-99"  # CNPJ não existente
-  And eu clico em "Salvar"
-  Then o sistema deve exibir a mensagem "CNPJ inválido ou inexistente."
-  And o banco não é salvo
+#### Cenário negativo – CNJP inválido
+```gherkin
+Quando eu preencho "CNJP" com "00.000.000/0000-00"  # CNJP inválido
+E preencho todos os demais campos válidos
+Então devo ver a mensagem de erro "CNJP inválido" ao lado do campo CNJP
+E o botão "Salvar" permanece desabilitado
+```
+
+#### Cenário negativo – Campo obrigatório em branco
+```gherkin
+Quando eu deixo em branco o campo "Apelido"
+E preencho os demais campos válidos
+Então devo ver a mensagem de erro "Apelido é obrigatório"
+E o botão "Salvar" permanece desabilitado
 ```
 
 ---
 
-**User Story 2 – Edição de Banco já Cadastrado (US02)**  
-> **Como** usuário autorizado,  
-> **eu quero** abrir um registro existente e alterar “Descrição do Banco”, “Apelido”, “Número de inscrição no SBP”, “Banco Controlador” e “CNPJ”,  
-> **para** manter o cadastro atualizado sem precisar criar um novo registro.
+## US02 – Editar um banco existente  
+**Como** usuário da aplicação de bancos nacionais,  
+**eu quero** editar um banco já cadastrado (exceto o Código),  
+**para** atualizar informações relevantes mantendo a integridade do registro.
 
-**Descrição detalhada**  
-- A lista de bancos permite selecionar um registro e abrir a tela de edição.  
-- O campo “Código” é exibido, porém bloqueado (não pode ser alterado).  
-- Todos os demais campos permanecem obrigatórios.  
-- Alterações em “CNPJ” passam pela mesma validação de formato e existência.  
-- Ao clicar em “Salvar”, o sistema atualiza o registro e retorna à lista.  
-- Se alguma validação falhar, a mensagem de erro específica é mostrada.
+### Descrição detalhada  
+Ao selecionar um registro na lista e escolher “Editar”, o sistema deve apresentar a mesma tela de cadastro com os campos preenchidos, exceto que o campo **Código** fica apenas em leitura.  
+O usuário pode alterar **Descrição**, **Apelido**, **Número de inscrição no SBP**, **Banco Controlador**, e **CNJP**.  
+Ao clicar em **Salvar**, a aplicação valida os novos valores e atualiza apenas os campos permitidos.
 
-**Critérios de Aceitação**  
-1. Ao abrir um banco já cadastrado, todos os campos (exceto Código) são preenchidos com os valores existentes.  
-2. O campo “Código” é exibido como somente leitura.  
-3. Alterar “CNPJ” para um valor inválido impede a gravação e mostra a mensagem de erro apropriada.  
-4. Ao salvar alterações válidas, o registro é atualizado na base de dados.  
-5. A lista de bancos reflete imediatamente as alterações feitas.  
+### Critérios de aceite
 
-**BDD – Cenários Positivos**  
+| # | Critério | Resultado esperado |
+|---|----------|--------------------|
+| 1 | O campo **Código** deve ser exibido em modo somente leitura. | Código visível, mas não editável. |
+| 2 | Os demais campos devem permitir alteração. | Alterações refletidas na tela. |
+| 3 | Ao clicar em **Salvar**, o sistema valida novamente todos os campos obrigatórios e os requisitos de CNJP e Banco Controlador. | Se tudo válido, grava e exibe sucesso. |
+| 4 | Se houver alteração de CNJP inválido, a aplicação bloqueia o salvamento e exibe erro. | Mensagem de erro “CNJP inválido”. |
+| 5 | Se o usuário alterar **Banco Controlador** para um valor não existente, erro de validação. | Mensagem de erro “Banco Controlador inválido”. |
+
+### BDD – Cenários
+
+#### Cenário positivo – Edição com sucesso
 ```gherkin
-Feature: Edição de Banco já Cadastrado
-
-Scenario: Editar informações de um banco existente
-  Given eu estou autenticado como usuário autorizado
-  And já existe um banco com Código "BN001"
-  When eu seleciono o banco BN001 na lista
-  And eu clico em "Editar"
-  And eu altero "Descrição do Banco" para "Banco Nacional de Teste Atualizado"
-  And eu altero "Apelido" para "BNTU"
-  And eu altero "Número de inscrição no SBP" para "11223344"
-  And eu seleciono "Banco ABC" na lista "Banco Controlador"
-  And eu altero "CNPJ" para "98.765.432/0001-10"
-  And eu clico em "Salvar"
-  Then o banco BN001 deve ter suas informações atualizadas
-  And a lista de bancos deve exibir as novas informações
+Dado que existe um banco com Código "BNK002" e Descrição "Banco X"
+Quando eu abro a tela de edição de "BNK002"
+E altero "Descrição" para "Banco X Atualizado"
+E altero "CNJP" para "98.765.432/0001-11"  # CNJP válido
+E seleciono "Banco Controlador" como "Banco Controlador Y"
+Então o botão "Salvar" deve estar habilitado
+Quando eu clico em "Salvar"
+Então devo ver a mensagem "Banco atualizado com sucesso"
+E a lista de bancos deve refletir a nova descrição e CNJP
 ```
 
-**BDD – Cenários Negativos**  
+#### Cenário negativo – Tentar editar Código
 ```gherkin
-Scenario: Tentar alterar o Código de um banco
-  Given eu estou autenticado como usuário autorizado
-  And já existe um banco com Código "BN001"
-  When eu seleciono o banco BN001 na lista
-  And eu clico em "Editar"
-  And eu tento alterar o campo "Código" para "BN002"
-  And eu clico em "Salvar"
-  Then o sistema deve ignorar a tentativa de alteração de Código
-  And o Código permanece BN001
+Quando eu tento alterar o campo "Código" para "BNK003"
+Então devo ver que o campo está desativado / não é editável
+```
 
-Scenario: Tentar salvar edição com CNPJ inválido
-  Given eu estou autenticado como usuário autorizado
-  And já existe um banco com Código "BN001"
-  When eu seleciono o banco BN001 na lista
-  And eu clico em "Editar"
-  And eu altero "CNPJ" para "12.345.678/0001-99"  # CNPJ não existente
-  And eu clico em "Salvar"
-  Then o sistema deve exibir a mensagem "CNPJ inválido ou inexistente."
-  And o registro não é atualizado
+#### Cenário negativo – CNJP inválido na edição
+```gherkin
+Quando eu altero "CNJP" para "00.000.000/0000-00"  # inválido
+E deixo os demais campos válidos
+Então devo ver a mensagem de erro "CNJP inválido" ao lado do campo CNJP
+E o botão "Salvar" permanece desabilitado
 ```
 
 ---
 
-**User Story 3 – Validação de CNPJ (US03)**  
-> **Como** usuário autorizado,  
-> **eu quero** que o sistema valide o CNPJ informado durante cadastro ou edição,  
-> **para** garantir que apenas bancos com CNPJ real e existente sejam cadastrados ou atualizados.
+## US03 – Feedback de validação  
+**Como** usuário da aplicação de bancos nacionais,  
+**eu quero** receber mensagens de erro instantâneas para cada campo inválido,  
+**para** poder corrigir imediatamente antes de submeter a informação.
 
-**Descrição detalhada**  
-- O campo CNPJ aceita apenas 14 dígitos (pode ser formatado com pontuação).  
-- A aplicação faz uma consulta a um serviço oficial (ex.: ReceitaWS, API do CNPJ) para confirmar a existência e a validade do número.  
-- Se a consulta falhar ou o CNPJ for inválido, uma mensagem de erro é mostrada e o usuário não pode prosseguir.  
+### Descrição detalhada  
+Cada campo tem validação específica:
+- **Código**: não vazio, único
+- **CNJP**: formato e existência
+- **Banco Controlador**: seleção obrigatória
+- **Outros campos obrigatórios**: não vazios
 
-**Critérios de Aceitação**  
-1. O campo aceita apenas números (e formatação opcional).  
-2. Ao tentar salvar um CNPJ com menos ou mais de 14 dígitos, o sistema mostra a mensagem *“CNPJ deve conter 14 dígitos.”*  
-3. Se o CNPJ não existir no banco de dados oficial, o sistema mostra *“CNPJ inválido ou inexistente.”*  
-4. Quando o CNPJ for válido e existir, o sistema permite a gravação.  
+O sistema exibe erro em linha (ou tooltip) e desabilita o botão “Salvar” enquanto houver erros.
 
-**BDD – Cenários Positivos**  
+### Critérios de aceite
+
+| # | Critério | Resultado esperado |
+|---|----------|--------------------|
+| 1 | Ao deixar vazio um campo obrigatório, a mensagem “*Campo X é obrigatório” aparece imediatamente. | Mensagem visível em real-time. |
+| 2 | Ao inserir valor inválido em CNJP, a mensagem “CNJP inválido” aparece. | Mensagem visível em real-time. |
+| 3 | Se houver qualquer mensagem de erro, o botão “Salvar” permanece desabilitado. | Botão disabled. |
+| 4 | Ao corrigir o erro, a mensagem desaparece e o botão “Salvar” pode ser habilitado. | Mensagem removida; botão habilitado. |
+
+### BDD – Cenários
+
+#### Cenário positivo – Correção de erro em tempo real
 ```gherkin
-Feature: Validação de CNPJ
-
-Scenario: Salvar banco com CNPJ válido
-  Given eu estou autenticado como usuário autorizado
-  When eu preencho o campo "CNPJ" com "12.345.678/0001-90"  # número existente
-  And eu salvo o cadastro
-  Then o sistema deve aceitar o cadastro
+Quando eu deixo em branco o campo "Apelido"
+Então a mensagem "Apelido é obrigatório" aparece
+E o botão "Salvar" fica desabilitado
+Quando eu escrevo "Banco Teste" no campo "Apelido"
+Então a mensagem desaparece
+E o botão "Salvar" fica habilitado (se demais campos válidos)
 ```
 
-**BDD – Cenários Negativos**  
+#### Cenário negativo – CNJP inválido não corrigido
 ```gherkin
-Scenario: CNPJ com dígitos insuficientes
-  Given eu estou autenticado como usuário autorizado
-  When eu preencho o campo "CNPJ" com "12.345.678/0001-9"
-  And eu salvo o cadastro
-  Then o sistema deve exibir "CNPJ deve conter 14 dígitos."
-  And o cadastro não é salvo
+Quando eu preencho "CNJP" com "00.000.000/0000-00"
+Então a mensagem "CNJP inválido" aparece
+E o botão "Salvar" permanece desabilitado
+```
 
-Scenario: CNPJ inexistente no cadastro oficial
-  Given eu estou autenticado como usuário autorizado
-  When eu preencho o campo "CNPJ" com "12.345.678/0001-99"  # número não registrado
-  And eu salvo o cadastro
-  Then o sistema deve exibir "CNPJ inválido ou inexistente."
-  And o cadastro não é salvo
+---
+
+## US04 – Habilitação condicional do botão “Salvar”  
+**Como** usuário da aplicação de bancos nacionais,  
+**eu quero** que o botão “Salvar” esteja habilitado apenas quando todos os campos obrigatórios forem preenchidos e válidos,  
+**para** evitar envios parciais ou inválidos.
+
+### Descrição detalhada  
+O botão “Salvar” permanece inativo até que:
+1. Todos os campos obrigatórios estejam preenchidos.
+2. Todos os campos passem nas validações de formato/uniqueness.
+
+Quando essas condições forem atendidas, o botão torna-se ativo.
+
+### Critérios de aceite
+
+| # | Critério | Resultado esperado |
+|---|----------|--------------------|
+| 1 | O botão “Salvar” deve iniciar como desabilitado quando a tela abre. | Botão disabled. |
+| 2 | Ao preencher todos os campos corretamente, o botão torna-se habilitado. | Botão enabled. |
+| 3 | Se algum campo voltar a ser inválido, o botão desabilita novamente. | Botão disabled. |
+| 4 | A habilitação do botão não deve depender apenas de clicar em “Salvar” – deve ser reativo a cada mudança de campo. | Botão habilita/desabilita em tempo real. |
+
+### BDD – Cenários
+
+#### Cenário positivo – Botão habilitado após preenchimento
+```gherkin
+Quando eu preencho "Código" com "BNK004"
+E preencho "Descrição" com "Banco Y"
+E preencho "Apelido" com "Y"
+E preencho "Número de inscrição no SBP" com "987654321"
+E seleciono "Banco Controlador" como "Banco Controlador Z"
+E preencho "CNJP" com "12.345.678/0001-90"
+Então o botão "Salvar" deve estar habilitado
+```
+
+#### Cenário negativo – Um campo inválido mantém o botão desabilitado
+```gherkin
+Quando eu deixo em branco o campo "Número de inscrição no SBP"
+E preencho os demais campos válidos
+Então o botão "Salvar" permanece desabilitado
+```
+
+---
+
+## US05 – Validação de Banco Controlador  
+**Como** usuário da aplicação de bancos nacionais,  
+**eu quero** que a lista de “Banco Controlador” só contenha valores válidos e atualizados,  
+**para** garantir a consistência das relações de controle.
+
+### Descrição detalhada  
+A lista de **Banco Controlador** deve ser carregada de uma fonte confiável (tabela de bancos controladores).  
+Ao selecionar um valor, o sistema deve armazenar a referência correta.  
+Se a lista estiver vazia, deve exibir mensagem de erro informando que nenhum controlador está disponível.
+
+### Critérios de aceite
+
+| # | Critério | Resultado esperado |
+|---|----------|--------------------|
+| 1 | A lista deve ser preenchida com todos os bancos controladores ativos. | Dropdown mostra opções. |
+| 2 | Se a lista estiver vazia, a tela exibe “Nenhum Banco Controlador disponível” e impede o cadastro. | Mensagem de erro e botão “Salvar” desabilitado. |
+| 3 | Ao selecionar um controlador válido, o valor é persistido junto com o banco. | Banco salvo com referência ao controlador. |
+
+### BDD – Cenários
+
+#### Cenário positivo – Seleção válida
+```gherkin
+Quando eu abro a tela de cadastro
+E a lista "Banco Controlador" contém "Banco Controlador X"
+E eu seleciono "Banco Controlador X"
+Então o campo "Banco Controlador" reflete a seleção
+E o botão "Salvar" permanece habilitado (se demais campos válidos)
+```
+
+#### Cenário negativo – Lista vazia
+```gherkin
+Quando a tabela de Bancos Controladores está vazia
+Então devo ver a mensagem "Nenhum Banco Controlador disponível"
+E o botão "Salvar" permanece desabilitado
 ```
 
 ---
 
 ### Rastreabilidade
+| ID | Feature | US | BDD |
+|----|---------|----|-----|
+| F001 | Cadastro de bancos | US01, US03, US04 | Cenários positivos/negativos de US01, US03, US04 |
+| F002 | Edição de bancos | US02, US03, US04 | Cenários positivos/negativos de US02, US03, US04 |
+| F003 | Validação de Banco Controlador | US05 | Cenários positivos/negativos de US05 |
 
-| ID | User Story | BDD Scenarios |
-|----|------------|---------------|
-| **US01** | Cadastro de Novo Banco | US01-BDD-01 (Positivo) |
-| | | US01-BDD-02 (Negativo - Código duplicado) |
-| | | US01-BDD-03 (Negativo - CNPJ inválido) |
-| **US02** | Edição de Banco já Cadastrado | US02-BDD-01 (Positivo) |
-| | | US02-BDD-02 (Negativo - Código bloqueado) |
-| | | US02-BDD-03 (Negativo - CNPJ inválido) |
-| **US03** | Validação de CNPJ | US03-BDD-01 (Positivo) |
-| | | US03-BDD-02 (Negativo - Dígitos insuficientes) |
-| | | US03-BDD-03 (Negativo - CNPJ inexistente) |
-
-Essas histórias são independentes, testáveis e cobrem todas as regras de negócio especificadas nos critérios de aceite.
+Essas User Stories e cenários BDD fornecem um conjunto completo, sem sobreposição, que cobre os requisitos de cadastro e edição de bancos na aplicação de Bancos Nacionais. Cada história é testável, tem valor direto ao usuário final e mantém a consistência entre as funcionalidades.
