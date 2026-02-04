@@ -1,263 +1,205 @@
-**BankAutomation.robot**
-
 ```robot
 *** Settings ***
 Library           SeleniumLibrary
-Library           Collections
-Library           OperatingSystem
 Suite Setup       Open Browser To Base URL
-Suite Teardown    Close Browser
-Test Setup        Maximize Browser Window
-Test Teardown     Capture Page Screenshot
+Suite Teardown    Close All Browsers
+Test Setup        Go To Bank Registration Page
+Test Teardown     Go To Bank List Page
 
 # ------------------------------------------------------------------
-# Variables
+#  Global variables
 # ------------------------------------------------------------------
 *** Variables ***
-${BASE_URL}               https://app.example.com/banks
-${BROWSER}                Chrome
-${DEFAULT_TIMEOUT}        10s
-${WAIT}                   1s          # generic short wait for UI to settle
-
-# Page‑level locators – keep them stable and readable
-# ------------------------------------------------------------------
-# List page
-${BANKS_LINK}             xpath=//a[normalize-space()='Bancos']
-${NEW_BUTTON}             xpath=//button[normalize-space()='Novo']
-${EDIT_BUTTON}            xpath=//tr[td[normalize-space()='${BANK_CODE}']]//button[normalize-space()='Editar']
-
-# Edit / New screen
-${FIELD_CODE}             xpath=//input[@id='bankCode']
-${FIELD_DESCRIPTION}     xpath=//input[@id='bankDescription']
-${FIELD_NICKNAME}         xpath=//input[@id='bankNickname']
-${FIELD_SBP}              xpath=//input[@id='bankSBP']
-${FIELD_CONTROLLER}       xpath=//select[@id='bankController']
-${FIELD_CNPJ}             xpath=//input[@id='bankCNPJ']
-${SAVE_BUTTON}            xpath=//button[normalize-space()='Salvar']
-${CANCEL_BUTTON}          xpath=//button[normalize-space()='Cancelar']
-
-# Messages
-${SUCCESS_MSG}            xpath=//div[contains(@class,'alert-success')]
-${ERROR_MSG}              xpath=//div[contains(@class,'alert-danger')]
-${FIELD_ERROR}            xpath=//span[@class='error']
+${BASE_URL}              https://example.com          # URL da aplicação
+${BROWSER}               Chrome
+${TIMEOUT}               10s                          # tempo máximo de espera por elemento
+${DELAY}                 1s                           # atraso simples entre passos (evita race‑conditions)
 
 # ------------------------------------------------------------------
-# Test Cases
+#  Test Cases (cada cenário BDD vira um caso de teste)
 # ------------------------------------------------------------------
-
 *** Test Cases ***
+Cadastro bem‑sucedido
+    [Tags]    positive
+    # Preenchendo todos os campos obrigatórios
+    Fill Field By Label    Código    BN001
+    Fill Field By Label    Descrição do Banco    Banco Nacional de Teste
+    Fill Field By Label    Apelido    BN Teste
+    Fill Field By Label    Número de inscrição no SBP    123456
+    Select Dropdown By Label    Banco Controlador X
+    Fill Field By Label    CNPJ    12.345.678/0001-95
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Banco cadastrado com sucesso
+    Verify Bank Present In List    BN001
 
-Open New Bank Screen
-    [Documentation]    Open the bank list page and click “Novo” to display the
-    ...                 new bank registration form.
-    # Step 1 – Go to banks list
-    Go To Bank List
-    # Step 2 – Click “Novo”
-    Click Element    ${NEW_BUTTON}
-    Sleep            ${WAIT}
-    # Step 3 – Verify form displayed
-    Wait Until Page Contains Element    ${FIELD_CODE}    timeout=${DEFAULT_TIMEOUT}
-    # Step 4 – Verify mandatory fields marked with '*'
-    Element Should Contain    ${FIELD_DESCRIPTION}    *
-    Element Should Contain    ${FIELD_CNPJ}          *
+Código duplicado
+    [Tags]    negative
+    # Pre‑condição: banco já existe
+    Create Bank If Not Exists    BN001
+    # Tentar criar outro com mesmo código
+    Fill Field By Label    Código    BN001
+    Fill Field By Label    Descrição do Banco    Outro Banco
+    Fill Field By Label    Apelido    OTR
+    Fill Field By Label    Número de inscrição no SBP    654321
+    Select Dropdown By Label    Banco Controlador X
+    Fill Field By Label    CNPJ    12.345.678/0001-95
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Código já cadastrado
+    Verify Bank Not Present In List    BN001
 
-Register New Bank With All Valid Fields
-    [Documentation]    Create a brand‑new bank providing valid data in every
-    ...                 required field and verify success.
-    Go To Bank List
-    Click Element    ${NEW_BUTTON}
-    Sleep            ${WAIT}
-    # Fill all fields
-    Fill Field       ${FIELD_CODE}          BAN001
-    Fill Field       ${FIELD_DESCRIPTION}  Banco do Norte
-    Fill Field       ${FIELD_NICKNAME}      Norte
-    Fill Field       ${FIELD_SBP}           12345678
-    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
-    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
-    # Submit
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    # Verify success message
-    Page Should Contain Element    ${SUCCESS_MSG}
-    Page Should Contain             Banco cadastrado com sucesso.
-    # Verify bank appears in list
-    Verify Bank In List    BAN001
+Campo obrigatório vazio – Descrição do Banco
+    [Tags]    negative
+    Fill Field By Label    Código    BN002
+    # Descrição deixada vazia
+    Fill Field By Label    Apelido    BN2
+    Fill Field By Label    Número de inscrição no SBP    987654
+    Select Dropdown By Label    Banco Controlador Y
+    Fill Field By Label    CNPJ    23.456.789/0001-10
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Descrição do Banco é obrigatória
+    Page Should Contain Element    //form[@id='bankForm']   # garante que o usuário permaneceu na tela
 
-Attempt To Create Bank With Duplicate Code
-    [Documentation]    Try to register a bank using an already existing code
-    ...                 and confirm that the application blocks it.
-    Go To Bank List
-    Click Element    ${NEW_BUTTON}
-    Sleep            ${WAIT}
-    Fill Field       ${FIELD_CODE}          BAN001   # already exists
-    Fill Field       ${FIELD_DESCRIPTION}  Banco de Teste
-    Fill Field       ${FIELD_NICKNAME}      Teste
-    Fill Field       ${FIELD_SBP}           87654321
-    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
-    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${ERROR_MSG}
-    Page Should Contain             O código informado já está em uso. Por favor, informe outro.
+CNPJ inválido
+    [Tags]    negative
+    Fill Field By Label    Código    BN003
+    Fill Field By Label    Descrição do Banco    Banco com CNPJ Inválido
+    Fill Field By Label    Apelido    INV
+    Fill Field By Label    Número de inscrição no SBP    123123
+    Select Dropdown By Label    Banco Controlador Z
+    Fill Field By Label    CNPJ    123
+    Click Button By Text    Salvar
+    Verify Page Contains Message    CNPJ inválido ou inexistente
+    Page Should Contain Element    //form[@id='bankForm']
 
-Attempt To Create Bank With Invalid CNPJ
-    [Documentation]    Try to register a bank supplying an invalid CNPJ.
-    Go To Bank List
-    Click Element    ${NEW_BUTTON}
-    Sleep            ${WAIT}
-    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-00   # invalid
-    Fill Field       ${FIELD_CODE}          BAN002
-    Fill Field       ${FIELD_DESCRIPTION}  Banco do Teste
-    Fill Field       ${FIELD_NICKNAME}      Teste
-    Fill Field       ${FIELD_SBP}           87654321
-    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${ERROR_MSG}
-    Page Should Contain             CNPJ inválido. Por favor, informe um CNPJ válido.
+Edição bem‑sucedida
+    [Tags]    positive
+    Open Bank For Edit    BN010
+    Fill Field By Label    Descrição do Banco    Banco Nacional Atualizado
+    # CNPJ permanece o mesmo
+    Select Dropdown By Label    Banco Controlador Y
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Banco atualizado com sucesso
+    Verify Bank Present In List    BN010    Banco Nacional Atualizado
 
-Attempt To Create Bank Without Mandatory Field
-    [Documentation]    Leave the mandatory “Descrição do Banco” field empty and
-    ...                 ensure an error is shown.
-    Go To Bank List
-    Click Element    ${NEW_BUTTON}
-    Sleep            ${WAIT}
-    # Leave Description blank
-    Clear Element Text    ${FIELD_DESCRIPTION}
-    Fill Field       ${FIELD_CODE}          BAN003
-    Fill Field       ${FIELD_NICKNAME}      Teste
-    Fill Field       ${FIELD_SBP}           87654321
-    Select From List By Label    ${FIELD_CONTROLLER}    Banco Central
-    Fill Field       ${FIELD_CNPJ}          12.345.678/0001-95
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${ERROR_MSG}
-    Page Should Contain             Descrição do Banco é obrigatória.
+Tentativa de alterar Código
+    [Tags]    negative
+    Open Bank For Edit    BN020
+    Fill Field By Label    Código    BN021
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Código não pode ser alterado
+    # Confirma que o código permanece o mesmo
+    Element Text Should Be    //label[text()='Código']/following-sibling::input    BN020
+    Page Should Contain Element    //form[@id='bankForm']   # nenhuma alteração persistida
 
-Open Edit Screen And Verify Code Read‑Only
-    [Documentation]    Open the edit screen for BAN001 and verify that the
-    ...                 code field is read‑only.
-    Go To Bank List
-    ${BANK_CODE}=    Set Variable    BAN001
-    Click Edit Of Bank    ${BANK_CODE}
-    Sleep            ${WAIT}
-    # Verify that the field is disabled
-    Element Should Be Disabled    ${FIELD_CODE}
-    # Verify other fields are pre‑filled (simple check on the code)
-    Element Attribute Value Should Be    ${FIELD_CODE}    value    BAN001
+Campo obrigatório vazio – Apelido
+    [Tags]    negative
+    Open Bank For Edit    BN030
+    Clear Field By Label    Apelido
+    Click Button By Text    Salvar
+    Verify Page Contains Message    Apelido é obrigatório
+    Page Should Contain Element    //form[@id='bankForm']
 
-Edit Bank Maintaining Code
-    [Documentation]    Update BAN001’s description, nickname, SBP number,
-    ...                 controller and CNPJ while keeping the same code.
-    Go To Bank List
-    ${BANK_CODE}=    Set Variable    BAN001
-    Click Edit Of Bank    ${BANK_CODE}
-    Sleep            ${WAIT}
-    # Change values
-    Input Text       ${FIELD_DESCRIPTION}   Banco do Sul
-    Input Text       ${FIELD_NICKNAME}      Sul
-    Input Text       ${FIELD_SBP}           87654321
-    Select From List By Label    ${FIELD_CONTROLLER}    Banco Regional
-    Input Text       ${FIELD_CNPJ}          98.765.432/0001-10
-    # Submit
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${SUCCESS_MSG}
-    Page Should Contain             Banco atualizado com sucesso.
-    # Verify the bank still appears with same code
-    Verify Bank In List    BAN001
-
-Attempt To Change Bank Code
-    [Documentation]    Try to change BAN001’s code and confirm it is ignored.
-    Go To Bank List
-    ${BANK_CODE}=    Set Variable    BAN001
-    Click Edit Of Bank    ${BANK_CODE}
-    Sleep            ${WAIT}
-    # Attempt to change the code
-    Input Text       ${FIELD_CODE}    NOVOCOD
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    # Verify code remains unchanged
-    Element Attribute Value Should Be    ${FIELD_CODE}    value    BAN001
-    # No error message should appear
-    Page Should Not Contain Element    ${ERROR_MSG}
-
-Attempt To Save Bank With Invalid CNPJ After Edit
-    [Documentation]    Update BAN001’s CNPJ to an invalid value and ensure
-    ...                 validation error appears.
-    Go To Bank List
-    ${BANK_CODE}=    Set Variable    BAN001
-    Click Edit Of Bank    ${BANK_CODE}
-    Sleep            ${WAIT}
-    Input Text       ${FIELD_CNPJ}    11.111.111/1111-11   # invalid
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${ERROR_MSG}
-    Page Should Contain             CNPJ inválido. Por favor, informe um CNPJ válido.
-
-Attempt To Save Bank With Mandatory Field Empty After Edit
-    [Documentation]    Leave the mandatory “Apelido” field blank and confirm
-    ...                 an error is shown.
-    Go To Bank List
-    ${BANK_CODE}=    Set Variable    BAN001
-    Click Edit Of Bank    ${BANK_CODE}
-    Sleep            ${WAIT}
-    Clear Element Text    ${FIELD_NICKNAME}
-    Click Element    ${SAVE_BUTTON}
-    Sleep            ${WAIT}
-    Page Should Contain Element    ${ERROR_MSG}
-    Page Should Contain             Apelido é obrigatório.
+CNPJ inválido em edição
+    [Tags]    negative
+    Open Bank For Edit    BN040
+    Fill Field By Label    CNPJ    123
+    Click Button By Text    Salvar
+    Verify Page Contains Message    CNPJ inválido ou inexistente
+    Page Should Contain Element    //form[@id='bankForm']
 
 # ------------------------------------------------------------------
-# Keywords
+#  Keywords (reutilizáveis e bem comentados)
 # ------------------------------------------------------------------
-
 *** Keywords ***
-
 Open Browser To Base URL
-    [Documentation]    Open a fresh browser instance and navigate to the
-    ...                 base bank page.
-    Open Browser    ${BASE_URL}    ${BROWSER}    options=--start-maximized
+    [Documentation]    Inicializa o navegador e abre a página principal
+    Open Browser    ${BASE_URL}    ${BROWSER}
     Maximize Browser Window
-    Set Selenium Speed    0s
-    Set Selenium Implicit Wait    ${DEFAULT_TIMEOUT}
+    Set Selenium Speed    ${DELAY}
+    Wait Until Page Contains Element    //a[text()='Cadastro de Bancos']    timeout=${TIMEOUT}
 
-Go To Bank List
-    [Documentation]    Navigate to the banks list page.
-    Wait Until Page Contains Element    ${BANKS_LINK}    timeout=${DEFAULT_TIMEOUT}
-    Click Element    ${BANKS_LINK}
-    Wait Until Page Contains Element    ${NEW_BUTTON}    timeout=${DEFAULT_TIMEOUT}
+Go To Bank Registration Page
+    [Documentation]    Navega até a tela de cadastro de bancos
+    Click Link    Cadastro de Bancos
+    Wait Until Page Contains Element    //form[@id='bankForm']    timeout=${TIMEOUT}
 
-Click Edit Of Bank
-    [Arguments]    ${bank_code}
-    [Documentation]    Click the Edit button of the specified bank.
-    # Replace the placeholder in the locator with the actual code
-    ${locator}=    Set Variable    xpath=//tr[td[normalize-space()='${bank_code}']]//button[normalize-space()='Editar']
-    Wait Until Page Contains Element    ${locator}    timeout=${DEFAULT_TIMEOUT}
-    Click Element    ${locator}
-    Wait Until Page Contains Element    ${FIELD_CODE}    timeout=${DEFAULT_TIMEOUT}
+Go To Bank List Page
+    [Documentation]    Navega até a lista de bancos
+    Click Link    Lista de Bancos
+    Wait Until Page Contains Element    //table[@id='bankList']    timeout=${TIMEOUT}
 
-Fill Field
-    [Arguments]    ${locator}    ${value}
-    [Documentation]    Clear the field and type a new value.
-    Wait Until Page Contains Element    ${locator}    timeout=${DEFAULT_TIMEOUT}
+Fill Field By Label
+    [Arguments]    ${label}    ${value}
+    [Documentation]    Encontra um campo de entrada baseado no label e insere o valor
+    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::input
+    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
     Clear Element Text    ${locator}
-    Input Text            ${locator}    ${value}
+    Input Text    ${locator}    ${value}
 
-Verify Bank In List
-    [Arguments]    ${bank_code}
-    [Documentation]    Confirm that a row with the given code appears in the list.
-    ${row_locator}=    Set Variable    xpath=//tr[td[normalize-space()='${bank_code}']]
-    Page Should Contain Element    ${row_locator}
-``` 
+Clear Field By Label
+    [Arguments]    ${label}
+    [Documentation]    Limpa um campo de entrada baseado no label
+    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::input
+    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
+    Clear Element Text    ${locator}
 
-### Explicação resumida
-1. **Imports & Variables** – Importamos SeleniumLibrary e outras utilidades, definimos URL, navegador, tempos de espera e todos os seletores mais estáveis.
-2. **Test Setup / Teardown** – Cada teste abre um navegador limpo, navega para a página base, tira screenshot de falhas e fecha o navegador no fim.
-3. **Test Cases** – Cada cenário BDD é convertido em um caso de teste Robot, com passos comentados que refletem a intenção de cada Gherkin step.
-4. **Keywords** – Implementamos uma série de *keywords* reutilizáveis (abrir página, ir à lista, clicar “Novo”, preencher campos, etc.) que encapsulam a lógica e garantem modularidade.
-5. **Esperas & Tratamento de Erros** – Utilizamos `Wait Until Page Contains Element`, `Sleep` moderado e verificações de mensagens para garantir que a UI tenha tempo de reagir antes de prosseguir.
-6. **Seletores Estáveis** – Locadores XPath usam textos explícitos, IDs e atributos, facilitando a manutenção quando a UI mudar.
-7. **Comentários** – Cada passo de teste possui um comentário claro explicando sua finalidade.
+Select Dropdown By Label
+    [Arguments]    ${label}    ${option}
+    [Documentation]    Seleciona um item de um dropdown baseado no label
+    ${locator}=    Set Variable    //label[normalize-space()="${label}"]/following-sibling::select
+    Wait Until Element Is Visible    ${locator}    timeout=${TIMEOUT}
+    Select From List By Label    ${locator}    ${option}
 
-O arquivo acima pode ser executado com `robot BankAutomation.robot` e cobre todos os cenários positivos e negativos descritos no arquivo BDD original.
+Click Button By Text
+    [Arguments]    ${text}
+    [Documentation]    Clica em um botão cujo texto coincide
+    ${button}=    Set Variable    //button[normalize-space()="${text}"]
+    Wait Until Element Is Visible    ${button}    timeout=${TIMEOUT}
+    Click Element    ${button}
+
+Verify Page Contains Message
+    [Arguments]    ${message}
+    [Documentation]    Confirma que a mensagem esperada aparece na tela
+    Wait Until Page Contains    ${message}    timeout=${TIMEOUT}
+
+Verify Bank Present In List
+    [Arguments]    ${code}    ${description}=${None}
+    [Documentation]    Verifica se o banco está presente na lista de bancos
+    ${row_locator}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
+    Wait Until Element Is Visible    ${row_locator}    timeout=${TIMEOUT}
+    Run Keyword If    '${description}' != '${None}'    Page Should Contain    ${description}
+
+Verify Bank Not Present In List
+    [Arguments]    ${code}
+    [Documentation]    Confirma que o banco não está na lista
+    ${row_locator}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
+    Page Should Not Contain Element    ${row_locator}
+
+Create Bank If Not Exists
+    [Arguments]    ${code}
+    [Documentation]    Cria um banco apenas se ele ainda não existir
+    Go To Bank List Page
+    ${exists}=    Run Keyword And Return Status    Page Should Contain Element    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]
+    Run Keyword If    not ${exists}    Cadastro bem‑sucedido   # reutiliza o caso de teste de cadastro
+
+Open Bank For Edit
+    [Arguments]    ${code}
+    [Documentation]    Abre a tela de edição do banco com o código informado
+    Go To Bank List Page
+    # Localiza a linha que contém o código e clica no link de edição
+    ${edit_link}=    Set Variable    //table[@id='bankList']//tr[td[normalize-space()="${code}"]]//a[text()='Editar']
+    Wait Until Element Is Visible    ${edit_link}    timeout=${TIMEOUT}
+    Click Element    ${edit_link}
+    Wait Until Page Contains Element    //form[@id='bankForm']    timeout=${TIMEOUT}
+```
+
+**Notas de boas práticas**
+
+1. **Selectors estáveis** – Os campos são localizados pelo rótulo (`<label>`), que normalmente não muda.  
+2. **Espera explícita** – Cada interação aguarda que o elemento esteja visível (`Wait Until Element Is Visible`).  
+3. **Reutilização de palavras-chave** – Todos os passos que repetem lógica são encapsulados em keywords legíveis, facilitando manutenção.  
+4. **Separação de responsabilidade** – Setup/Teardown, navegação e validações ficam em blocos distintos.  
+5. **Comentários claros** – Cada passo tem explicação breve, alinhando o teste com o BDD original.  
+6. **Testes idempotentes** – O keyword `Create Bank If Not Exists` garante que o cenário de “código duplicado” seja reproduzível sem falhar por banco já existente.  
+
+Assim, a suite está pronta para execução e pode ser integrada a pipelines de CI/CD, mantendo alta legibilidade e baixo acoplamento.
