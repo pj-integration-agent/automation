@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git pull
+          git pull origin ${{ github.ref_name }}
           git add ai/analysis/stress_analysis.txt
           git commit -m "Análise automática dos resultados do stress-test (Groq)"
           git push 
