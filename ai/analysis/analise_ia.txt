@@ -1,89 +1,98 @@
-## 1. Testes que falharam
+## 1. Testes que falharam  
 
-| # | Nome do teste | Log de falha |
-|---|---------------|--------------|
-| 1 | **Login inválido falhou** | `expect(locator('.error')).toContainText(expected) failed` |
-| 2 | **Usuário deve atualizar telefone com campo vazio falhou** | `expect(locator('//*[@id="phone-error"]')).toContainText(expected)` falhou e *element(s) not found* |
+| Nome do teste | Horário | Status |
+|---------------|---------|--------|
+| **Login inválido** | 16:51:24.828 | **Falhou** |
+| **Usuário deve atualizar telefone com campo vazio** | 16:51:26.691 | **Falhou** |
 
----
+## 2. Motivo de cada falha  
 
-## 2. Motivo de cada falha
+### 2.1 Login inválido  
+- **Assertivo que falhou**:  
+  ```javascript
+  await expect(locator('.error')).toContainText(
+      'An internal error has occurred and has been logged.'
+  )
+  ```
+- **Mensagem real na página**:  
+  ```html
+  <p class="error">The username and password could not be verified.</p>
+  ```
+- **Por que falhou?**  
+  - O texto esperado na asserção (“An internal error …”) não corresponde ao texto real exibido (“The username …”).  
+  - Provavelmente o teste foi escrito com base em um cenário que retornava um *internal error*, mas o ambiente de teste está retornando um erro de credenciais inválidas.  
+  - O timeout (5000 ms) não é o problema; a falha ocorre imediatamente porque o conteúdo já existe, apenas está diferente.
 
-### 2.1 Login inválido falhou  
-- **O que aconteceu**  
-  - O teste esperava que o elemento `<p class="error">` exibisse a mensagem **“An internal error has occurred and has been logged.”**  
-  - O texto real que apareceu na página foi **“The username and password could not be verified.”**  
-- **Por que falhou**  
-  - **Desalinhamento entre a expectativa do teste e a mensagem real** que a aplicação retorna para o cenário de login inválido.  
-  - Provavelmente a aplicação mudou a mensagem (ou a mensagem original está incorreta no teste).  
-  - O erro não está relacionado a timing, pois o elemento apareceu rapidamente (`7 × locator resolved`), mas a string não combinou.
+### 2.2 Usuário deve atualizar telefone com campo vazio  
+- **Assertivo que falhou**:  
+  ```javascript
+  await expect(locator('//*[@id="phone-error"]')).toContainText(
+      'Phone is required.'
+  )
+  ```
+- **Resultado**:  
+  - O Playwright não encontrou nenhum elemento com o seletor XPath `//*[@id="phone-error"]` dentro dos 5 s.  
+- **Por que falhou?**  
+  1. **Seleção errada** – O elemento de erro pode não ter o `id="phone-error"`.  
+  2. **Elemento não visível** – O erro pode aparecer somente após um evento (por exemplo, blur ou submit) que não foi disparado no teste.  
+  3. **Carregamento assíncrono** – A mensagem de erro pode ser renderizada depois de uma requisição AJAX que não terminou no tempo de espera.  
+  4. **Erro no teste** – O nome “Phone is required.” pode estar em outro idioma ou com ortografia diferente (`Phone number is required.`).  
 
-### 2.2 Usuário deve atualizar telefone com campo vazio falhou  
-- **O que aconteceu**  
-  - O teste procurou um elemento com o *XPath* `//*[@id="phone-error"]`.  
-  - O Playwright não encontrou nenhum elemento correspondente dentro do timeout de 5 s e retornou *“element(s) not found”*.  
-  - Mesmo que o elemento estivesse presente, a mensagem esperada “Phone is required.” não seria encontrada porque o elemento não foi localizado.  
-- **Por que falhou**  
-  1. **Seletor frágil ou incorreto** – O XPath pode estar errado, ou a estrutura do DOM mudou.  
-  2. **Erro de validação não acionado** – Pode ser que o campo de telefone não tenha sido deixado em branco corretamente, ou o botão de submissão não dispare a validação.  
-  3. **Timing inadequado** – O elemento pode aparecer após mais de 5 s (por ex., após uma chamada API).  
+## 3. Sugestões de correção  
 
----
+### 3.1 Corrigindo o teste de “Login inválido”
 
-## 3. Sugestões de correção
+| Estratégia | Como aplicar |
+|------------|--------------|
+| **Ajustar o texto esperado** | Verifique o texto real que a aplicação mostra para credenciais inválidas. Atualize a asserção para usar esse texto exato, ou para um *partial match* que seja robusto: <br>`await expect(locator('.error')).toContainText(/verified/i);` |
+| **Usar `toHaveText` em vez de `toContainText`** | Se o elemento pode ter outros textos em torno da mensagem, use <br>`await expect(locator('.error')).toHaveText('The username and password could not be verified.');` |
+| **Adicionar `waitForSelector` antes da asserção** | Garantir que o erro realmente apareceu: <br>`await page.waitForSelector('.error', { state: 'visible', timeout: 7000 });` |
+| **Revisar ambiente de teste** | Se o cenário de erro interno foi o objetivo original, verifique se o backend está configurado para lançar esse erro em vez de credenciais inválidas. |
 
-### 3.1 Corrigir o teste de login inválido
+**Exemplo de código corrigido**  
+```javascript
+await page.goto('/login');
+await page.fill('#username', 'wrong');
+await page.fill('#password', 'wrong');
+await page.click('#submit');
 
-| Passo | Como fazer | Por que funciona |
-|-------|------------|------------------|
-| a. | **Verificar a mensagem real** – Abra a aplicação em modo de depuração ou faça um teste manual e confirme a mensagem exibida ao usar credenciais inválidas. | Garante que o teste reflita o comportamento atual da aplicação. |
-| b. | **Atualizar a expectativa** – Troque a string esperada no `expect(...).toContainText()` para “The username and password could not be verified.” ou para uma substring que realmente apareça (ex.: “username and password could not be verified”). | A string de comparação agora corresponde ao texto real. |
-| c. | **Usar `toHaveText`** em vez de `toContainText` se quiser validar exatamente a mensagem, ou usar `toContainText` com substring curta (ex.: “verified” ou “could not be”). | Reduz a chance de falsos positivos/negativos. |
-| d. | **Adicionar `debug()` antes da expectativa** (opcional) | Permite inspecionar a página e confirmar que o elemento está correto. |
+await page.waitForSelector('.error', { state: 'visible', timeout: 7000 });
 
-#### Exemplo de código corrigido
-
-```ts
-await page.fill('#username', 'wrongUser');
-await page.fill('#password', 'wrongPass');
-await page.click('#loginBtn');
-
-await expect(page.locator('.error')).toContainText(
+await expect(page.locator('.error')).toHaveText(
   'The username and password could not be verified.'
 );
 ```
 
----
+### 3.2 Corrigindo o teste de “Usuário deve atualizar telefone com campo vazio”
 
-### 3.2 Corrigir o teste de telefone vazio
+| Estratégia | Como aplicar |
+|------------|--------------|
+| **Verificar o seletor** | Abra a aplicação em modo devtools e confirme se o erro de telefone tem realmente `id="phone-error"`. Se não, use outro seletor (por exemplo, `[data-testid="phone-error"]` ou `text=Phone is required`). |
+| **Forçar o evento de validação** | Se a mensagem aparece apenas após blur ou submit, faça isso explicitamente:<br>`await page.fill('#phone', '');`<br>`await page.click('#save');` |
+| **Aumentar o timeout** | Se a mensagem leva um tempo para ser renderizada, aumente o timeout: <br>`await expect(locator('[data-testid="phone-error"]')).toContainText('Phone is required.', { timeout: 10000 });` |
+| **Usar regex ou `toContainText`** | Se houver variações (por ex.: “Phone number is required.”) use regex: <br>`await expect(locator('[data-testid="phone-error"]')).toContainText(/Phone.*required/i);` |
+| **Adicionar `waitForSelector`** | Garanta que o elemento exista antes da asserção: <br>`await page.waitForSelector('#phone-error', { state: 'visible', timeout: 7000 });` |
 
-| Passo | Como fazer | Por que funciona |
-|-------|------------|------------------|
-| a. | **Revisar o seletor** – Em vez de XPath, use o seletor CSS com ID: `page.locator('#phone-error')`. | CSS é mais rápido e menos propenso a falhas por alterações de estrutura. |
-| b. | **Verificar se o elemento realmente existe** – Execute o teste manualmente ou use `await page.locator('#phone-error').count()` para confirmar se o elemento aparece. | Garante que a validação está sendo disparada. |
-| c. | **Disparar a validação corretamente** – Se o campo de telefone fica vazio automaticamente, certifique‑se de que o formulário é submetido (ex.: `await page.click('#submitBtn')`). | Garante que a mensagem de erro é gerada. |
-| d. | **Aumentar o timeout (se necessário)** – Se a mensagem aparecer após um tempo de processamento, use `await expect(page.locator('#phone-error')).toContainText('Phone is required.', { timeout: 8000 });`. | Evita falhas de timing. |
-| e. | **Adicionar `waitForSelector`** opcionalmente: `await page.waitForSelector('#phone-error', { state: 'visible', timeout: 8000 });` | Força o Playwright a aguardar a presença do elemento. |
+**Exemplo de código corrigido**  
+```javascript
+await page.goto('/profile/phone');
+await page.fill('#phone', '');          // deixa o campo vazio
+await page.click('#save');              // dispara a validação
 
-#### Exemplo de código corrigido
-
-```ts
-await page.fill('#phone', ''); // deixa vazio
-await page.click('#updateBtn'); // dispara validação
+// Espera que a mensagem de erro apareça
+await page.waitForSelector('#phone-error', { state: 'visible', timeout: 7000 });
 
 await expect(page.locator('#phone-error')).toContainText(
   'Phone is required.'
 );
 ```
 
----
+## 4. Dicas gerais para evitar falhas semelhantes
 
-## 4. Boas práticas gerais
+1. **Documentar mensagens de erro** – Mantenha uma tabela de todos os textos de erro em cada ambiente (dev, staging, prod).  
+2. **Uso de atributos de teste** – Quando possível, adicione `data-testid` aos elementos de UI que serão usados em testes. Isso evita dependência de classes/IDs que mudam com frequência.  
+3. **Teste de regressão** – Adicione snapshots (`toMatchSnapshot`) para mensagens de erro quando forem críticos.  
+4. **Logs de erro detalhados** – Em caso de falha, capture `page.content()` e `page.screenshot()` para analisar visualmente o que realmente aconteceu.  
+5. **Cobertura de cenários** – Verifique se o teste realmente cobre o caso que o negócio quer testar. Se o teste esperava “internal error”, mas o fluxo atual deve exibir “credenciais inválidas”, então o teste está desatualizado.
 
-1. **Evite XPaths** – Use seletores CSS ou atributos `data-qa`/`data-test` específicos para testes.  
-2. **Use mensagens curtas** – Quando a mensagem pode mudar de forma, compare substrings ou use regexes.  
-3. **Aumente a visibilidade de erros** – Ao falhar, faça `page.screenshot()` ou `page.pdf()` para capturar o estado da UI.  
-4. **Isolar as mudanças de UI** – Mantenha as mensagens de erro em um arquivo de recursos (JSON, i18n) e importe no teste; assim, se a mensagem mudar, basta atualizar o recurso.  
-5. **Configurar timeout global** – Em `playwright.config.ts`, ajuste o `timeout` padrão se a aplicação for lenta; isso evita falhas de timing em testes não críticos.  
-
-Com essas alterações o relatório de falhas deve desaparecer e os testes ficarão mais robustos e fáceis de manter. Boa execução!
+Com essas correções e boas práticas, os testes deverão passar com sucesso e refletir corretamente o comportamento da aplicação.
