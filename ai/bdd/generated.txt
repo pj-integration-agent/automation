@@ -1,55 +1,227 @@
+**US01 – Cadastrar um novo banco**  
 ```
-titulo: Cadastro de Novo Banco (US01),
+titulo: US01 – Cadastrar um novo banco
 cenario_bdd:
-    nome: Cadastro bem-sucedido de um novo banco,
-    tipo: positivo,
-    gherkin: "Feature: Cadastro de Novo Banco\nScenario: Cadastro bem-sucedido de um novo banco\n  Given eu estou autenticado como usuário autorizado\n  When eu clico em \"Novo\"\n  And eu preencho o campo \"Código\" com \"BN001\"\n  And eu preencho o campo \"Descrição do Banco\" com \"Banco Nacional de Testes\"\n  And eu preencho o campo \"Apelido\" com \"BNT\"\n  And eu preencho o campo \"Número de inscrição no SBP\" com \"12345678\"\n  And eu seleciono \"Banco XYZ\" na lista \"Banco Controlador\"\n  And eu preencho o campo \"CNPJ\" com \"12.345.678/0001-90\"\n  And eu clico em \"Salvar\"\n  Then o sistema deve persistir o novo registro\n  And a lista de bancos deve exibir um banco com \"Código\" BN001"
+  - nome: Cadastro com dados válidos
+    tipo: positivo
+    gherkin: |
+      Feature: Cadastro de banco
+      Scenario: Cadastro de banco com todos os campos válidos
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK001"
+        And preencho "Descrição do Banco" com "Banco Nacional ABC"
+        And preencho "Apelido" com "ABC"
+        And preencho "Número de inscrição no SBP" com "123456789"
+        And seleciono "Banco Controlador" como "Banco Controlador X"
+        And preencho "CNJP" com "12.345.678/0001-90"
+        Then o botão "Salvar" deve estar habilitado
+        When clico em "Salvar"
+        Then devo ver a mensagem "Banco cadastrado com sucesso"
+        And a lista de bancos deve incluir um registro com Código "BNK001"
+  - nome: Código duplicado
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de banco
+      Scenario: Tentativa de cadastro com código já existente
+        Given já existe um banco com Código "BNK001"
+        When tento cadastrar outro banco com Código "BNK001"
+        And preencho "Descrição do Banco" com "Banco Duplicado"
+        And preencho "Apelido" com "Dup"
+        And preencho "Número de inscrição no SBP" com "987654321"
+        And seleciono "Banco Controlador" como "Banco Controlador X"
+        And preencho "CNJP" com "23.456.789/0001-10"
+        Then o botão "Salvar" deve estar habilitado
+        When clico em "Salvar"
+        Then devo ver a mensagem "Código já cadastrado"
+        And o registro não deve ser salvo
+  - nome: CNJP inválido
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de banco
+      Scenario: Cadastro com CNJP inválido
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK002"
+        And preencho "Descrição do Banco" com "Banco Inválido CNJP"
+        And preencho "Apelido" com "Inválido"
+        And preencho "Número de inscrição no SBP" com "123456789"
+        And seleciono "Banco Controlador" como "Banco Controlador X"
+        And preencho "CNJP" com "00.000.000/0000-00"
+        Then devo ver a mensagem "CNJP inválido" ao lado do campo CNJP
+        And o botão "Salvar" permanece desabilitado
+  - nome: Campo obrigatório em branco
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de banco
+      Scenario: Cadastro com campo obrigatório vazio
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK003"
+        And preencho "Descrição do Banco" com "Banco Sem Apelido"
+        And deixo em branco o campo "Apelido"
+        And preencho "Número de inscrição no SBP" com "123456789"
+        And seleciono "Banco Controlador" como "Banco Controlador X"
+        And preencho "CNJP" com "12.345.678/0001-90"
+        Then devo ver a mensagem "Apelido é obrigatório" ao lado do campo Apelido
+        And o botão "Salvar" permanece desabilitado
+  - nome: Banco Controlador inexistente
+    tipo: negativo
+    gherkin: |
+      Feature: Cadastro de banco
+      Scenario: Seleção de Banco Controlador inválido
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK004"
+        And preencho "Descrição do Banco" com "Banco Sem Controlador Válido"
+        And preencho "Apelido" com "SemCtrl"
+        And preencho "Número de inscrição no SBP" com "123456789"
+        And seleciono "Banco Controlador" como "Banco Inexistente"
+        And preencho "CNJP" com "12.345.678/0001-90"
+        Then devo ver a mensagem "Banco Controlador inválido" ao lado do campo Banco Controlador
+        And o botão "Salvar" permanece desabilitado
+```
 
-titulo: Cadastro de Novo Banco (US01),
+**US02 – Editar um banco existente**  
+```
+titulo: US02 – Editar um banco existente
 cenario_bdd:
-    nome: Tentativa de cadastro com Código duplicado,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Novo Banco\nScenario: Tentar cadastrar com Código duplicado\n  Given eu estou autenticado como usuário autorizado\n  And já existe um banco com Código \"BN001\"\n  When eu clico em \"Novo\"\n  And eu preencho o campo \"Código\" com \"BN001\"\n  And eu preencho o campo \"Descrição do Banco\" com \"Banco Teste Duplicado\"\n  And eu preencho o campo \"Apelido\" com \"BTT\"\n  And eu preencho o campo \"Número de inscrição no SBP\" com \"87654321\"\n  And eu seleciono \"Banco XYZ\" na lista \"Banco Controlador\"\n  And eu preencho o campo \"CNPJ\" com \"12.345.678/0001-90\"\n  And eu clico em \"Salvar\"\n  Then o sistema deve exibir a mensagem \"Código já cadastrado. Por favor, informe outro.\"\n  And o banco não é salvo"
+  - nome: Edição com sucesso
+    tipo: positivo
+    gherkin: |
+      Feature: Edição de banco
+      Scenario: Atualização de dados de um banco existente
+        Given existe um banco com Código "BNK005" e Descrição "Banco X"
+        When abro a tela de edição de "BNK005"
+        And altero "Descrição" para "Banco X Atualizado"
+        And altero "Apelido" para "X Upd"
+        And altero "Número de inscrição no SBP" para "987654321"
+        And seleciono "Banco Controlador" como "Banco Controlador Y"
+        And altero "CNJP" para "98.765.432/0001-11"
+        Then o botão "Salvar" deve estar habilitado
+        When clico em "Salvar"
+        Then devo ver a mensagem "Banco atualizado com sucesso"
+        And a lista de bancos deve refletir a nova descrição e CNJP
+  - nome: Tentativa de alteração do Código
+    tipo: negativo
+    gherkin: |
+      Feature: Edição de banco
+      Scenario: Campo Código em modo somente leitura
+        Given existe um banco com Código "BNK006"
+        When abro a tela de edição de "BNK006"
+        And tento alterar o campo "Código" para "BNK007"
+        Then o campo "Código" permanece não editável
+  - nome: CNJP inválido na edição
+    tipo: negativo
+    gherkin: |
+      Feature: Edição de banco
+      Scenario: Atualização com CNJP inválido
+        Given existe um banco com Código "BNK008"
+        When abro a tela de edição de "BNK008"
+        And altero "CNJP" para "00.000.000/0000-00"
+        And preencho os demais campos com valores válidos
+        Then devo ver a mensagem "CNJP inválido" ao lado do campo CNJP
+        And o botão "Salvar" permanece desabilitado
+  - nome: Banco Controlador inexistente na edição
+    tipo: negativo
+    gherkin: |
+      Feature: Edição de banco
+      Scenario: Seleção de Banco Controlador inválido na edição
+        Given existe um banco com Código "BNK009"
+        When abro a tela de edição de "BNK009"
+        And seleciono "Banco Controlador" como "Banco Inexistente"
+        And preencho os demais campos com valores válidos
+        Then devo ver a mensagem "Banco Controlador inválido" ao lado do campo Banco Controlador
+        And o botão "Salvar" permanece desabilitado
+```
 
-titulo: Cadastro de Novo Banco (US01),
+**US03 – Feedback de validação**  
+```
+titulo: US03 – Feedback de validação
 cenario_bdd:
-    nome: Tentativa de cadastro com CNPJ inválido,
-    tipo: negativo,
-    gherkin: "Feature: Cadastro de Novo Banco\nScenario: Tentar cadastrar com CNPJ inválido\n  Given eu estou autenticado como usuário autorizado\n  When eu clico em \"Novo\"\n  And eu preencho o campo \"Código\" com \"BN002\"\n  And eu preencho o campo \"Descrição do Banco\" com \"Banco Inválido\"\n  And eu preencho o campo \"Apelido\" com \"BIN\"\n  And eu preencho o campo \"Número de inscrição no SBP\" com \"87654321\"\n  And eu seleciono \"Banco XYZ\" na lista \"Banco Controlador\"\n  And eu preencho o campo \"CNPJ\" com \"12.345.678/0001-99\"\n  And eu clico em \"Salvar\"\n  Then o sistema deve exibir a mensagem \"CNPJ inválido ou inexistente.\"\n  And o banco não é salvo"
+  - nome: Mensagem instantânea de campo obrigatório
+    tipo: positivo
+    gherkin: |
+      Feature: Validação em tempo real
+      Scenario: Campo obrigatório vazio gera mensagem imediata
+        Given que estou na tela de cadastro de bancos
+        When deixo em branco o campo "Apelido"
+        Then a mensagem "Apelido é obrigatório" aparece imediatamente
+        And o botão "Salvar" fica desabilitado
+        When escrevo "Banco Teste" no campo "Apelido"
+        Then a mensagem desaparece
+        And o botão "Salvar" fica habilitado (se demais campos válidos)
+  - nome: Mensagem CNJP inválido em tempo real
+    tipo: negativo
+    gherkin: |
+      Feature: Validação em tempo real
+      Scenario: CNJP inválido gera mensagem imediata
+        Given que estou na tela de cadastro de bancos
+        When preencho "CNJP" com "00.000.000/0000-00"
+        Then a mensagem "CNJP inválido" aparece imediatamente
+        And o botão "Salvar" permanece desabilitado
+```
 
-titulo: Edição de Banco já Cadastrado (US02),
+**US04 – Habilitação condicional do botão “Salvar”**  
+```
+titulo: US04 – Habilitação condicional do botão “Salvar”
 cenario_bdd:
-    nome: Editar informações de um banco existente,
-    tipo: positivo,
-    gherkin: "Feature: Edição de Banco já Cadastrado\nScenario: Editar informações de um banco existente\n  Given eu estou autenticado como usuário autorizado\n  And já existe um banco com Código \"BN001\"\n  When eu seleciono o banco BN001 na lista\n  And eu clico em \"Editar\"\n  And eu altero \"Descrição do Banco\" para \"Banco Nacional de Teste Atualizado\"\n  And eu altero \"Apelido\" para \"BNTU\"\n  And eu altero \"Número de inscrição no SBP\" para \"11223344\"\n  And eu seleciono \"Banco ABC\" na lista \"Banco Controlador\"\n  And eu altero \"CNPJ\" para \"98.765.432/0001-10\"\n  And eu clico em \"Salvar\"\n  Then o banco BN001 deve ter suas informações atualizadas\n  And a lista de bancos deve exibir as novas informações"
+  - nome: Botão habilitado quando todos os campos válidos
+    tipo: positivo
+    gherkin: |
+      Feature: Habilitação do botão Salvar
+      Scenario: Botão habilitado após preenchimento de todos os campos corretos
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK010"
+        And preencho "Descrição" com "Banco Y"
+        And preencho "Apelido" com "Y"
+        And preencho "Número de inscrição no SBP" com "987654321"
+        And seleciono "Banco Controlador" como "Banco Controlador Z"
+        And preencho "CNJP" com "12.345.678/0001-90"
+        Then o botão "Salvar" deve estar habilitado
+  - nome: Botão permanece desabilitado se houver campo inválido
+    tipo: negativo
+    gherkin: |
+      Feature: Habilitação do botão Salvar
+      Scenario: Botão permanece desabilitado quando há campo inválido
+        Given que estou na tela de cadastro de bancos
+        When deixo em branco o campo "Número de inscrição no SBP"
+        And preencho os demais campos com valores válidos
+        Then o botão "Salvar" permanece desabilitado
+  - nome: Botão desabilitado quando um campo é removido após habilitado
+    tipo: negativo
+    gherkin: |
+      Feature: Habilitação do botão Salvar
+      Scenario: Botão desabilitado ao remover valor de campo previamente válido
+        Given que estou na tela de cadastro de bancos
+        When preencho "Código" com "BNK011"
+        And preencho "Descrição" com "Banco Z"
+        And preencho "Apelido" com "Z"
+        And preencho "Número de inscrição no SBP" com "123456789"
+        And seleciono "Banco Controlador" como "Banco Controlador W"
+        And preencho "CNJP" com "12.345.678/0001-90"
+        Then o botão "Salvar" deve estar habilitado
+        When deixo em branco o campo "Apelido"
+        Then o botão "Salvar" permanece desabilitado
+```
 
-titulo: Edição de Banco já Cadastrado (US02),
+**US05 – Validação de Banco Controlador**  
+```
+titulo: US05 – Validação de Banco Controlador
 cenario_bdd:
-    nome: Tentar alterar o Código de um banco,
-    tipo: negativo,
-    gherkin: "Feature: Edição de Banco já Cadastrado\nScenario: Tentar alterar o Código de um banco\n  Given eu estou autenticado como usuário autorizado\n  And já existe um banco com Código \"BN001\"\n  When eu seleciono o banco BN001 na lista\n  And eu clico em \"Editar\"\n  And eu tento alterar o campo \"Código\" para \"BN002\"\n  And eu clico em \"Salvar\"\n  Then o sistema deve ignorar a tentativa de alteração de Código\n  And o Código permanece BN001"
-
-titulo: Edição de Banco já Cadastrado (US02),
-cenario_bdd:
-    nome: Salvar edição com CNPJ inválido,
-    tipo: negativo,
-    gherkin: "Feature: Edição de Banco já Cadastrado\nScenario: Salvar edição com CNPJ inválido\n  Given eu estou autenticado como usuário autorizado\n  And já existe um banco com Código \"BN001\"\n  When eu seleciono o banco BN001 na lista\n  And eu clico em \"Editar\"\n  And eu altero \"CNPJ\" para \"12.345.678/0001-99\"\n  And eu clico em \"Salvar\"\n  Then o sistema deve exibir a mensagem \"CNPJ inválido ou inexistente.\"\n  And o registro não é atualizado"
-
-titulo: Validação de CNPJ (US03),
-cenario_bdd:
-    nome: Salvar banco com CNPJ válido,
-    tipo: positivo,
-    gherkin: "Feature: Validação de CNPJ\nScenario: Salvar banco com CNPJ válido\n  Given eu estou autenticado como usuário autorizado\n  When eu preencho o campo \"CNPJ\" com \"12.345.678/0001-90\"\n  And eu salvo o cadastro\n  Then o sistema deve aceitar o cadastro"
-
-titulo: Validação de CNPJ (US03),
-cenario_bdd:
-    nome: CNPJ com dígitos insuficientes,
-    tipo: negativo,
-    gherkin: "Feature: Validação de CNPJ\nScenario: CNPJ com dígitos insuficientes\n  Given eu estou autenticado como usuário autorizado\n  When eu preencho o campo \"CNPJ\" com \"12.345.678/0001-9\"\n  And eu salvo o cadastro\n  Then o sistema deve exibir \"CNPJ deve conter 14 dígitos.\"\n  And o cadastro não é salvo"
-
-titulo: Validação de CNPJ (US03),
-cenario_bdd:
-    nome: CNPJ inexistente no cadastro oficial,
-    tipo: negativo,
-    gherkin: "Feature: Validação de CNPJ\nScenario: CNPJ inexistente no cadastro oficial\n  Given eu estou autenticado como usuário autorizado\n  When eu preencho o campo \"CNPJ\" com \"12.345.678/0001-99\"\n  And eu salvo o cadastro\n  Then o sistema deve exibir \"CNPJ inválido ou inexistente.\"\n  And o cadastro não é salvo"
+  - nome: Seleção válida de Banco Controlador
+    tipo: positivo
+    gherkin: |
+      Feature: Seleção de Banco Controlador
+      Scenario: Seleção de um Banco Controlador válido
+        Given que estou na tela de cadastro de bancos
+        When a lista "Banco Controlador" contém "Banco Controlador X"
+        And seleciono "Banco Controlador" como "Banco Controlador X"
+        Then o campo "Banco Controlador" reflete a seleção
+        And o botão "Salvar" permanece habilitado (se demais campos válidos)
+  - nome: Lista vazia de Banco Controlador
+    tipo: negativo
+    gherkin: |
+      Feature: Seleção de Banco Controlador
+      Scenario: Nenhum Banco Controlador disponível na lista
+        Given a tabela de Bancos Controladores está vazia
+        When abro a tela de cadastro de bancos
+        Then devo ver a mensagem "Nenhum Banco Controlador disponível"
+        And o botão "Salvar" permanece desabilitado
 ```
