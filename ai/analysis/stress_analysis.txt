@@ -1,41 +1,40 @@
-Relatório Técnico – Análise de Stress‑Test (JTL)
-
 Resumo do cenário de teste  
-O teste foi conduzido contra a API pública “https://pokeapi.co/api/v2/pokemon/ditto” utilizando 2 threads de execução, com 20 requisições do tipo GET. Todas as requisições foram realizadas em um intervalo de 9 000 ms (9 s), resultando em 20 chamadas bem-sucedidas (código HTTP 200).
+O teste foi executado com o Apache JMeter enviando requisições GET para o endpoint https://pokeapi.co/api/v2/pokemon/ditto. O script foi configurado com 20 threads, cada uma efetuando uma única requisição, resultando em um conjunto de 20 mensagens de resposta em um intervalo de aproximadamente 9,4 segundos. O objetivo era avaliar a resposta do serviço sob carga simultânea moderada e identificar eventuais gargalos.
 
 Volume total de requisições  
-Total de solicitações registradas: 20.
+O arquivo JTL contém 20 linhas de resposta, correspondendo a 20 requisições GET realizadas durante o teste.
 
 Throughput estimado  
-Throughput = total de requisições / duração do teste = 20 / 9 s ≈ 2,22 requisições por segundo. Esse valor reflete a taxa de produção das requisições no ambiente de teste.
+O throughput foi calculado dividindo o número total de requisições pelo tempo total do teste em segundos. O tempo total foi determinado pela diferença entre o último e o primeiro timestamp, resultando em 9,422 s. Assim, o throughput médio foi de 20 / 9,422 ≈ 2,12 requisições por segundo.
 
-Latência (p50, p90, p95, p99)  
-Os valores de latência (coluna “Latency”) foram os seguintes, em ordem crescente: 39 ms, 41 ms, 41 ms, 42 ms, 42 ms, 43 ms, 43 ms, 43 ms, 44 ms, 44 ms, 45 ms, 45 ms, 45 ms, 46 ms, 48 ms, 48 ms, 48 ms, 49 ms, 357 ms, 761 ms.  
-Com base nesses dados:  
-- p50 (mediana) ≈ 44,5 ms  
-- p90 ≈ 49 ms  
-- p95 ≈ 357 ms  
-- p99 ≈ 761 ms  
+Latência  
+Os valores de latência (coluna Latency) foram analisados para obter os percentis solicitados:  
+- p50 (50.º percentile) = 21 ms  
+- p90 (90.º percentile) = 28 ms  
+- p95 (95.º percentile) = 32 ms  
+- p99 (99.º percentile) = 324 ms  
+
+Esses valores indicam que a maior parte das requisições teve latência abaixo de 32 ms, mas houve um pico de 324 ms que domina o 99.º percentile.
 
 Taxa de erros  
-Nenhum erro foi registrado; taxa de falhas = 0 %. Todos os 20 requests retornaram HTTP 200.
+Todas as requisições retornaram código 200 e a coluna success é true em cada linha. Portanto, a taxa de erros é 0 % e não há falhas de resposta no conjunto analisado.
 
 Principais gargalos identificados  
-1. Latências atípicas de 357 ms e 761 ms, que elevam significativamente o p95 e p99, indicando possíveis gargalos de rede ou de processamento da API externa.  
-2. O throughput baixo (≈ 2,2 req/s) sugere que a configuração de threads ou o limite de conexão não foram adequados ao objetivo de carga.  
-3. Falta de variabilidade nas métricas de latência entre as primeiras duas requisições (conexões ativas) e as demais (conexões fechadas), indicando que a manutenção de conexão (keep‑alive) pode estar contribuindo para a discrepância.
+1. O primeiro pedido apresentou um tempo de conexão de 309 ms e latência de 324 ms, sugerindo um problema de estabelecimento de conexão ou de resposta do servidor para a primeira requisição em cada sessão.  
+2. A presença de um pico de latência isolado (324 ms) indica que, em condições de carga, a aplicação pode experimentar atrasos inesperados possivelmente relacionados a limites de recursos, como pool de conexões, threads ou capacidade de I/O.  
+3. O número baixo de requisições por segundo indica que o teste não alcançou a saturação da infraestrutura, o que pode mascarar gargalos que só apareceriam em cargas mais elevadas.
 
 Impacto potencial em ambiente de produção  
-Mesmo que a taxa de erro seja nula, os p95 e p99 elevados implicam em experiências de usuário degradadas quando a aplicação dependerá de respostas da API em intervalos críticos. Se o tráfego real atingir centenas ou milhares de requisições por segundo, esses picos de latência podem se multiplicar, resultando em tempos de espera excessivos, timeouts em downstream services e aumento de custos de rede e infra‑estrutura.
+Em produção, a ausência de erros mas a existência de latências elevadas pode resultar em uma experiência de usuário insatisfatória, especialmente se as requisições forem parte de fluxos críticos de negócio. Um pico de latência pode aumentar a taxa de timeout de clientes, causar retrys e, consequentemente, aumentar a carga no servidor. Se o volume de tráfego aumentar, esses gargalos poderão se multiplicar, levando a degradação sistêmica.
 
 Recomendações técnicas claras e acionáveis  
-1. **Otimização de conexão** – habilitar e configurar corretamente keep‑alive na camada HTTP/1.1 ou HTTP/2. Isso reduzirá o overhead de estabelecimento de conexão e poderá mitigar latências elevadas em requisições subsequentes.  
-2. **Pool de conexões** – configurar um pool de conexões no cliente HTTP (ex.: Apache HttpClient, OkHttp, etc.) para reutilizar sockets e reduzir latência de conexão inicial.  
-3. **Balanceamento de carga e redundância** – se possível, distribuir as chamadas entre múltiplos nós da API ou usar um serviço de proxy que balanceie a carga, diminuindo a probabilidade de gargalos concentrados.  
-4. **Cache de respostas** – a API retorna dados estáticos sobre o Pokémon “ditto”; implementar caching no lado cliente ou em um proxy reverso (ex.: Varnish, CloudFront) pode eliminar chamadas repetidas e reduzir a latência observada.  
-5. **Aumentar o número de threads** – para simular cenários de produção, elevar o número de usuários virtuais (threads) e manter o mesmo número de requisições por usuário. Isso permitirá observar o comportamento de throughput em condições de carga mais realista.  
-6. **Monitoramento de métricas** – integrar ferramentas de observabilidade (Prometheus, Grafana, New Relic, etc.) para acompanhar em tempo real latência, throughput e taxa de erros, permitindo detecção precoce de degradação.  
-7. **Testes de carga adicionais** – repetir o teste com cargas progressivas (50, 100, 200 requisições simultâneas) para mapear o ponto de saturação e validar a eficácia das otimizações implementadas.  
-8. **Análise de logs da API** – se possível, acessar logs internos da API (ou solicitar métricas ao provedor) para identificar se os picos de latência são originados no endpoint ou em camadas externas (DNS, firewall, CDN).  
+1. Ativar e configurar o keep‑alive do protocolo HTTP/1.1 ou HTTP/2 para reduzir o overhead de estabelecimento de conexão; revisar o tempo de timeout de conexão.  
+2. Investigar e otimizar o pool de conexões do servidor backend, certificando‑se de que há capacidade suficiente para atender simultaneamente os 20 clientes, especialmente nas primeiras requisições.  
+3. Monitorar o tempo de resposta em produção com métricas de latência contínua; configurar alertas quando o 95.º ou 99.º percentile exceder 200 ms.  
+4. Executar testes de carga adicionais com maior número de threads (ex.: 100, 500) e com duração mais longa (pelo menos 5 minutos) para identificar pontos de falha que só aparecem quando a carga aumenta.  
+5. Analisar logs de aplicação e métricas de sistema (CPU, memória, I/O) para correlacionar picos de latência com eventos de alto consumo de recursos.  
+6. Caso o serviço utilize balanceador de carga, confirmar que a distribuição de sessões está balanceada e que não há sobrecarga em instâncias específicas.  
+7. Implementar caching de respostas, se aplicável, para reduzir carga no servidor de origem.  
+8. Se o serviço for exposto via API Gateway, configurar limitação de taxa (rate limiting) e fallback adequado para proteger a aplicação contra spikes repentinos de tráfego.
 
-Implementação dessas ações reduzirá as latências atípicas, aumentará o throughput e garantirá maior confiabilidade e desempenho em produção.
+Essas ações devem ser priorizadas em conjunto com um plano de monitoramento contínuo para garantir que a aplicação mantenha performance e disponibilidade mesmo em cenários de pico de uso.
