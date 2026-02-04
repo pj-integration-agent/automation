@@ -75,6 +75,7 @@ jobs:
     secrets: inherit
 
   execucao-testes-de-carga:
-    if: ${{ inputs.criacao-testes }}
-    uses: pj-integration-agent/automation/.github/workflows/stress-test.yaml@main
+    if: ${{ inputs.execucao-testes-de-carga }}
+    needs: executar-testes
+    uses: pj-integration-agent/automation/.github/workflows/jmeter-load-test.yml@main
     secrets: inherit
