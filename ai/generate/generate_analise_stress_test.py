@@ -1,12 +1,19 @@
 import os
-from groq import Groq
+from anthropic import Anthropic
+
 
 def generate_stress_analysis():
+    api_key = os.getenv("CLAUDE_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("❌ CLAUDE_API_KEY não definida")
+
+    model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
 
     # ==============================
-    # GROQ (via CI/CD secrets)
+    # Cliente Claude
     # ==============================
-    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
+    client = Anthropic(api_key=api_key)
 
     # ==============================
     # Leitura do resultado do JMeter
@@ -19,11 +26,11 @@ def generate_stress_analysis():
     with open(jtl_path, "r", encoding="utf-8") as f:
         jtl_lines = f.readlines()
 
-    # ⚠️ Limita conteúdo para não estourar tokens
+    # ⚠️ Limite de conteúdo para não estourar tokens
     resumo_jtl = "".join(jtl_lines[:300])
 
     # ==============================
-    # PROMPT EMBUTIDO
+    # Prompt
     # ==============================
     prompt = f"""
 Você é um engenheiro de performance especialista em Apache JMeter e testes de carga.
@@ -31,34 +38,39 @@ Você é um engenheiro de performance especialista em Apache JMeter e testes de 
 Analise o resultado abaixo, extraído de um arquivo JTL de um teste de stress, e gere
 um relatório técnico em TEXTO PURO contendo obrigatoriamente:
 
-- Resumo do cenário de teste
-- Volume total de requisições
-- Throughput estimado
-- Latência (p50, p90, p95, p99)
-- Taxa de erros
-- Principais gargalos identificados
-- Impacto potencial em ambiente de produção
-- Recomendações técnicas claras e acionáveis
+Resumo do cenário de teste
+Volume total de requisições
+Throughput estimado
+Latência p50, p90, p95 e p99
+Taxa de erros
+Principais gargalos identificados
+Impacto potencial em ambiente de produção
+Recomendações técnicas claras e acionáveis
 
-Não utilize markdown.
-Não utilize listas com símbolos especiais.
-Use linguagem profissional, objetiva e técnica.
+Regras:
+Não utilizar markdown
+Não utilizar listas com símbolos especiais
+Usar linguagem profissional, objetiva e técnica
 
 Resultado do stress-test (JTL resumido):
 {resumo_jtl}
 """
 
     # ==============================
-    # Chamada à API Groq
+    # Chamada à API Claude
     # ==============================
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+    response = client.messages.create(
+        model=model,
+        max_tokens=1500,
         messages=[
-            {"role": "user", "content": prompt}
+            {
+                "role": "user",
+                "content": prompt
+            }
         ]
     )
 
-    analysis_text = response.choices[0].message.content
+    analysis_text = response.content[0].text
 
     # ==============================
     # Escrita do resultado
@@ -70,6 +82,7 @@ Resultado do stress-test (JTL resumido):
         f.write(analysis_text)
 
     print(f"✅ Análise de stress-test gerada com sucesso em {output_path}")
+
 
 if __name__ == "__main__":
     generate_stress_analysis()
