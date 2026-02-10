@@ -1,1 +1,1 @@
-
+seja um QA especialista e crie as user storys com requisitos e em seguida, os BDD's de cenários positivos e negativos, estando na primeira pessoa do imperativo considerando os critérios abaixo da funcionalidade da aplicação Bancos Nacionais. Use como base a imagem "image.png"
