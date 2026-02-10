@@ -1,13 +1,23 @@
 import os
-import google.generativeai as genai
+from anthropic import Anthropic
 
 
 def generate_tests_from_bdd():
-    # Configuração da API Gemini via Secrets
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    api_key = os.getenv("CLAUDE_API_KEY")
 
-    model = genai.GenerativeModel("gemini-1.5-pro")
+    if not api_key:
+        raise RuntimeError("❌ CLAUDE_API_KEY não definida")
 
+    model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
+
+    # ==============================
+    # Cliente Claude
+    # ==============================
+    client = Anthropic(api_key=api_key)
+
+    # ==============================
+    # Tipo de prompt
+    # ==============================
     prompt_tipo = os.getenv("PROMPT_TIPO", "default").lower()
     prompt_path = f"ai/prompts/{prompt_tipo}.txt"
 
@@ -17,9 +27,19 @@ def generate_tests_from_bdd():
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt_base = f.read()
 
-    with open("ai/bdd/generated.txt", "r", encoding="utf-8") as f:
+    # ==============================
+    # Leitura do BDD
+    # ==============================
+    with open(
+        "ai/bdd/generated.feature",
+        "r",
+        encoding="utf-8"
+    ) as f:
         bdd_content = f.read()
 
+    # ==============================
+    # Prompt final
+    # ==============================
     prompt = f"""
 {prompt_base}
 
@@ -27,10 +47,25 @@ Arquivo BDD fornecido:
 {bdd_content}
 """
 
-    response = model.generate_content(prompt)
+    # ==============================
+    # Chamada à API Claude
+    # ==============================
+    response = client.messages.create(
+        model=model,
+        max_tokens=1800,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
 
-    tests_code = response.text
+    tests_code = response.content[0].text
 
+    # ==============================
+    # Escrita do resultado
+    # ==============================
     os.makedirs("ai/tests", exist_ok=True)
     with open(
         f"ai/tests/test_generated_{prompt_tipo}.ts",
