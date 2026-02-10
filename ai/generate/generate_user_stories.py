@@ -41,6 +41,8 @@ Regras:
 
 Critérios:
 {all_contents}
+
+E ao finalizar não precisa realizar a criação de BDDs
 """
 
     # ==============================
