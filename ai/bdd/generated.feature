@@ -1,63 +1,89 @@
-titulo: US01 - Cadastro de Novo Banco
+Título da User Story: Criar novo registro de Banco Nacional
 cenario_bdd:
-  nome: Cadastrar novo banco com sucesso
+  nome: Criar novo registro de Banco Nacional com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Cadastro de Novo Banco
-    Scenario: Cadastrar novo banco com sucesso
-      Given que o usuário está na tela de cadastro de novo banco
-      When preencher todos os campos obrigatórios corretamente
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco Controlador | CNPJ |
-        | 123    | Banco ABC          | ABC     | 12345                      | Banco Central    | 12.345.678/0001-90 |
+    Feature: Cadastro de Banco Nacional
+    Scenario: Criar novo registro de Banco Nacional com sucesso
+      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
+      When o Especialista preencher todos os campos obrigatórios corretamente
+        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        | 123    | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
       And clicar no botão "Salvar"
-      Then o novo banco deve ser cadastrado com sucesso
-
+      Then o novo registro de Banco Nacional deve ser exibido na listagem
+        
 cenario_bdd:
-  nome: Cadastrar novo banco com código duplicado
+  nome: Código de Banco duplicado
   tipo: negativo
   gherkin: |
-    Feature: Cadastro de Novo Banco
-    Scenario: Cadastrar novo banco com código duplicado
-      Given que o usuário está na tela de cadastro de novo banco
-      When preencher todos os campos obrigatórios corretamente
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco Controlador | CNPJ |
-        | 123    | Banco XYZ          | XYZ     | 54321                      | Banco Central    | 98.765.432/0001-09 |
+    Feature: Cadastro de Banco Nacional
+    Scenario: Código de Banco duplicado
+      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
+      When o Especialista preencher todos os campos obrigatórios com um Código que já existe
+        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        | 123    | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
       And clicar no botão "Salvar"
-      Then deve ser exibida uma mensagem de erro informando que o código é duplicado
+      Then deve ser exibida uma mensagem de erro informando que o Código já está cadastrado
 
 cenario_bdd:
-  nome: Cadastrar novo banco com CNPJ inválido
+  nome: Campo obrigatório não preenchido
   tipo: negativo
   gherkin: |
-    Feature: Cadastro de Novo Banco
-    Scenario: Cadastrar novo banco com CNPJ inválido
-      Given que o usuário está na tela de cadastro de novo banco
-      When preencher todos os campos obrigatórios corretamente
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco Controlador | CNPJ |
-        | 456    | Banco DEF          | DEF     | 98765                      | Banco Central    | 12.345.678/0001-91 |
+    Feature: Cadastro de Banco Nacional
+    Scenario: Campo obrigatório não preenchido
+      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
+      When o Especialista deixar de preencher um campo obrigatório
+        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        |        | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
+      And clicar no botão "Salvar"
+      Then deve ser exibida uma mensagem de erro informando que o campo obrigatório não foi preenchido
+
+cenario_bdd:
+  nome: CNPJ inválido
+  tipo: negativo
+  gherkin: |
+    Feature: Cadastro de Banco Nacional
+    Scenario: CNPJ inválido
+      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
+      When o Especialista preencher um CNPJ inválido
+        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        | 456    | Banco DEF         | DEF     | 789012                     | Banco XYZ         | 12.345.678/0001-91 |
       And clicar no botão "Salvar"
       Then deve ser exibida uma mensagem de erro informando que o CNPJ é inválido
 
-titulo: US02 - Editar Banco Cadastrado
+Título da User Story: Editar registro de Banco Nacional
 cenario_bdd:
-  nome: Editar informações de um banco cadastrado
+  nome: Editar registro de Banco Nacional com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Editar Banco Cadastrado
-    Scenario: Editar informações de um banco cadastrado
-      Given que o usuário está na tela de edição de um banco cadastrado
-      When alterar os seguintes campos:
-        | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco Controlador | CNPJ |
-        | Banco ABC Ltda     | ABC123  | 54321                      | Banco XYZ         | 98.765.432/0001-09 |
+    Feature: Edição de Banco Nacional
+    Scenario: Editar registro de Banco Nacional com sucesso
+      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
+      When o Especialista alterar os campos permitidos
+        | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        | Banco ABC Atualizado | ABC2   | 987654                     | Banco XYZ         | 12.345.678/0001-90 |
       And clicar no botão "Salvar"
-      Then as informações do banco devem ser atualizadas com sucesso
+      Then o registro de Banco Nacional deve ser atualizado na listagem
 
 cenario_bdd:
-  nome: Tentar editar o código de um banco cadastrado
+  nome: Tentar editar o código do Banco
   tipo: negativo
   gherkin: |
-    Feature: Editar Banco Cadastrado
-    Scenario: Tentar editar o código de um banco cadastrado
-      Given que o usuário está na tela de edição de um banco cadastrado
-      When tentar alterar o campo "Código"
-      Then o campo "Código" não deve poder ser editado
+    Feature: Edição de Banco Nacional
+    Scenario: Tentar editar o código do Banco
+      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
+      When o Especialista tentar alterar o campo "Código"
+      Then o campo "Código" deve estar desabilitado e não permitir a edição
+
+cenario_bdd:
+  nome: CNPJ inválido na edição
+  tipo: negativo
+  gherkin: |
+    Feature: Edição de Banco Nacional
+    Scenario: CNPJ inválido na edição
+      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
+      When o Especialista preencher um CNPJ inválido
+        | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
+        | Banco ABC Atualizado | ABC2   | 987654                     | Banco XYZ         | 12.345.678/0001-91 |
+      And clicar no botão "Salvar"
+      Then deve ser exibida uma mensagem de erro informando que o CNPJ é inválido
