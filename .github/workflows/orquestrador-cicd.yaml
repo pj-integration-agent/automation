@@ -51,7 +51,6 @@ permissions:
 jobs:
   user-stories:
     if: ${{ inputs.criacao-user-stories }}
-    needs: test-api
     uses: pj-integration-agent/reusable-workflows/.github/workflows/criacao-user-stories.yaml@main
     secrets: inherit
 
