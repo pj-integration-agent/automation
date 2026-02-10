@@ -1,34 +1,41 @@
-**User Story 01 - Criar Novo Banco**
+User Stories:
 
-Como um QA especialista, eu quero poder criar um novo registro de banco para que seja possível adicionar informações de novos bancos no sistema.
+US01 - Como um Especialista do Banco, eu quero criar um novo registro de Banco Nacional para que eu possa cadastrar as informações essenciais do banco.
 
 Descrição:
-- Ao clicar na opção "Novo", o usuário deve ser direcionado para a tela de cadastro de banco.
-- Os campos obrigatórios a serem preenchidos são: "Código", "Descrição do Banco", "Apelido", "Número de inscrição no SBP", "Banco controlador" (com opções em uma lista) e CNPJ (que deve ser válido e existente).
-- O campo "Código" não pode ser igual a outro já cadastrado em outros registros.
-- Após preencher todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para validar o cadastro do novo banco.
+- Na tela de cadastro de Banco Nacional, os seguintes campos devem ser preenchidos obrigatoriamente:
+  - Código (que não pode ser igual a outro já cadastrado)
+  - Descrição do Banco
+  - Apelido
+  - Número de inscrição no SBP
+  - Banco controlador (lista suspensa)
+  - CNPJ (deve ser válido e existente)
+- Após o preenchimento de todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para validar o cadastro.
 
 Critérios de Aceitação:
-- Todos os campos obrigatórios devem ser preenchidos corretamente.
-- O campo "Código" não pode ser igual a outro já cadastrado.
+- O Código do Banco deve ser único, não podendo ser igual a outro já cadastrado.
+- Todos os campos obrigatórios devem ser preenchidos para que o cadastro seja realizado.
 - O CNPJ informado deve ser válido e existente.
-- Ao clicar em "Salvar", o novo banco deve ser cadastrado com sucesso.
+- Após clicar em "Salvar", o cadastro deve ser validado e o novo registro deve ser exibido na listagem de Bancos Nacionais.
 
 Rastreabilidade: US01
 
-**User Story 02 - Editar Registro de Banco**
-
-Como um QA especialista, eu quero poder editar as informações de um banco já cadastrado, exceto o campo "Código", para que seja possível manter os registros atualizados.
+US02 - Como um Especialista do Banco, eu quero editar as informações de um Banco Nacional cadastrado para que eu possa manter os dados atualizados.
 
 Descrição:
-- Ao selecionar um banco da lista de registros existentes, o usuário deve poder abrir o formulário de edição.
-- Os campos editáveis são: "Descrição do Banco", "Apelido", "Número de inscrição no SBP", "Banco controlador" e CNPJ.
-- O campo "Código" não pode ser editado.
-- Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as mudanças.
+- Na tela de edição de Banco Nacional, os seguintes campos poderão ser editados:
+  - Descrição do Banco
+  - Apelido
+  - Número de inscrição no SBP
+  - Banco controlador (lista suspensa)
+  - CNPJ
+- O campo "Código" não poderá ser editado.
+- Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as modificações.
 
 Critérios de Aceitação:
-- Todos os campos editáveis devem poder ser alterados, exceto o "Código".
-- As alterações realizadas devem ser salvas corretamente ao clicar em "Salvar".
-- Não deve ser possível alterar o valor do campo "Código".
+- O Código do Banco não poderá ser editado.
+- Todos os outros campos permitidos para edição devem ser atualizados corretamente.
+- O CNPJ informado deve ser válido e existente.
+- Após clicar em "Salvar", as alterações devem ser validadas e o registro atualizado deve ser exibido na listagem de Bancos Nacionais.
 
 Rastreabilidade: US02
