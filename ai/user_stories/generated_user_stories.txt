@@ -1,41 +1,44 @@
-User Stories:
-
-US01 - Como um Especialista do Banco, eu quero criar um novo registro de Banco Nacional para que eu possa cadastrar as informações essenciais do banco.
+User Story 01 - Acesso ao aplicativo móvel
+Como usuário, eu quero ter acesso ao aplicativo móvel dos Bancos Nacionais para poder gerenciar minha conta bancária.
 
 Descrição:
-- Na tela de cadastro de Banco Nacional, os seguintes campos devem ser preenchidos obrigatoriamente:
-  - Código (que não pode ser igual a outro já cadastrado)
-  - Descrição do Banco
-  - Apelido
-  - Número de inscrição no SBP
-  - Banco controlador (lista suspensa)
-  - CNPJ (deve ser válido e existente)
-- Após o preenchimento de todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para validar o cadastro.
+O usuário deverá ser capaz de baixar e instalar o aplicativo móvel dos Bancos Nacionais em seu dispositivo (smartphone ou tablet). Após a instalação, o usuário poderá abrir o aplicativo e realizar o login com suas credenciais (nome de usuário e senha) para acessar sua conta bancária.
 
 Critérios de Aceitação:
-- O Código do Banco deve ser único, não podendo ser igual a outro já cadastrado.
-- Todos os campos obrigatórios devem ser preenchidos para que o cadastro seja realizado.
-- O CNPJ informado deve ser válido e existente.
-- Após clicar em "Salvar", o cadastro deve ser validado e o novo registro deve ser exibido na listagem de Bancos Nacionais.
+- O aplicativo deve estar disponível para download nas principais lojas de aplicativos (Google Play e App Store).
+- O processo de download e instalação do aplicativo deve ser simples e intuitivo.
+- O usuário deve ser capaz de realizar o login com suas credenciais (nome de usuário e senha) de forma segura e confiável.
+- O aplicativo deve fornecer uma experiência de usuário agradável e responsiva.
 
 Rastreabilidade: US01
 
-US02 - Como um Especialista do Banco, eu quero editar as informações de um Banco Nacional cadastrado para que eu possa manter os dados atualizados.
+User Story 02 - Visualização de saldo e extrato da conta
+Como usuário, eu quero visualizar o saldo e o extrato da minha conta bancária para poder acompanhar minhas movimentações financeiras.
 
 Descrição:
-- Na tela de edição de Banco Nacional, os seguintes campos poderão ser editados:
-  - Descrição do Banco
-  - Apelido
-  - Número de inscrição no SBP
-  - Banco controlador (lista suspensa)
-  - CNPJ
-- O campo "Código" não poderá ser editado.
-- Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as modificações.
+Após realizar o login, o usuário deverá ser capaz de acessar a tela de saldo e extrato da sua conta bancária. Nesta tela, o usuário poderá visualizar o saldo atual da sua conta, bem como o histórico de transações (extrato) realizadas, incluindo informações como data, valor, descrição e tipo de transação (crédito ou débito).
 
 Critérios de Aceitação:
-- O Código do Banco não poderá ser editado.
-- Todos os outros campos permitidos para edição devem ser atualizados corretamente.
-- O CNPJ informado deve ser válido e existente.
-- Após clicar em "Salvar", as alterações devem ser validadas e o registro atualizado deve ser exibido na listagem de Bancos Nacionais.
+- O saldo da conta deve ser exibido de forma clara e destacada.
+- O extrato da conta deve apresentar as transações de forma organizada e cronológica.
+- As informações de cada transação (data, valor, descrição e tipo) devem ser exibidas de maneira clara e compreensível.
+- O usuário deve poder filtrar o extrato por período (ex: últimos 30 dias, últimos 3 meses, etc.).
+- O aplicativo deve atualizar o saldo e o extrato em tempo real, refletindo as últimas movimentações da conta.
 
 Rastreabilidade: US02
+
+User Story 03 - Transferência entre contas
+Como usuário, eu quero poder transferir dinheiro entre minhas próprias contas bancárias para gerenciar melhor meus recursos financeiros.
+
+Descrição:
+O usuário deverá ser capaz de realizar transferências de dinheiro entre suas próprias contas bancárias cadastradas no aplicativo. Para isso, o usuário deverá selecionar a conta de origem, a conta de destino, digitar o valor a ser transferido e confirmar a operação.
+
+Critérios de Aceitação:
+- O usuário deve poder visualizar todas as suas contas bancárias cadastradas no aplicativo.
+- O usuário deve poder selecionar a conta de origem e a conta de destino da transferência.
+- O usuário deve poder digitar o valor a ser transferido, com validação de campo para aceitar apenas valores numéricos e com duas casas decimais.
+- O aplicativo deve exibir o saldo atualizado das contas envolvidas na transferência após a conclusão da operação.
+- O aplicativo deve fornecer um mecanismo seguro de autenticação (ex: senha, biometria) para confirmar a transferência.
+- O aplicativo deve exibir uma confirmação da transferência realizada com sucesso.
+
+Rastreabilidade: US03
