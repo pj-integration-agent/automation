@@ -1,0 +1,21 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1770729743892,784,GET Pokémon,200,OK,GET PokéAPI - CI 1-1,text,true,,26759,133,2,2,https://pokeapi.co/api/v2/pokemon/ditto,772,0,756
+1770729744289,389,GET Pokémon,200,OK,GET PokéAPI - CI 1-2,text,true,,26759,133,2,2,https://pokeapi.co/api/v2/pokemon/ditto,375,0,361
+1770729744789,34,GET Pokémon,200,OK,GET PokéAPI - CI 1-3,text,true,,26765,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,32,0,20
+1770729745287,39,GET Pokémon,200,OK,GET PokéAPI - CI 1-4,text,true,,26759,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,37,0,20
+1770729745788,25,GET Pokémon,200,OK,GET PokéAPI - CI 1-5,text,true,,26769,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,23,0,15
+1770729746288,41,GET Pokémon,200,OK,GET PokéAPI - CI 1-6,text,true,,26766,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,39,0,16
+1770729746789,52,GET Pokémon,200,OK,GET PokéAPI - CI 1-7,text,true,,26760,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,49,0,23
+1770729747288,30,GET Pokémon,200,OK,GET PokéAPI - CI 1-8,text,true,,26763,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,27,0,17
+1770729747789,27,GET Pokémon,200,OK,GET PokéAPI - CI 1-9,text,true,,26763,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,25,0,16
+1770729748288,26,GET Pokémon,200,OK,GET PokéAPI - CI 1-10,text,true,,26763,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,25,0,16
+1770729748787,28,GET Pokémon,200,OK,GET PokéAPI - CI 1-11,text,true,,26765,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,26,0,17
+1770729749288,33,GET Pokémon,200,OK,GET PokéAPI - CI 1-12,text,true,,26761,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,31,0,16
+1770729749788,30,GET Pokémon,200,OK,GET PokéAPI - CI 1-13,text,true,,26765,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,29,0,18
+1770729750289,22,GET Pokémon,200,OK,GET PokéAPI - CI 1-14,text,true,,26759,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,20,0,13
+1770729750787,29,GET Pokémon,200,OK,GET PokéAPI - CI 1-15,text,true,,26763,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,27,0,15
+1770729751288,30,GET Pokémon,200,OK,GET PokéAPI - CI 1-16,text,true,,26765,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,28,0,15
+1770729751789,24,GET Pokémon,200,OK,GET PokéAPI - CI 1-17,text,true,,26755,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,23,0,13
+1770729752287,28,GET Pokémon,200,OK,GET PokéAPI - CI 1-18,text,true,,26763,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,27,0,14
+1770729752788,26,GET Pokémon,200,OK,GET PokéAPI - CI 1-19,text,true,,26759,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,25,0,15
+1770729753288,26,GET Pokémon,200,OK,GET PokéAPI - CI 1-20,text,true,,26759,133,1,1,https://pokeapi.co/api/v2/pokemon/ditto,26,0,13

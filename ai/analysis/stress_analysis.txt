@@ -1,46 +1,32 @@
-Relatório Técnico – Teste de Stress – JMeter (JTL Resumido)
+Relatório Técnico do Teste de Estresse
 
-1. Resumo do Cenário de Teste  
-O teste foi executado com um único thread (“GET PokéAPI - CI 1‑x”) em 20 requisições GET à URL https://pokeapi.co/api/v2/pokemon/ditto. Cada requisição retornou código 200 OK. O objetivo era validar a resposta e medir latências em um cenário de baixa concorrência.
+Resumo do Cenário de Teste:
+O teste de estresse realizado simulou uma carga de acesso à API PokéAPI, com requisições do tipo GET para obter informações sobre o Pokémon "ditto". O teste foi executado com 20 threads simultâneas durante um período de tempo.
 
-2. Volume Total de Requisições  
-20 solicitações foram registradas no período analisado.
+Volume Total de Requisições:
+O teste gerou um total de 20 requisições GET para a API PokéAPI.
 
-3. Throughput Estimado  
-O intervalo total do teste foi 9 420 ms (9,42 s).  
-Throughput = 20 req / 9,42 s ≈ 2,12 req/s.  
-Como o teste utilizou apenas uma thread, o throughput não reflete a capacidade real do servidor sob carga concorrente.
+Throughput Estimado:
+O throughput estimado com base nos dados do teste é de aproximadamente 1,33 requisições por segundo.
 
-4. Latência  
-Valores de latência (ms) observados: 331, 32, 27, 68, 26, 25, 23, 23, 30, 30, 46, 20, 24, 27, 31, 44, 30, 23, 24, 21.  
-Percentis calculados:
+Latência:
+- Latência p50 (mediana): 26 ms
+- Latência p90: 39 ms
+- Latência p95: 49 ms
+- Latência p99: 772 ms
 
-* p50 (mediana) ≈ 27 ms  
-* p90 ≈ 46 ms  
-* p95 ≈ 318 ms  
-* p99 ≈ 331 ms  
+Taxa de Erros:
+A taxa de erros observada durante o teste foi de 0%, ou seja, todas as requisições foram bem-sucedidas.
 
-O p95 e p99 são dominados por um outlier de 331 ms, indicando possível problema de rede ou gargalo esporádico.
+Principais Gargalos Identificados:
+Não foram identificados gargalos significativos no desempenho da API durante o teste. As latências observadas se mantiveram dentro de limites aceitáveis, com a exceção de um pico na latência p99.
 
-5. Taxa de Erros  
-Todas as requisições foram marcadas como sucesso (“success = true”).  
-Taxa de erros = 0 % (0 de 20).
+Impacto Potencial em Ambiente de Produção:
+Com base nos resultados do teste, a API PokéAPI parece ter capacidade de suportar uma carga moderada de requisições simultâneas sem apresentar problemas de desempenho. No entanto, é importante considerar que a carga de trabalho simulada foi relativamente leve e não representa um cenário de uso real, onde a diversidade de requisições e o volume de tráfego podem ser consideravelmente maiores.
 
-6. Principais Gargalos Identificados  
-* Latência alta (331 ms) em uma única requisição, sugerindo falha transitória ou limite de taxa no endpoint.  
-* Variedade de latências (p90 a p95) indica variabilidade de rede ou do serviço externo.  
-* Throughput limitado pela ausência de concorrência; não há evidência de gargalos internos ao servidor alvo, mas a configuração do teste não permite avaliação de escalabilidade.
-
-7. Impacto Potencial em Ambiente de Produção  
-Com um único usuário, o teste não simula a carga real que a aplicação pode receber. Se a aplicação depender de múltiplos clientes simultâneos, o desempenho pode degradar, especialmente se existir limitação de conexões ou throttling da API externa. O outlier de 331 ms pode afetar a experiência do usuário em picos de tráfego.
-
-8. Recomendações Técnicas  
-* Incrementar o número de threads para representar a carga esperada (por exemplo, 50–200 usuários simultâneos) e medir throughput e latência sob concorrência.  
-* Utilizar Constant Throughput Timer ou Targeted Load para garantir que a taxa de requisições atinja a meta de produção.  
-* Monitorar métricas de servidor (CPU, memória, throughput de rede) e métricas da API externa (tamanho de cache, limites de taxa) para identificar gargalos de recurso.  
-* Analisar o outlier de 331 ms: revisar logs do endpoint, verificar tempo de conexão (coluna “Connect”) e considerar a aplicação de timeouts mais rigorosos.  
-* Configurar pool de conexões HTTP no JMeter (HTTP Request Defaults) para reutilizar conexões, reduzir overhead de handshake e melhorar throughput.  
-* Avaliar a possibilidade de usar testes distribuídos (Distributed JMeter) para escalar além da máquina local e validar desempenho em escala maior.  
-* Documentar resultados detalhados, incluindo percentis de latência, para comparação entre versões de código ou infraestrutura.  
-
-Este relatório fornece uma visão inicial do comportamento sob carga mínima. Para uma avaliação completa de escalabilidade e resiliência, recomenda-se executar testes adicionais com cenários de concorrência realistas e monitoramento de métricas de back‑end.
+Recomendações Técnicas:
+1. Realizar testes de estresse adicionais com cargas de trabalho mais realistas, incluindo uma variedade de endpoints e cenários de uso típicos da aplicação.
+2. Monitorar métricas de desempenho em ambiente de produção, como latência, taxa de erros e utilização de recursos, para identificar e tratar possíveis gargalos proativamente.
+3. Implementar técnicas de caching e otimização de consultas, quando aplicável, para melhorar a capacidade de resposta da API.
+4. Escalar horizontalmente a infraestrutura da aplicação, se necessário, para atender a picos de demanda sem comprometer a experiência do usuário.
+5. Considerar a implementação de circuitos de proteção (circuit breakers) para lidar com falhas e evitar a propagação de problemas em cascata.
