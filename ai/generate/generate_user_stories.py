@@ -8,6 +8,8 @@ def generate_user_stories_from_criterios():
     if not api_key:
         raise RuntimeError("❌ CLAUDE_API_KEY não definida")
 
+    model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
+
     # ==============================
     # Cliente Claude
     # ==============================
@@ -45,7 +47,7 @@ Critérios:
     # Chamada à API Claude
     # ==============================
     response = client.messages.create(
-        model="claude-3-haiku-20240307",
+        model=model,
         max_tokens=1200,
         messages=[
             {
