@@ -1,3 +1,1 @@
-seja um QA especialista e crie as user storys com requisitos e em seguida, os BDD's de cenários positivos e negativos, estando na primeira pessoa do imperativo considerando os critérios abaixo da funcionalidade da aplicação Bancos Nacionais:
-Ao clicar na opção "Novo", visualizo a tela de cadastro, sendo obrigatório o preenchimento dos campos "Código", não podendo ser igual à outra já cadastrado em outros registros, o campo "Descrição do Banco", "Apelido", "Número de inscrição no SBP", "Banco controlador" (sendo uma lista) e CNJP (que deve ser válido e existente). Após o preenchimento, devo clicar na opção "Salvar" para validar o cadastro.
-Uma vez que existam registros cadastrados, deve ser possível abrí-lo e editar as informações, com exceção do "Código". Após edições nos ampos permitidos, deve-se clicar na opção "Salvar" para validar as alterações.
+
