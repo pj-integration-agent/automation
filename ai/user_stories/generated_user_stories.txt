@@ -1,81 +1,41 @@
 User Stories:
 
-US01 - Cadastrar novo banco nacional
-Como um QA especialista, eu quero poder cadastrar um novo banco nacional para que a aplicação contenha todas as informações necessárias desse banco.
+US01 - Cadastro de Novo Banco
+Como um QA especialista, eu quero visualizar a tela de cadastro de um novo banco para poder registrar as informações do banco.
 
 Descrição:
-Na tela de cadastro de novo banco, devo preencher os seguintes campos obrigatórios:
-- Código (não pode ser igual a outro já cadastrado)
-- Descrição do Banco
-- Apelido
-- Número de inscrição no SBP
-- Banco controlador (em uma lista)
-- CNPJ (deve ser válido e existente)
+Ao clicar na opção "Novo", o usuário deve visualizar a tela de cadastro de um novo banco, onde serão apresentados os seguintes campos obrigatórios:
+- Código: campo numérico único, não podendo ser igual a outro já cadastrado.
+- Descrição do Banco: campo de texto livre para informar a descrição do banco.
+- Apelido: campo de texto livre para informar o apelido do banco.
+- Número de inscrição no SBP: campo numérico para informar o número de inscrição no Sistema Bancário Brasileiro.
+- Banco Controlador: campo de seleção para informar o banco controlador.
+- CNPJ: campo numérico para informar o CNPJ do banco, que deve ser válido e existente.
 
-Após o preenchimento de todos os campos obrigatórios, devo clicar no botão "Salvar" para validar o cadastro do novo banco.
+Após o preenchimento de todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para concluir o cadastro do novo banco.
 
 Critérios de Aceitação:
-- Todos os campos obrigatórios devem ser preenchidos
-- O código não pode ser igual a outro já cadastrado
-- O CNPJ deve ser válido e existente
-- Ao clicar em "Salvar", o cadastro deve ser concluído com sucesso
+- O campo "Código" deve ser único, não podendo ser igual a outro já cadastrado.
+- Todos os campos obrigatórios devem ser preenchidos.
+- O campo "CNPJ" deve ser válido e existente.
+- Ao clicar no botão "Salvar", o cadastro deve ser concluído com sucesso.
 
-Rastreabilidade: US01
-
-US02 - Editar banco nacional existente
-Como um QA especialista, eu quero poder editar as informações de um banco nacional já cadastrado para manter os dados atualizados.
+US02 - Editar Banco Cadastrado
+Como um QA especialista, eu quero poder editar as informações de um banco já cadastrado para manter os dados atualizados.
 
 Descrição:
-Ao selecionar um banco existente, devo poder editar os seguintes campos:
+Ao selecionar um banco já cadastrado, o usuário deve visualizar a tela de edição, onde poderá alterar as seguintes informações:
 - Descrição do Banco
 - Apelido
 - Número de inscrição no SBP
-- Banco controlador
+- Banco Controlador
 - CNPJ
 
-O campo "Código" não deve ser editável, pois é um identificador único do banco.
+O campo "Código" não poderá ser editado, pois é um identificador único do banco.
 
-Após realizar as alterações desejadas, devo clicar no botão "Salvar" para validar as modificações.
+Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as modificações.
 
 Critérios de Aceitação:
-- Os campos editáveis devem ser atualizados corretamente
-- O campo "Código" não deve ser editável
-- Ao clicar em "Salvar", as alterações devem ser salvas com sucesso
-
-Rastreabilidade: US02
-
-BDD - Cenários Positivos:
-
-Cenário: Cadastrar novo banco nacional com sucesso
-Dado que eu esteja na tela de cadastro de novo banco
-Quando eu preencher todos os campos obrigatórios corretamente
-E clicar no botão "Salvar"
-Então o cadastro do novo banco deve ser concluído com sucesso
-
-Cenário: Editar informações de um banco nacional existente
-Dado que eu tenha um banco nacional já cadastrado
-E eu esteja visualizando as informações desse banco
-Quando eu alterar os campos editáveis
-E clicar no botão "Salvar"
-Então as alterações devem ser salvas com sucesso
-
-BDD - Cenários Negativos:
-
-Cenário: Tentar cadastrar novo banco com código já existente
-Dado que eu esteja na tela de cadastro de novo banco
-Quando eu preencher todos os campos corretamente
-E informar um código que já existe em outro registro
-E clicar no botão "Salvar"
-Então o sistema deve exibir uma mensagem de erro informando que o código já existe
-
-Cenário: Tentar cadastrar novo banco com CNPJ inválido
-Dado que eu esteja na tela de cadastro de novo banco
-Quando eu preencher todos os campos corretamente
-E informar um CNPJ inválido
-E clicar no botão "Salvar"
-Então o sistema deve exibir uma mensagem de erro informando que o CNPJ é inválido
-
-Cenário: Tentar editar código de um banco existente
-Dado que eu esteja visualizando as informações de um banco nacional cadastrado
-Quando eu tentar alterar o campo "Código"
-Então o sistema deve bloquear a edição desse campo
+- Todos os campos editáveis devem poder ser atualizados.
+- O campo "Código" não deve poder ser editado.
+- Ao clicar no botão "Salvar", as alterações devem ser salvas com sucesso.
