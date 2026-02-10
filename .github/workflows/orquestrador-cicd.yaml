@@ -48,6 +48,7 @@ permissions:
   actions: write
   issues: write
 
+jobs:
   user-stories:
     if: ${{ inputs.criacao-user-stories }}
     needs: test-api
