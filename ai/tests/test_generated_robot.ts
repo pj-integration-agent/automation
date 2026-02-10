@@ -1,281 +1,127 @@
-```robot
-*** Settings ***
-Library           SeleniumLibrary
-Library           Collections
-Suite Setup       Open Application
-Suite Teardown    Close Browser
-Test Setup        Reset Test Data
-Test Teardown     Capture Page Screenshot
+Certamente, vou criar o código de teste automatizado funcional para os cenários BDD fornecidos, seguindo as melhores práticas de automação e utilizando a estrutura do Robot Framework.
 
-*** Variables ***
-${BROWSER}                 Chrome
-${URL}                     http://app.example.com
-${WAIT}                    5s
+```python
+# Declaração de imports necessários
+import os
+from robot.api.deco import keyword, library
+from robot.api import logger
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-# Test‑data used by the scenarios
-${B001_CODE}               B001
-${B002_CODE}               B002
-${B003_CODE}               B003
-${B001_DESC}               Banco Nacional S/A
-${B001_ALIAS}              BNASA
-${B001_SBP}                12345678
-${B001_CNPJ}               12.345.678/0001-90
-${INVALID_CNPJ}            11.222.333/4444-55
-${NEW_CNPJ}                98.765.432/0001-10
-${INVALID_DESC_MSG}        O campo Descrição do Banco é obrigatório
-${INVALID_CODE_MSG}        O campo Código é obrigatório
-${CODE_DUP_MSG}            Código já existe, escolha outro
-${CNPJ_ERR_MSG}            CNPJ inválido ou não encontrado
-${SUCCESS_MSG}             Banco cadastrado com sucesso
-${UPDATE_SUCCESS_MSG}      Banco atualizado com sucesso
-${READONLY_MSG}            Campo “Código” está em read‑only
+# Variáveis globais
+BROWSER = os.environ.get("BROWSER", "chrome")
+URL = "https://example.com/cadastro-banco-nacional"
 
-# XPath helpers – locate elements relative to their label
-#   Useful for stable selectors that do not change even if the UI layout does
-#   The `following-sibling::input[1]` pattern assumes the form layout is
-#   label → input/select. Adjust the XPath if the actual markup differs.
-${FIELD_LABEL_XPATH}        //label[normalize-space()='${label}']/following-sibling::input[1]
-${DROPDOWN_LABEL_XPATH}    //label[normalize-space()='${label}']/following-sibling::select[1]
-${BANK_TABLE_ROW_XPATH}    //table//tr[td[contains(text(),'${code}')]]
+# Definição da Keyword Library
+@library
+class CadastroBancoNacional:
+    """
+    Biblioteca de Keywords para os testes de Cadastro de Banco Nacional.
+    """
+    ROBOT_LIBRARY_SCOPE = 'GLOBAL'
 
-*** Keywords ***
-Open Application
-    [Documentation]    Start a browser and open the application URL
-    Open Browser    ${URL}    ${BROWSER}
-    Maximize Browser Window
-    Wait Until Page Contains Element    ${BANKS_SCREEN}    timeout=${WAIT}
+    def __init__(self):
+        self.driver = webdriver.Chrome()
+        self.driver.get(URL)
 
-Reset Test Data
-    [Documentation]    Make sure the test starts with a known state
-    # This is a placeholder – implement any required test‑data cleanup here
-    # e.g., delete banks created in previous runs or reset the DB.
+    @keyword
+    def que_o_especialista_do_banco_esta_na_tela_de_cadastro_de_banco_nacional(self):
+        """
+        Verifica se o Especialista do Banco está na tela de cadastro de Banco Nacional.
+        """
+        assert "Cadastro de Banco Nacional" in self.driver.title
 
-# Generic helper to locate an input field by its label text
-Fill Field By Label
-    [Arguments]    ${label}    ${value}
-    ${locator}=    Set Variable    ${FIELD_LABEL_XPATH}
-    ${locator}=    Replace String    ${locator}    ${label}    ${label}
-    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
-    Clear Element Text    ${locator}
-    Input Text    ${locator}    ${value}
+    @keyword
+    def o_especialista_preencher_todos_os_campos_obrigatorios_corretamente(self, dados_banco):
+        """
+        Preenche todos os campos obrigatórios corretamente no formulário de cadastro.
+        """
+        self.driver.find_element(By.ID, "codigo").send_keys(dados_banco["Código"])
+        self.driver.find_element(By.ID, "descricao").send_keys(dados_banco["Descrição do Banco"])
+        self.driver.find_element(By.ID, "apelido").send_keys(dados_banco["Apelido"])
+        self.driver.find_element(By.ID, "numero_sbp").send_keys(dados_banco["Número de inscrição no SBP"])
+        self.driver.find_element(By.ID, "banco_controlador").send_keys(dados_banco["Banco controlador"])
+        self.driver.find_element(By.ID, "cnpj").send_keys(dados_banco["CNPJ"])
 
-# Generic helper to select an option in a dropdown by its visible text
-Select Dropdown By Label
-    [Arguments]    ${label}    ${option}
-    ${locator}=    Set Variable    ${DROPDOWN_LABEL_XPATH}
-    ${locator}=    Replace String    ${locator}    ${label}    ${label}
-    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
-    Select From List By Label    ${locator}    ${option}
+    @keyword
+    def clicar_no_botao_salvar(self):
+        """
+        Clica no botão "Salvar" no formulário de cadastro.
+        """
+        self.driver.find_element(By.ID, "btn-salvar").click()
 
-# Click a button whose visible text matches the argument
-Click Button By Text
-    [Arguments]    ${button_text}
-    ${locator}=    xpath=//button[normalize-space()='${button_text}']
-    Wait Until Element Is Visible    ${locator}    timeout=${WAIT}
-    Click Button    ${locator}
-    Sleep    1s    # Wait for UI to react
+    @keyword
+    def o_novo_registro_de_banco_nacional_deve_ser_exibido_na_listagem(self):
+        """
+        Verifica se o novo registro de Banco Nacional foi exibido na listagem.
+        """
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "banco-123"))
+        )
+        assert self.driver.find_element(By.ID, "banco-123").is_displayed()
 
-# Verify a toast / message appears on the screen
-Verify Message
-    [Arguments]    ${expected_msg}
-    Wait Until Page Contains    ${expected_msg}    timeout=${WAIT}
+    @keyword
+    def deve_ser_exibida_uma_mensagem_de_erro_informando_que_o_codigo_ja_esta_cadastrado(self):
+        """
+        Verifica se uma mensagem de erro é exibida informando que o código já está cadastrado.
+        """
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "error-message"))
+        )
+        assert "Código já cadastrado" in self.driver.find_element(By.ID, "error-message").text
 
-# Verify that a bank with a given code appears in the list
-Verify Bank In List
-    [Arguments]    ${bank_code}
-    ${row_locator}=    Set Variable    ${BANK_TABLE_ROW_XPATH}
-    ${row_locator}=    Replace String    ${row_locator}    ${bank_code}    ${bank_code}
-    Wait Until Page Contains Element    ${row_locator}    timeout=${WAIT}
+    @keyword
+    def deve_ser_exibida_uma_mensagem_de_erro_informando_que_o_campo_obrigatorio_nao_foi_preenchido(self):
+        """
+        Verifica se uma mensagem de erro é exibida informando que um campo obrigatório não foi preenchido.
+        """
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "error-message"))
+        )
+        assert "Campo obrigatório não preenchido" in self.driver.find_element(By.ID, "error-message").text
 
-# Verify that a bank with a given code does NOT appear in the list
-Verify Bank Not In List
-    [Arguments]    ${bank_code}
-    ${row_locator}=    Set Variable    ${BANK_TABLE_ROW_XPATH}
-    ${row_locator}=    Replace String    ${row_locator}    ${bank_code}    ${bank_code}
-    Page Should Not Contain Element    ${row_locator}
+    @keyword
+    def deve_ser_exibida_uma_mensagem_de_erro_informando_que_o_cnpj_e_invalido(self):
+        """
+        Verifica se uma mensagem de erro é exibida informando que o CNPJ é inválido.
+        """
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "error-message"))
+        )
+        assert "CNPJ inválido" in self.driver.find_element(By.ID, "error-message").text
 
-# Verify a field is read‑only
-Verify Field Readonly
-    [Arguments]    ${label}
-    ${locator}=    Set Variable    ${FIELD_LABEL_XPATH}
-    ${locator}=    Replace String    ${locator}    ${label}    ${label}
-    Element Should Have Attribute    ${locator}    readonly
+    @keyword
+    def que_o_especialista_do_banco_esta_na_tela_de_edicao_de_um_banco_nacional(self):
+        """
+        Verifica se o Especialista do Banco está na tela de edição de um Banco Nacional.
+        """
+        assert "Edição de Banco Nacional" in self.driver.title
 
-*** Test Cases ***
-US01 – Cadastro de Novo Banco – Cadastro completo e válido
-    [Tags]    US01    Positivo
-    # 1️⃣  Navigate to Bancos Nacionais screen
-    Go To Bancos Nacionais Screen
+    @keyword
+    def o_especialista_alterar_os_campos_permitidos(self, dados_banco):
+        """
+        Altera os campos permitidos no formulário de edição de Banco Nacional.
+        """
+        self.driver.find_element(By.ID, "descricao").clear()
+        self.driver.find_element(By.ID, "descricao").send_keys(dados_banco["Descrição do Banco"])
+        self.driver.find_element(By.ID, "apelido").clear()
+        self.driver.find_element(By.ID, "apelido").send_keys(dados_banco["Apelido"])
+        self.driver.find_element(By.ID, "numero_sbp").clear()
+        self.driver.find_element(By.ID, "numero_sbp").send_keys(dados_banco["Número de inscrição no SBP"])
+        self.driver.find_element(By.ID, "banco_controlador").clear()
+        self.driver.find_element(By.ID, "banco_controlador").send_keys(dados_banco["Banco controlador"])
+        self.driver.find_element(By.ID, "cnpj").clear()
+        self.driver.find_element(By.ID, "cnpj").send_keys(dados_banco["CNPJ"])
 
-    # 2️⃣  Click the “Novo” button
-    Click Button By Text    Novo
+    @keyword
+    def o_campo_codigo_deve_estar_desabilitado_e_nao_permitir_a_edicao(self):
+        """
+        Verifica se o campo "Código" está desabilitado e não permite a edição.
+        """
+        codigo_campo = self.driver.find_element(By.ID, "codigo")
+        assert codigo_campo.get_attribute("disabled") == "true"
 
-    # 3️⃣  Fill in all required fields
-    Fill Field By Label    Código                ${B001_CODE}
-    Fill Field By Label    Descrição do Banco    ${B001_DESC}
-    Fill Field By Label    Apelido               ${B001_ALIAS}
-    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
-    Select Dropdown By Label    Banco Controlador    Banco Central
-    Fill Field By Label    CNPJ                  ${B001_CNPJ}
-
-    # 4️⃣  Submit the form
-    Click Button By Text    Salvar
-
-    # 5️⃣  Verify success message
-    Verify Message    ${SUCCESS_MSG}
-
-    # 6️⃣  Verify the new bank appears in the list
-    Verify Bank In List    ${B001_CODE}
-
-US01 – Cadastro de Novo Banco – Código em branco
-    [Tags]    US01    Negativo
-    Go To Bancos Nacionais Screen
-    Click Button By Text    Novo
-    # Leave "Código" empty
-    Fill Field By Label    Código                ${EMPTY}
-    Fill Field By Label    Descrição do Banco    ${B001_DESC}
-    Fill Field By Label    Apelido               ${B001_ALIAS}
-    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
-    Select Dropdown By Label    Banco Controlador    Banco Central
-    Fill Field By Label    CNPJ                  ${B001_CNPJ}
-    Click Button By Text    Salvar
-    Verify Message    ${INVALID_CODE_MSG}
-    Verify Bank Not In List    ${B001_CODE}
-
-US01 – Cadastro de Novo Banco – Código duplicado
-    [Tags]    US01    Negativo
-    # Pre‑condition: bank with code B001 already exists
-    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
-    Go To Bancos Nacionais Screen
-    Click Button By Text    Novo
-    Fill Field By Label    Código                ${B001_CODE}
-    Fill Field By Label    Descrição do Banco    ${B001_DESC}
-    Fill Field By Label    Apelido               ${B001_ALIAS}
-    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
-    Select Dropdown By Label    Banco Controlador    Banco Central
-    Fill Field By Label    CNPJ                  ${B001_CNPJ}
-    Click Button By Text    Salvar
-    Verify Message    ${CODE_DUP_MSG}
-    Verify Bank Not In List    ${B001_CODE}
-
-US01 – Cadastro de Novo Banco – CNPJ inválido
-    [Tags]    US01    Negativo
-    Go To Bancos Nacionais Screen
-    Click Button By Text    Novo
-    Fill Field By Label    Código                ${B002_CODE}
-    Fill Field By Label    Descrição do Banco    ${B001_DESC}
-    Fill Field By Label    Apelido               ${B001_ALIAS}
-    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
-    Select Dropdown By Label    Banco Controlador    Banco Central
-    Fill Field By Label    CNPJ                  ${INVALID_CNPJ}
-    Click Button By Text    Salvar
-    Verify Message    ${CNPJ_ERR_MSG}
-    Verify Bank Not In List    ${B002_CODE}
-
-US01 – Cadastro de Novo Banco – Descrição em branco
-    [Tags]    US01    Negativo
-    Go To Bancos Nacionais Screen
-    Click Button By Text    Novo
-    Fill Field By Label    Código                ${B003_CODE}
-    # Leave "Descrição do Banco" empty
-    Fill Field By Label    Descrição do Banco    ${EMPTY}
-    Fill Field By Label    Apelido               ${B001_ALIAS}
-    Fill Field By Label    Número de Inscrição no SBP    ${B001_SBP}
-    Select Dropdown By Label    Banco Controlador    Banco Central
-    Fill Field By Label    CNPJ                  ${B001_CNPJ}
-    Click Button By Text    Salvar
-    Verify Message    ${INVALID_DESC_MSG}
-    Verify Bank Not In List    ${B003_CODE}
-
-US02 – Edição de Banco Existente – Alteração de campos permitidos
-    [Tags]    US02    Positivo
-    # Pre‑condition
-    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
-    Go To Bancos Nacionais Screen
-    # 1️⃣  Select the existing bank from the list
-    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
-    # 2️⃣  Verify pre‑filled form
-    Page Should Contain Element    ${FIELD_LABEL_XPATH.replace('${label}', 'Código')}
-    # 3️⃣  Alter allowed fields
-    Fill Field By Label    Apelido               BNASA1
-    Fill Field By Label    CNPJ                  ${NEW_CNPJ}
-    # 4️⃣  Save
-    Click Button By Text    Salvar
-    Verify Message    ${UPDATE_SUCCESS_MSG}
-    Verify Bank In List    ${B001_CODE}
-
-US02 – Edição de Banco Existente – Tentativa de alterar Código
-    [Tags]    US02    Negativo
-    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
-    Go To Bancos Nacionais Screen
-    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
-    Verify Field Readonly    Código
-    # Attempt to change the code – should have no effect
-    Fill Field By Label    Código                ${B002_CODE}
-    Element Attribute Should Be    ${FIELD_LABEL_XPATH.replace('${label}', 'Código')}    readonly    true
-
-US02 – Edição de Banco Existente – CNPJ inválido na edição
-    [Tags]    US02    Negativo
-    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
-    Go To Bancos Nacionais Screen
-    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
-    Fill Field By Label    CNPJ                  ${INVALID_CNPJ}
-    Click Button By Text    Salvar
-    Verify Message    ${CNPJ_ERR_MSG}
-    Verify Bank In List    ${B001_CODE}
-
-US02 – Edição de Banco Existente – Campo obrigatório deixado em branco
-    [Tags]    US02    Negativo
-    Precreate Bank    ${B001_CODE}    ${B001_DESC}    ${B001_ALIAS}    ${B001_SBP}    Banco Central    ${B001_CNPJ}
-    Go To Bancos Nacionais Screen
-    Click Element    xpath=//table//tr[td[contains(text(),'${B001_CODE}')]]/td/button[text()='Editar']
-    # Clear required field "Apelido"
-    Fill Field By Label    Apelido               ${EMPTY}
-    Click Button By Text    Salvar
-    Verify Message    O campo Apelido é obrigatório
-    Verify Bank In List    ${B001_CODE}
-
-*** Keywords ***
-Go To Bancos Nacionais Screen
-    [Documentation]    Navigate to the “Bancos Nacionais” page
-    Click Link    xpath=//nav//a[normalize-space()='Bancos Nacionais']
-    Wait Until Page Contains Element    ${BANKS_SCREEN}    timeout=${WAIT}
-
-# Helper for creating a bank directly (e.g., via API or DB seeding)
-Precreate Bank
-    [Arguments]    ${code}    ${desc}    ${alias}    ${sbp}    ${controller}    ${cnpj}
-    # Implement the real pre‑creation logic here – this is a stub
-    # For example, call a REST endpoint or run a DB script.
-    # The keyword should leave the UI in a clean state before each test.
-    Log    Pre‑creating bank: ${code}
-    # ... implementation goes here ...
-
-# Dummy locator for the page header – replace with actual selector
-${BANKS_SCREEN}    xpath=//h1[normalize-space()='Bancos Nacionais']
-```
-
-### Explicação rápida
-
-1. **Estrutura**  
-   * **Settings**: importa as bibliotecas, define setup/teardown.  
-   * **Variables**: contém os valores usados em todos os testes, facilitando alterações futuras.  
-   * **Keywords**: encapsulam ações repetitivas (preencher campo, selecionar dropdown, clicar botão, etc.).  
-   * **Test Cases**: cada cenário Gherkin vira um caso legível, com comentários claros antes de cada bloco de ações.
-
-2. **Seletores estáveis**  
-   * Os *locators* são baseados em rótulos (`label`) e não em posições relativas ao DOM, reduzindo a fragilidade do teste.  
-   * Se o HTML mudar, basta ajustar um único XPath em vez de vários testes.
-
-3. **Sincronização**  
-   * `Wait Until Element Is Visible` e `Wait Until Page Contains` garantem que o teste só prossegue quando os elementos estão prontos.  
-   * Um pequeno `Sleep` após ações que provocam mudança de estado (ex.: `Click Button By Text`) evita flutuações.
-
-4. **Manutenção**  
-   * Cada passo tem um comentário que explica a intenção.  
-   * Palavras‑chave reutilizáveis permitem que mudanças de UI sejam refletidas em poucos pontos.
-
-5. **Pre‑e‑condições**  
-   * O keyword `Precreate Bank` é um placeholder para criar um banco antes de testar a edição ou duplicidade.  
-   * Implementar essa lógica com chamadas de API ou scripts de banco garante que os testes são independentes e repetíveis.
-
-Com essa estrutura, os testes permanecem claros, fáceis de manter e extensíveis para novas funcionalidades.
+    @keyword
+    def o_registro_de_banco_nacional_deve
