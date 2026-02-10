@@ -1,41 +1,34 @@
-User Stories:
+**User Story 01 - Criar Novo Banco**
 
-US01 - Cadastro de Novo Banco
-Como um QA especialista, eu quero visualizar a tela de cadastro de um novo banco para poder registrar as informações do banco.
-
-Descrição:
-Ao clicar na opção "Novo", o usuário deve visualizar a tela de cadastro de um novo banco, onde serão apresentados os seguintes campos obrigatórios:
-- Código: campo numérico único, não podendo ser igual a outro já cadastrado.
-- Descrição do Banco: campo de texto livre para informar a descrição do banco.
-- Apelido: campo de texto livre para informar o apelido do banco.
-- Número de inscrição no SBP: campo numérico para informar o número de inscrição no Sistema Bancário Brasileiro.
-- Banco Controlador: campo de seleção para informar o banco controlador.
-- CNPJ: campo numérico para informar o CNPJ do banco, que deve ser válido e existente.
-
-Após o preenchimento de todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para concluir o cadastro do novo banco.
-
-Critérios de Aceitação:
-- O campo "Código" deve ser único, não podendo ser igual a outro já cadastrado.
-- Todos os campos obrigatórios devem ser preenchidos.
-- O campo "CNPJ" deve ser válido e existente.
-- Ao clicar no botão "Salvar", o cadastro deve ser concluído com sucesso.
-
-US02 - Editar Banco Cadastrado
-Como um QA especialista, eu quero poder editar as informações de um banco já cadastrado para manter os dados atualizados.
+Como um QA especialista, eu quero poder criar um novo registro de banco para que seja possível adicionar informações de novos bancos no sistema.
 
 Descrição:
-Ao selecionar um banco já cadastrado, o usuário deve visualizar a tela de edição, onde poderá alterar as seguintes informações:
-- Descrição do Banco
-- Apelido
-- Número de inscrição no SBP
-- Banco Controlador
-- CNPJ
-
-O campo "Código" não poderá ser editado, pois é um identificador único do banco.
-
-Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as modificações.
+- Ao clicar na opção "Novo", o usuário deve ser direcionado para a tela de cadastro de banco.
+- Os campos obrigatórios a serem preenchidos são: "Código", "Descrição do Banco", "Apelido", "Número de inscrição no SBP", "Banco controlador" (com opções em uma lista) e CNPJ (que deve ser válido e existente).
+- O campo "Código" não pode ser igual a outro já cadastrado em outros registros.
+- Após preencher todos os campos obrigatórios, o usuário deve clicar no botão "Salvar" para validar o cadastro do novo banco.
 
 Critérios de Aceitação:
-- Todos os campos editáveis devem poder ser atualizados.
-- O campo "Código" não deve poder ser editado.
-- Ao clicar no botão "Salvar", as alterações devem ser salvas com sucesso.
+- Todos os campos obrigatórios devem ser preenchidos corretamente.
+- O campo "Código" não pode ser igual a outro já cadastrado.
+- O CNPJ informado deve ser válido e existente.
+- Ao clicar em "Salvar", o novo banco deve ser cadastrado com sucesso.
+
+Rastreabilidade: US01
+
+**User Story 02 - Editar Registro de Banco**
+
+Como um QA especialista, eu quero poder editar as informações de um banco já cadastrado, exceto o campo "Código", para que seja possível manter os registros atualizados.
+
+Descrição:
+- Ao selecionar um banco da lista de registros existentes, o usuário deve poder abrir o formulário de edição.
+- Os campos editáveis são: "Descrição do Banco", "Apelido", "Número de inscrição no SBP", "Banco controlador" e CNPJ.
+- O campo "Código" não pode ser editado.
+- Após realizar as alterações desejadas, o usuário deve clicar no botão "Salvar" para validar as mudanças.
+
+Critérios de Aceitação:
+- Todos os campos editáveis devem poder ser alterados, exceto o "Código".
+- As alterações realizadas devem ser salvas corretamente ao clicar em "Salvar".
+- Não deve ser possível alterar o valor do campo "Código".
+
+Rastreabilidade: US02
