@@ -1,38 +1,69 @@
 import os
-from groq import Groq
- 
-def generated_analysis():
+from anthropic import Anthropic
 
-# Geração utilizando front end usando .env
-    # client = Groq(api_key=("API_GROQ"))
-    
-    # Utilização do CICD usando secrets
-    client = Groq(api_key=os.getenv("GEMINI_API_KEY"))
- 
+
+def generated_analysis():
+    api_key = os.getenv("CLAUDE_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("❌ CLAUDE_API_KEY não definida")
+
+    model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
+
+    # ==============================
+    # Cliente Claude
+    # ==============================
+    client = Anthropic(api_key=api_key)
+
+    # ==============================
+    # Leitura do log de erros
+    # ==============================
     with open("erros.txt", "r", encoding="utf-8") as f:
         erros = f.read()
- 
-    prompt = f"""
-    Você é um especialista em testes automatizados com Playwright.
-            Analise o log abaixo e explique de forma clara e detalhada:
-            1. Quais testes falharam.
-            2. O motivo de cada falha.
-            3. Sugestões de como corrigir os erros.
 
-            Log do Playwright:
-            {erros}
-    """
- 
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
-        messages=[{"role": "user", "content": prompt}]
+    # ==============================
+    # Prompt
+    # ==============================
+    prompt = f"""
+Você é um especialista em testes automatizados com Playwright.
+
+Analise o log abaixo e explique de forma clara e detalhada:
+
+1. Quais testes falharam
+2. O motivo de cada falha
+3. Sugestões práticas de como corrigir os erros
+
+Log do Playwright:
+{erros}
+"""
+
+    # ==============================
+    # Chamada à API Claude
+    # ==============================
+    response = client.messages.create(
+        model=model,
+        max_tokens=1200,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     )
- 
-    analise = response.choices[0].message.content
- 
+
+    analise = response.content[0].text
+
+    # ==============================
+    # Escrita do resultado
+    # ==============================
     os.makedirs("ai/analysis", exist_ok=True)
-    with open("ai/analysis/analise_ia.txt", "w", encoding="utf-8") as f:
+    with open(
+        "ai/analysis/analise_ia.txt",
+        "w",
+        encoding="utf-8"
+    ) as f:
         f.write(analise)
- 
+
+
 if __name__ == "__main__":
     generated_analysis()
