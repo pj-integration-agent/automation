@@ -1,44 +1,36 @@
-User Story 01 - Acesso ao aplicativo móvel
-Como usuário, eu quero ter acesso ao aplicativo móvel dos Bancos Nacionais para poder gerenciar minha conta bancária.
+Claro, vamos criar as User Stories para a aplicação de Bancos Nacionais com base nos critérios fornecidos.
 
-Descrição:
-O usuário deverá ser capaz de baixar e instalar o aplicativo móvel dos Bancos Nacionais em seu dispositivo (smartphone ou tablet). Após a instalação, o usuário poderá abrir o aplicativo e realizar o login com suas credenciais (nome de usuário e senha) para acessar sua conta bancária.
-
+US01 - Como usuário, eu quero visualizar uma lista de bancos nacionais disponíveis para que eu possa escolher o banco de minha preferência.
+Descrição: O sistema deve exibir uma lista de todos os bancos nacionais cadastrados, incluindo informações como o nome do banco, a sigla e a localização (cidade e estado).
 Critérios de Aceitação:
-- O aplicativo deve estar disponível para download nas principais lojas de aplicativos (Google Play e App Store).
-- O processo de download e instalação do aplicativo deve ser simples e intuitivo.
-- O usuário deve ser capaz de realizar o login com suas credenciais (nome de usuário e senha) de forma segura e confiável.
-- O aplicativo deve fornecer uma experiência de usuário agradável e responsiva.
+- A lista de bancos deve ser exibida de forma organizada e legível.
+- Deve ser possível pesquisar e filtrar os bancos por nome, sigla ou localização.
+- A lista deve ser atualizada automaticamente sempre que um novo banco for adicionado ao sistema.
 
-Rastreabilidade: US01
-
-User Story 02 - Visualização de saldo e extrato da conta
-Como usuário, eu quero visualizar o saldo e o extrato da minha conta bancária para poder acompanhar minhas movimentações financeiras.
-
-Descrição:
-Após realizar o login, o usuário deverá ser capaz de acessar a tela de saldo e extrato da sua conta bancária. Nesta tela, o usuário poderá visualizar o saldo atual da sua conta, bem como o histórico de transações (extrato) realizadas, incluindo informações como data, valor, descrição e tipo de transação (crédito ou débito).
-
+US02 - Como usuário, eu quero visualizar os detalhes de um banco específico para obter mais informações sobre ele.
+Descrição: Ao selecionar um banco da lista, o sistema deve exibir uma página com informações detalhadas sobre o banco, incluindo o endereço completo, o telefone, o site e uma breve descrição.
 Critérios de Aceitação:
-- O saldo da conta deve ser exibido de forma clara e destacada.
-- O extrato da conta deve apresentar as transações de forma organizada e cronológica.
-- As informações de cada transação (data, valor, descrição e tipo) devem ser exibidas de maneira clara e compreensível.
-- O usuário deve poder filtrar o extrato por período (ex: últimos 30 dias, últimos 3 meses, etc.).
-- O aplicativo deve atualizar o saldo e o extrato em tempo real, refletindo as últimas movimentações da conta.
+- Deve ser possível visualizar todas as informações relevantes sobre o banco selecionado.
+- Deve haver links diretos para o site e o telefone do banco.
+- As informações devem ser exibidas de forma clara e organizada.
 
-Rastreabilidade: US02
-
-User Story 03 - Transferência entre contas
-Como usuário, eu quero poder transferir dinheiro entre minhas próprias contas bancárias para gerenciar melhor meus recursos financeiros.
-
-Descrição:
-O usuário deverá ser capaz de realizar transferências de dinheiro entre suas próprias contas bancárias cadastradas no aplicativo. Para isso, o usuário deverá selecionar a conta de origem, a conta de destino, digitar o valor a ser transferido e confirmar a operação.
-
+US03 - Como usuário, eu quero poder comparar os principais serviços oferecidos por diferentes bancos para escolher o que melhor atende às minhas necessidades.
+Descrição: O sistema deve permitir que o usuário selecione dois ou mais bancos e exiba uma tabela comparativa dos serviços oferecidos por eles, como tipos de contas, taxas, empréstimos e investimentos.
 Critérios de Aceitação:
-- O usuário deve poder visualizar todas as suas contas bancárias cadastradas no aplicativo.
-- O usuário deve poder selecionar a conta de origem e a conta de destino da transferência.
-- O usuário deve poder digitar o valor a ser transferido, com validação de campo para aceitar apenas valores numéricos e com duas casas decimais.
-- O aplicativo deve exibir o saldo atualizado das contas envolvidas na transferência após a conclusão da operação.
-- O aplicativo deve fornecer um mecanismo seguro de autenticação (ex: senha, biometria) para confirmar a transferência.
-- O aplicativo deve exibir uma confirmação da transferência realizada com sucesso.
+- A tabela comparativa deve exibir de forma clara e objetiva as informações relevantes sobre os serviços de cada banco.
+- Deve ser possível ordenar e filtrar a tabela por diferentes critérios, como tipo de serviço ou valor das taxas.
+- O usuário deve poder salvar a comparação feita para referência futura.
 
-Rastreabilidade: US03
+US04 - Como usuário, eu quero poder acessar as avaliações e opiniões de outros clientes sobre os bancos para me ajudar a tomar uma decisão.
+Descrição: O sistema deve exibir uma seção com avaliações e comentários de outros usuários sobre os bancos, incluindo informações como a nota geral, a satisfação com os serviços e a recomendação do banco.
+Critérios de Aceitação:
+- As avaliações devem ser exibidas de forma organizada e com a possibilidade de filtrar por nota, data ou tipo de serviço.
+- Deve ser possível visualizar os comentários detalhados dos usuários, incluindo a data, o perfil do avaliador e uma resposta do banco (se houver).
+- O usuário deve poder deixar sua própria avaliação e comentário sobre o banco após utilizar seus serviços.
+
+US05 - Como usuário, eu quero poder salvar meus bancos favoritos para facilitar o acesso a eles no futuro.
+Descrição: O sistema deve permitir que o usuário marque os bancos de sua preferência como "favoritos", para que eles fiquem destacados na lista e sejam exibidos primeiro.
+Critérios de Aceitação:
+- Deve ser possível adicionar e remover bancos da lista de favoritos.
+- Os bancos favoritos devem ficar destacados na lista principal.
+- O sistema deve lembrar quais são os bancos favoritos do usuário, mesmo após ele sair da aplicação.
