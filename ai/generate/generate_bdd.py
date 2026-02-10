@@ -1,13 +1,23 @@
 import os
-import google.generativeai as genai
+from anthropic import Anthropic
 
 
 def generate_bdd_from_user_stories():
-    # Configuração da API do Gemini via Secret
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+    api_key = os.getenv("CLAUDE_API_KEY")
 
-    model = genai.GenerativeModel("gemini-1.5-pro")
+    if not api_key:
+        raise RuntimeError("❌ CLAUDE_API_KEY não definida")
 
+    model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
+
+    # ==============================
+    # Cliente Claude
+    # ==============================
+    client = Anthropic(api_key=api_key)
+
+    # ==============================
+    # Leitura das User Stories
+    # ==============================
     with open(
         "ai/user_stories/generated_user_stories.txt",
         "r",
@@ -15,22 +25,25 @@ def generate_bdd_from_user_stories():
     ) as f:
         stories = f.read()
 
+    # ==============================
+    # Prompt
+    # ==============================
     prompt = f"""
 Você é um especialista em BDD (Behavior Driven Development) e qualidade de software.
 
 Com base nas seguintes User Stories, gere **cenários de teste completos**
 utilizando a **sintaxe Gherkin (Given, When, Then)**.
 
-Siga estas diretrizes:
-- Crie **cenários positivos** (fluxos esperados) e **cenários negativos**
-  (erros, validações e exceções).
-- Cada cenário deve ser **claro, conciso e testável**.
-- Evite redundâncias entre cenários.
-- Utilize linguagem natural e objetiva.
-- Cada User Story deve conter **vários cenários relevantes**, quando aplicável.
-- Cubra as principais regras de negócio.
+Diretrizes obrigatórias:
+- Criar **cenários positivos** (fluxos esperados)
+- Criar **cenários negativos** (erros, validações, exceções)
+- Cada cenário deve ser **claro, conciso e testável**
+- Evitar redundância entre cenários
+- Linguagem objetiva e natural
+- Cada User Story pode gerar **vários cenários**
+- Cobrir regras de negócio principais
 
-Retorne EXATAMENTE no seguinte padrão:
+Formato EXATO de saída:
 
 titulo: Título da User Story
 cenario_bdd:
@@ -43,17 +56,36 @@ cenario_bdd:
       When ...
       Then ...
 
-User Stories fornecidas:
+User Stories:
 {stories}
 """
 
-    response = model.generate_content(prompt)
+    # ==============================
+    # Chamada à API Claude
+    # ==============================
+    response = client.messages.create(
+        model=model,
+        max_tokens=1500,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+    )
 
-    bdd = response.text
+    bdd_text = response.content[0].text
 
+    # ==============================
+    # Escrita do resultado
+    # ==============================
     os.makedirs("ai/bdd", exist_ok=True)
-    with open("ai/bdd/generated.txt", "w", encoding="utf-8") as f:
-        f.write(bdd)
+    with open(
+        "ai/bdd/generated.feature",
+        "w",
+        encoding="utf-8"
+    ) as f:
+        f.write(bdd_text)
 
 
 if __name__ == "__main__":
