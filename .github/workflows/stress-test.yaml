@@ -45,7 +45,7 @@ jobs:
 
       - name: Gerar análise de stress com IA (Claude)
         run: |
-          python3 ai/generate/generate_stress_analysis.py
+          python3 ai/generate/generate_analise_stress_test.py
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           CLAUDE_MODEL: claude-3-haiku-20240307
@@ -55,6 +55,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git pull origin ${{ github.ref_name }}
-          git add ai/analysis/stress_analysis.txt
+          git add .
           git commit -m "🤖 Análise automática dos resultados do stress-test com Claude AI" || echo "Nada para commitar"
           git push
