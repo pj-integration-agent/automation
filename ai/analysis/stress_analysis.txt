@@ -1,32 +1,36 @@
-Relatório Técnico de Análise de Stress-Test
+Relatório técnico do teste de estresse do PokéAPI
 
-Resumo do Cenário de Teste:
-O teste de stress realizado simulou uma série de requisições GET à API do PokéAPI, para obter informações sobre o Pokémon "ditto". O teste foi executado com um número crescente de threads, iniciando com 2 e chegando a 20 threads simultâneas.
+Resumo do cenário de teste:
+O cenário de teste consiste em realizar requisições GET para o endpoint "/pokemon/ditto" da API PokéAPI. O teste foi realizado com 20 threads concorrentes, simulando múltiplos usuários acessando a API simultaneamente.
 
-Volume Total de Requisições:
-O teste de stress gerou um total de 20 requisições GET à API do PokéAPI.
+Volume total de requisições:
+O teste gerou um total de 20 requisições.
 
-Throughput Estimado:
-O throughput estimado com base nos dados coletados é de aproximadamente 2 requisições por segundo.
+Throughput estimado:
+O throughput estimado, com base nos dados obtidos, é de aproximadamente 0,5 requisições por segundo.
 
 Latência:
-- Latência p50: 26 ms
-- Latência p90: 32 ms
-- Latência p95: 36 ms
-- Latência p99: 767 ms
+- p50 (mediana): 36 ms
+- p90: 41 ms
+- p95: 44 ms
+- p99: 807 ms
 
-Taxa de Erros:
-A taxa de erros durante o teste foi de 0%. Todas as requisições foram bem-sucedidas.
+Taxa de erros:
+Não houve nenhuma requisição com erro, a taxa de sucesso foi de 100%.
 
-Principais Gargalos Identificados:
-Com base nos dados coletados, não foram identificados gargalos significativos no desempenho da API. As latências observadas foram, em sua maioria, baixas e consistentes.
+Principais gargalos identificados:
+Baseado nos dados coletados, não foram identificados gargalos significativos de desempenho na aplicação testada. As latências observadas estão dentro de parâmetros aceitáveis para a maioria das requisições.
 
-Impacto Potencial em Ambiente de Produção:
-Considerando o baixo volume de requisições e a alta taxa de sucesso observada, o impacto potencial em um ambiente de produção seria mínimo. A API demonstrou capacidade de atender à carga de trabalho simulada de forma eficiente.
+No entanto, uma observação importante é a presença de uma latência muito alta (807 ms) na primeira requisição do teste, possivelmente indicando alguma forma de inicialização ou aquecimento da aplicação.
 
-Recomendações Técnicas:
-1. Monitorar continuamente o desempenho da API em ambiente de produção, especialmente a latência p99, para identificar possíveis degradações de desempenho.
-2. Estabelecer limites de latência aceitáveis e implementar mecanismos de alerta para garantir a qualidade do serviço.
-3. Realizar testes de stress adicionais com cargas de trabalho mais intensas, a fim de avaliar o limite de escalabilidade da API.
-4. Considerar a implementação de técnicas de caching e otimização de consultas para melhorar ainda mais o desempenho da API.
-5. Documentar os resultados do teste de stress e as recomendações técnicas para referência futura e melhoria contínua do sistema.
+Impacto potencial em ambiente de produção:
+Considerando o cenário de teste realizado, é possível inferir que a aplicação PokéAPI estaria apta a suportar um volume moderado de tráfego em um ambiente de produção, sem apresentar problemas de desempenho significativos para a maioria dos usuários.
+
+No entanto, é importante considerar que o teste realizado é bastante simples e focado em um único endpoint. Em um ambiente de produção real, com uma carga de trabalho mais diversificada e complexa, podem surgir outros gargalos e desafios de desempenho que não foram identificados neste teste.
+
+Recomendações técnicas:
+1. Investigar a causa da latência elevada na primeira requisição do teste, possivelmente relacionada a algum tipo de inicialização ou aquecimento da aplicação.
+2. Realizar testes adicionais com cenários mais complexos e diversificados, abrangendo diferentes endpoints e operações da API, para obter uma visão mais ampla do desempenho da aplicação.
+3. Monitorar constantemente o desempenho da aplicação em produção, identificando e tratando proativamente qualquer gargalo ou degradação de performance que possa surgir.
+4. Considerar a implementação de técnicas de cache, otimização de consultas e outras estratégias de melhoria de desempenho, conforme necessário, para garantir a escalabilidade e a satisfação dos usuários.
+5. Estabelecer métricas de desempenho claras e objetivas, como tempos de resposta, taxa de erros e throughput, para acompanhar a saúde da aplicação e orientar futuras ações de melhoria.
