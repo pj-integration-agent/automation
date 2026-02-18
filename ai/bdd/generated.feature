@@ -1,89 +1,132 @@
-Título da User Story: Criar novo registro de Banco Nacional
+Título da User Story: Realizar login no sistema
+
 cenario_bdd:
-  nome: Criar novo registro de Banco Nacional com sucesso
+  nome: Realizar login com credenciais válidas
   tipo: positivo
   gherkin: |
-    Feature: Cadastro de Banco Nacional
-    Scenario: Criar novo registro de Banco Nacional com sucesso
-      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
-      When o Especialista preencher todos os campos obrigatórios corretamente
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        | 123    | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
-      And clicar no botão "Salvar"
-      Then o novo registro de Banco Nacional deve ser exibido na listagem
-        
-cenario_bdd:
-  nome: Código de Banco duplicado
-  tipo: negativo
-  gherkin: |
-    Feature: Cadastro de Banco Nacional
-    Scenario: Código de Banco duplicado
-      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
-      When o Especialista preencher todos os campos obrigatórios com um Código que já existe
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        | 123    | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
-      And clicar no botão "Salvar"
-      Then deve ser exibida uma mensagem de erro informando que o Código já está cadastrado
+    Feature: Login do usuário
+    Scenario: Realizar login com credenciais válidas
+      Given que o usuário está na tela de login
+      When o usuário insere o nome de usuário "joaosilva" e a senha "123456"
+      Then o sistema deve conceder acesso ao usuário
+      And redirecionar o usuário para a página inicial
 
 cenario_bdd:
-  nome: Campo obrigatório não preenchido
+  nome: Realizar login com credenciais inválidas
   tipo: negativo
   gherkin: |
-    Feature: Cadastro de Banco Nacional
-    Scenario: Campo obrigatório não preenchido
-      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
-      When o Especialista deixar de preencher um campo obrigatório
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        |        | Banco ABC         | ABC     | 123456                     | Banco XYZ         | 12.345.678/0001-90 |
-      And clicar no botão "Salvar"
-      Then deve ser exibida uma mensagem de erro informando que o campo obrigatório não foi preenchido
+    Feature: Login do usuário
+    Scenario: Realizar login com credenciais inválidas
+      Given que o usuário está na tela de login
+      When o usuário insere o nome de usuário "joaosilva" e a senha "abcdef"
+      Then o sistema deve exibir uma mensagem de erro informando que as credenciais são inválidas
+      And não conceder acesso ao usuário
 
 cenario_bdd:
-  nome: CNPJ inválido
+  nome: Realizar login com campos em branco
   tipo: negativo
   gherkin: |
-    Feature: Cadastro de Banco Nacional
-    Scenario: CNPJ inválido
-      Given que o Especialista do Banco está na tela de cadastro de Banco Nacional
-      When o Especialista preencher um CNPJ inválido
-        | Código | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        | 456    | Banco DEF         | DEF     | 789012                     | Banco XYZ         | 12.345.678/0001-91 |
-      And clicar no botão "Salvar"
-      Then deve ser exibida uma mensagem de erro informando que o CNPJ é inválido
+    Feature: Login do usuário
+    Scenario: Realizar login com campos em branco
+      Given que o usuário está na tela de login
+      When o usuário não preenche o nome de usuário e a senha
+      Then o sistema deve exibir uma mensagem de erro informando que os campos são obrigatórios
+      And não conceder acesso ao usuário
 
-Título da User Story: Editar registro de Banco Nacional
+Título da User Story: Visualizar saldo bancário
+
 cenario_bdd:
-  nome: Editar registro de Banco Nacional com sucesso
+  nome: Visualizar saldo bancário após login
   tipo: positivo
   gherkin: |
-    Feature: Edição de Banco Nacional
-    Scenario: Editar registro de Banco Nacional com sucesso
-      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
-      When o Especialista alterar os campos permitidos
-        | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        | Banco ABC Atualizado | ABC2   | 987654                     | Banco XYZ         | 12.345.678/0001-90 |
-      And clicar no botão "Salvar"
-      Then o registro de Banco Nacional deve ser atualizado na listagem
+    Feature: Visualização de saldo bancário
+    Scenario: Visualizar saldo bancário após login
+      Given que o usuário fez login no sistema
+      When o usuário acessa a página inicial
+      Then o sistema deve exibir o saldo bancário do usuário de forma clara e destacada
+      And informar a data e hora da última atualização do saldo
 
 cenario_bdd:
-  nome: Tentar editar o código do Banco
-  tipo: negativo
+  nome: Visualizar extrato de movimentações
+  tipo: positivo
   gherkin: |
-    Feature: Edição de Banco Nacional
-    Scenario: Tentar editar o código do Banco
-      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
-      When o Especialista tentar alterar o campo "Código"
-      Then o campo "Código" deve estar desabilitado e não permitir a edição
+    Feature: Visualização de saldo bancário
+    Scenario: Visualizar extrato de movimentações
+      Given que o usuário está na página inicial
+      When o usuário acessa a opção de visualizar extrato
+      Then o sistema deve exibir o histórico de movimentações bancárias do usuário
+
+Título da User Story: Realizar transferência bancária
 
 cenario_bdd:
-  nome: CNPJ inválido na edição
+  nome: Realizar transferência com sucesso
+  tipo: positivo
+  gherkin: |
+    Feature: Transferência bancária
+    Scenario: Realizar transferência com sucesso
+      Given que o usuário está logado no sistema
+      When o usuário preenche os dados da transferência:
+        | Conta de Origem | 12345-6 |
+        | Conta de Destino | 98765-0 |
+        | Valor           | 500.00  |
+      And o usuário confirma a transferência
+      Then o sistema deve processar a transferência em tempo real
+      And atualizar os saldos das contas envolvidas
+      And exibir uma confirmação da transferência realizada com sucesso
+
+cenario_bdd:
+  nome: Realizar transferência com saldo insuficiente
   tipo: negativo
   gherkin: |
-    Feature: Edição de Banco Nacional
-    Scenario: CNPJ inválido na edição
-      Given que o Especialista do Banco está na tela de edição de um Banco Nacional
-      When o Especialista preencher um CNPJ inválido
-        | Descrição do Banco | Apelido | Número de inscrição no SBP | Banco controlador | CNPJ |
-        | Banco ABC Atualizado | ABC2   | 987654                     | Banco XYZ         | 12.345.678/0001-91 |
-      And clicar no botão "Salvar"
-      Then deve ser exibida uma mensagem de erro informando que o CNPJ é inválido
+    Feature: Transferência bancária
+    Scenario: Realizar transferência com saldo insuficiente
+      Given que o usuário está logado no sistema
+      When o usuário preenche os dados da transferência:
+        | Conta de Origem | 12345-6 |
+        | Conta de Destino | 98765-0 |
+        | Valor           | 10000.00 |
+      And o usuário confirma a transferência
+      Then o sistema deve exibir uma mensagem de erro informando que não há saldo suficiente na conta de origem
+      And não processar a transferência
+
+cenario_bdd:
+  nome: Realizar transferência com conta de destino inválida
+  tipo: negativo
+  gherkin: |
+    Feature: Transferência bancária
+    Scenario: Realizar transferência com conta de destino inválida
+      Given que o usuário está logado no sistema
+      When o usuário preenche os dados da transferência:
+        | Conta de Origem | 12345-6 |
+        | Conta de Destino | 98765-x |
+        | Valor           | 500.00  |
+      And o usuário confirma a transferência
+      Then o sistema deve exibir uma mensagem de erro informando que a conta de destino é inválida
+      And não processar a transferência
+
+Título da User Story: Solicitar empréstimo
+
+cenario_bdd:
+  nome: Solicitar empréstimo com sucesso
+  tipo: positivo
+  gherkin: |
+    Feature: Solicitação de empréstimo
+    Scenario: Solicitar empréstimo com sucesso
+      Given que o usuário está logado no sistema
+      When o usuário preenche os dados da solicitação de empréstimo:
+        | Valor       | 10000.00 |
+        | Prazo       | 24 meses |
+        | Finalidade  | Compra de carro |
+      And o usuário envia a solicitação
+      Then o sistema deve validar os dados da solicitação
+      And exibir uma estimativa das parcelas e taxas do empréstimo
+      And permitir que o usuário acompanhe o status da solicitação
+
+cenario_bdd:
+  nome: Solicitar empréstimo com valor acima do limite
+  tipo: negativo
+  gherkin: |
+    Feature: Solicitação de empréstimo
+    Scenario: Solicitar empréstimo com valor acima do limite
+      Given que o usuário está logado no sistema
+      When o usuário preenche os dados da solicitação de
