@@ -19,7 +19,7 @@ def generate_user_stories_from_image():
     # ==============================
     # Caminho da imagem
     # ==============================
-    image_path = "ai/requirements/criterios.png"
+    image_path = "ai/requirements/image.png"
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"❌ Imagem não encontrada: {image_path}")
