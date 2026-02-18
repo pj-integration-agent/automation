@@ -1,32 +1,32 @@
-Relatório Técnico: Teste de Estresse na API PokéAPI
+Relatório Técnico de Análise de Stress-Test
 
 Resumo do Cenário de Teste:
-O teste de estresse realizado teve como objetivo avaliar o desempenho da API PokéAPI ao realizar requisições do tipo GET para obter informações sobre o Pokémon "Ditto". O teste foi executado com 20 threads concorrentes, simulando uma carga de usuários acessando a aplicação.
+O teste de stress realizado simulou uma série de requisições GET à API do PokéAPI, para obter informações sobre o Pokémon "ditto". O teste foi executado com um número crescente de threads, iniciando com 2 e chegando a 20 threads simultâneas.
 
 Volume Total de Requisições:
-O teste gerou um total de 20 requisições GET para a API PokéAPI.
+O teste de stress gerou um total de 20 requisições GET à API do PokéAPI.
 
 Throughput Estimado:
-O throughput estimado, calculado com base no tempo total de execução do teste e no número de requisições bem-sucedidas, é de aproximadamente 0,65 requisições por segundo.
+O throughput estimado com base nos dados coletados é de aproximadamente 2 requisições por segundo.
 
 Latência:
-- Latência p50 (mediana): 21 ms
-- Latência p90: 27 ms
-- Latência p95: 28 ms
-- Latência p99: 928 ms
+- Latência p50: 26 ms
+- Latência p90: 32 ms
+- Latência p95: 36 ms
+- Latência p99: 767 ms
 
 Taxa de Erros:
-Todas as 20 requisições tiveram sucesso, com código de resposta 200 OK. Não houve nenhuma falha registrada.
+A taxa de erros durante o teste foi de 0%. Todas as requisições foram bem-sucedidas.
 
 Principais Gargalos Identificados:
-Não foram identificados gargalos significativos no desempenho da API durante o teste. As latências observadas estão dentro de valores aceitáveis para a maioria das aplicações.
+Com base nos dados coletados, não foram identificados gargalos significativos no desempenho da API. As latências observadas foram, em sua maioria, baixas e consistentes.
 
 Impacto Potencial em Ambiente de Produção:
-Considerando o baixo volume de requisições e o alto desempenho observado, o impacto da carga de teste no ambiente de produção seria mínimo. A API PokéAPI demonstrou capacidade de atender a esse nível de tráfego sem comprometer a experiência do usuário.
+Considerando o baixo volume de requisições e a alta taxa de sucesso observada, o impacto potencial em um ambiente de produção seria mínimo. A API demonstrou capacidade de atender à carga de trabalho simulada de forma eficiente.
 
 Recomendações Técnicas:
-1. Continuar monitorando o desempenho da API PokéAPI em ambiente de produção, especialmente durante períodos de maior demanda.
-2. Implementar testes de carga periódicos para identificar possíveis regressões de desempenho à medida que a aplicação evolui.
-3. Considerar realizar testes com cargas mais elevadas, simulando cenários de pico de uso, a fim de identificar os limites de capacidade da API.
-4. Avaliar a possibilidade de implementar mecanismos de cache e otimizações adicionais na API, visando reduzir ainda mais a latência das respostas.
-5. Manter a documentação atualizada e acessível para que a equipe de desenvolvimento possa compreender melhor a API e suas características de desempenho.
+1. Monitorar continuamente o desempenho da API em ambiente de produção, especialmente a latência p99, para identificar possíveis degradações de desempenho.
+2. Estabelecer limites de latência aceitáveis e implementar mecanismos de alerta para garantir a qualidade do serviço.
+3. Realizar testes de stress adicionais com cargas de trabalho mais intensas, a fim de avaliar o limite de escalabilidade da API.
+4. Considerar a implementação de técnicas de caching e otimização de consultas para melhorar ainda mais o desempenho da API.
+5. Documentar os resultados do teste de stress e as recomendações técnicas para referência futura e melhoria contínua do sistema.
