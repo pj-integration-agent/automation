@@ -19,7 +19,7 @@ def generate_user_stories_from_criterios():
     # Leitura dos critérios
     # ==============================
     with open(
-        "ai/requirements/criterios.md",
+        "ai/requirements/",
         "r",
         encoding="utf-8"
     ) as f:
