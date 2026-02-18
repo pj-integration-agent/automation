@@ -33,7 +33,6 @@ jobs:
 
       - name: Criar diretórios
         run: |
-          mkdir -p results
           mkdir -p ai/analysis
 
       - name: Executar JMeter
@@ -55,6 +54,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git pull origin ${{ github.ref_name }}
-          git add .
+          git add ai/analysis/stress_analysis.txt
           git commit -m "🤖 Análise automática dos resultados do stress-test com Claude AI" || echo "Nada para commitar"
           git push
