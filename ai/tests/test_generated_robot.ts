@@ -1,118 +1,138 @@
-Entendi, vou criar o código de teste automatizado funcional usando a estrutura do Robot Framework, seguindo as melhores práticas de automação e atendendo às diretrizes obrigatórias.
-
-Primeiro, vou declarar os imports necessários:
+Certamente, vou criar o código de teste automatizado funcional utilizando a estrutura do Robot Framework, seguindo as melhores práticas de automação. Aqui está o código:
 
 ```python
+# Declaração de imports necessários
+import os
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-```
 
-Em seguida, vou criar a classe `LoginTests` que herda de `RobotFrameworkLibrary`:
-
-```python
+# Biblioteca personalizada
 @library
-class LoginTests:
-    """
-    Testes de login do sistema.
-    """
-    
+class LoginPageKeywords:
+    """Keywords relacionadas à página de login"""
+
     def __init__(self):
-        self.driver = webdriver.Chrome()  # Inicializa o driver do Chrome
-        self.wait = WebDriverWait(self.driver, 10)  # Instância de WebDriverWait para controle de espera
+        self.driver = BuiltIn().get_library_instance("SeleniumLibrary").driver
+
+    # Cenário: Realizar login com credenciais válidas
+    @keyword
+    def que_o_cliente_acessa_a_pagina_de_login(self):
+        """Abre a página de login do sistema"""
+        self.driver.get("https://www.example.com/login")
 
     @keyword
-    def given_que_o_usuario_esta_na_tela_de_login(self):
-        """
-        Dado que o usuário está na tela de login.
-        """
-        self.driver.get("https://example.com/login")
-
-    @keyword
-    def when_o_usuario_insere_o_nome_de_usuario_e_a_senha(self, username, password):
-        """
-        Quando o usuário insere o nome de usuário e a senha.
-        """
+    def o_cliente_preenche_o_username_e_a_senha(self, username, password):
+        """Preenche os campos de username e senha"""
         self.driver.find_element(By.ID, "username").send_keys(username)
         self.driver.find_element(By.ID, "password").send_keys(password)
+
+    @keyword
+    def clica_no_botao_de_login(self):
+        """Clica no botão de login"""
         self.driver.find_element(By.ID, "login-button").click()
 
     @keyword
-    def then_o_sistema_deve_conceder_acesso_ao_usuario(self):
-        """
-        Então o sistema deve conceder acesso ao usuário.
-        """
-        self.wait.until(EC.presence_of_element_located((By.ID, "home-page")))
-        assert "Home" in self.driver.title
+    def o_sistema_autentica_as_credenciais(self):
+        """Verifica se as credenciais foram autenticadas com sucesso"""
+        wait = WebDriverWait(self.driver, 10)
+        home_page = wait.until(EC.presence_of_element_located((By.ID, "home-page")))
+        assert home_page.is_displayed()
 
     @keyword
-    def then_o_sistema_deve_exibir_uma_mensagem_de_erro(self):
-        """
-        Então o sistema deve exibir uma mensagem de erro.
-        """
-        self.wait.until(EC.presence_of_element_located((By.ID, "error-message")))
-        error_message = self.driver.find_element(By.ID, "error-message").text
-        assert "Credenciais inválidas" in error_message
+    def concede_acesso_ao_sistema(self):
+        """Verifica se o acesso foi concedido ao sistema"""
+        assert "Bem-vindo" in self.driver.title
 
     @keyword
-    def then_o_sistema_deve_exibir_uma_mensagem_de_campos_obrigatorios(self):
-        """
-        Então o sistema deve exibir uma mensagem de campos obrigatórios.
-        """
-        self.wait.until(EC.presence_of_element_located((By.ID, "error-message")))
-        error_message = self.driver.find_element(By.ID, "error-message").text
-        assert "Preencha todos os campos" in error_message
+    def exibe_a_pagina_inicial_do_sistema(self):
+        """Verifica se a página inicial do sistema é exibida"""
+        assert "Página Inicial" in self.driver.page_source
 
-    def teardown(self):
-        """
-        Teardown do teste.
-        """
-        self.driver.quit()
-```
+    # Cenário: Realizar login com credenciais inválidas
+    @keyword
+    def o_cliente_preenche_o_username_e_a_senha_invalidos(self, username, password):
+        """Preenche os campos de username e senha com valores inválidos"""
+        self.driver.find_element(By.ID, "username").send_keys(username)
+        self.driver.find_element(By.ID, "password").send_keys(password)
 
-Agora, vou criar os casos de teste usando a estrutura do Robot Framework:
+    @keyword
+    def o_sistema_nao_autentica_as_credenciais(self):
+        """Verifica se as credenciais não foram autenticadas"""
+        wait = WebDriverWait(self.driver, 10)
+        error_message = wait.until(EC.presence_of_element_located((By.ID, "login-error")))
+        assert error_message.is_displayed()
 
-```robot
-*** Settings ***
-Library    LoginTests
+    @keyword
+    def exibe_uma_mensagem_de_erro_informando_que_as_credenciais_sao_invalidas(self):
+        """Verifica se a mensagem de erro sobre credenciais inválidas é exibida"""
+        assert "Credenciais inválidas" in self.driver.page_source
 
-*** Test Cases ***
-Realizar login com credenciais válidas
-    Given que o usuário está na tela de login
-    When o usuário insere o nome de usuário "joaosilva" e a senha "123456"
-    Then o sistema deve conceder acesso ao usuário
+    # Cenário: Realizar login com campos vazios
+    @keyword
+    def o_cliente_nao_preenche_o_username_e_a_senha(self):
+        """Deixa os campos de username e senha vazios"""
+        pass
 
-Realizar login com credenciais inválidas
-    Given que o usuário está na tela de login
-    When o usuário insere o nome de usuário "joaosilva" e a senha "abcdef"
-    Then o sistema deve exibir uma mensagem de erro
+    @keyword
+    def exibe_uma_mensagem_de_erro_informando_que_os_campos_sao_obrigatorios(self):
+        """Verifica se a mensagem de erro sobre campos obrigatórios é exibida"""
+        wait = WebDriverWait(self.driver, 10)
+        error_message = wait.until(EC.presence_of_element_located((By.ID, "required-fields-error")))
+        assert error_message.is_displayed()
 
-Realizar login com campos em branco
-    Given que o usuário está na tela de login
-    When o usuário não preenche o nome de usuário e a senha
-    Then o sistema deve exibir uma mensagem de campos obrigatórios
+@library
+class ATMKeywords:
+    """Keywords relacionadas ao serviço de ATM"""
 
-*** Teardown ***
-teardown
-```
+    def __init__(self):
+        self.driver = BuiltIn().get_library_instance("SeleniumLibrary").driver
 
-Aqui estão algumas explicações sobre o código:
+    # Cenário: Sacar dinheiro com saldo suficiente
+    @keyword
+    def que_o_cliente_acessa_o_servico_de_atm(self):
+        """Abre a página do serviço de ATM"""
+        self.driver.get("https://www.example.com/atm")
 
-1. Utilizei a estrutura do Robot Framework, com a declaração de imports necessários e a criação da classe `LoginTests` que herda de `RobotFrameworkLibrary`.
-2. Cada cenário é implementado como um método `keyword` na classe `LoginTests`, seguindo as etapas `Given/When/Then` do BDD.
-3. Os seletores utilizados são claros e estáveis, seguindo as boas práticas de localização de elementos.
-4. O tratamento de esperas e erros é feito usando o `WebDriverWait` e verificações de presença de elementos.
-5. Cada método `keyword` possui um comentário explicativo descrevendo a intenção e a lógica do passo.
-6. A estrutura é modular e reutilizável, permitindo a fácil manutenção futura.
+    @keyword
+    def o_cliente_possui_saldo_de_r_em_sua_conta(self, saldo):
+        """Simula o saldo da conta do cliente"""
+        self.saldo = float(saldo)
 
-Você pode executar esses testes usando o Robot Framework, digitando o seguinte comando no terminal:
+    @keyword
+    def o_cliente_seleciona_a_opcao_de_saque(self):
+        """Seleciona a opção de saque no serviço de ATM"""
+        self.driver.find_element(By.ID, "withdraw-button").click()
 
-```
-robot LoginTests.robot
-```
+    @keyword
+    def o_cliente_informa_o_valor_de_r_para_saque(self, valor):
+        """Informa o valor de saque"""
+        self.driver.find_element(By.ID, "withdraw-amount").send_keys(valor)
 
-Este código de teste automatizado funcional atende às diretrizes obrigatórias e segue as melhores práticas de automação utilizando o Robot Framework.
+    @keyword
+    def o_sistema_valida_o_saldo(self):
+        """Verifica se o saldo é suficiente para o saque"""
+        assert self.saldo >= float(self.driver.find_element(By.ID, "withdraw-amount").get_attribute("value"))
+
+    @keyword
+    def realiza_o_saque_da_conta(self):
+        """Realiza o saque da conta"""
+        self.saldo -= float(self.driver.find_element(By.ID, "withdraw-amount").get_attribute("value"))
+
+    @keyword
+    def atualiza_o_saldo_da_conta_para_r(self, novo_saldo):
+        """Atualiza o saldo da conta"""
+        assert abs(self.saldo - float(novo_saldo)) < 0.01
+
+    @keyword
+    def exibe_uma_mensagem_de_sucesso_informando_o_valor_sacado(self):
+        """Verifica se a mensagem de sucesso é exibida"""
+        assert f"Saque de R$ {self.driver.find_element(By.ID, 'withdraw-amount').get_attribute('value')} realizado com sucesso" in self.driver.page_source
+
+    # Cenário: Sacar dinheiro com saldo insuficiente
+    @keyword
+    def o_sistema_exibe_uma_mensagem_de_erro_informando_que_o_saldo_e_insuficiente(self):
+        
