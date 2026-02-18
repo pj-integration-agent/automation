@@ -1,32 +1,32 @@
-Relatório Técnico do Teste de Estresse
+Relatório Técnico - Análise de Stress-test em JMeter
 
 Resumo do Cenário de Teste:
-O teste de estresse realizado simulou uma carga de acesso à API PokéAPI, com requisições do tipo GET para obter informações sobre o Pokémon "ditto". O teste foi executado com 20 threads simultâneas durante um período de tempo.
+O cenário de teste consistiu em uma série de requisições GET ao endpoint /api/v2/pokemon/ditto da API PokéAPI. Foram executadas 20 requisições simultâneas, simulando um cenário de carga sobre a API.
 
 Volume Total de Requisições:
-O teste gerou um total de 20 requisições GET para a API PokéAPI.
+O teste gerou um total de 20 requisições GET ao endpoint da PokéAPI.
 
 Throughput Estimado:
-O throughput estimado com base nos dados do teste é de aproximadamente 1,33 requisições por segundo.
+Com base nos dados coletados, o throughput estimado é de aproximadamente 2 requisições por segundo.
 
 Latência:
-- Latência p50 (mediana): 26 ms
-- Latência p90: 39 ms
-- Latência p95: 49 ms
-- Latência p99: 772 ms
+- Latência p50: 68 ms
+- Latência p90: 74 ms
+- Latência p95: 75 ms
+- Latência p99: 816 ms
 
 Taxa de Erros:
-A taxa de erros observada durante o teste foi de 0%, ou seja, todas as requisições foram bem-sucedidas.
+Não foram registrados erros durante a execução do teste. Todas as requisições retornaram código de status HTTP 200 (OK).
 
 Principais Gargalos Identificados:
-Não foram identificados gargalos significativos no desempenho da API durante o teste. As latências observadas se mantiveram dentro de limites aceitáveis, com a exceção de um pico na latência p99.
+Não foram identificados gargalos significativos durante a execução do teste. As latências registradas estão dentro de um intervalo aceitável para a maioria das aplicações web.
 
 Impacto Potencial em Ambiente de Produção:
-Com base nos resultados do teste, a API PokéAPI parece ter capacidade de suportar uma carga moderada de requisições simultâneas sem apresentar problemas de desempenho. No entanto, é importante considerar que a carga de trabalho simulada foi relativamente leve e não representa um cenário de uso real, onde a diversidade de requisições e o volume de tráfego podem ser consideravelmente maiores.
+Considerando o baixo volume de requisições e a ausência de erros, o impacto em um ambiente de produção seria mínimo. No entanto, é importante considerar que em situações de carga mais elevada, a latência pode aumentar consideravelmente, conforme indica o valor da latência p99.
 
 Recomendações Técnicas:
-1. Realizar testes de estresse adicionais com cargas de trabalho mais realistas, incluindo uma variedade de endpoints e cenários de uso típicos da aplicação.
-2. Monitorar métricas de desempenho em ambiente de produção, como latência, taxa de erros e utilização de recursos, para identificar e tratar possíveis gargalos proativamente.
-3. Implementar técnicas de caching e otimização de consultas, quando aplicável, para melhorar a capacidade de resposta da API.
-4. Escalar horizontalmente a infraestrutura da aplicação, se necessário, para atender a picos de demanda sem comprometer a experiência do usuário.
-5. Considerar a implementação de circuitos de proteção (circuit breakers) para lidar com falhas e evitar a propagação de problemas em cascata.
+1. Monitorar a latência da API em produção, especialmente durante períodos de maior atividade, a fim de identificar possíveis gargalos e degradação de performance.
+2. Realizar testes de carga mais abrangentes, com maior volume de requisições simultâneas, para avaliar o comportamento da API em cenários de carga extrema.
+3. Implementar mecanismos de cache e otimização de recursos para melhorar a resposta da API em situações de pico de demanda.
+4. Realizar testes de capacidade para determinar o limite máximo de carga suportado pela API sem comprometer a experiência do usuário.
+5. Implementar monitoramento e alertas para acompanhar métricas de desempenho da API, como latência, taxa de erros e throughput, de modo a permitir a rápida identificação e solução de problemas.
