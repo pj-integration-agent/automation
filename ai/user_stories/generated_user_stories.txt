@@ -1,36 +1,29 @@
-Entendido. Aqui estão as user stories completas com base nos critérios fornecidos:
+Based on the information provided in the image, here are some User Stories for the ParaBank website:
 
-US01 - Como usuário, eu quero fazer login no sistema para acessar minhas informações bancárias.
-Descrição: O usuário deverá ser capaz de fazer login no sistema da aplicação de Bancos Nacionais usando suas credenciais (nome de usuário e senha) para acessar suas informações bancárias.
-Critérios de Aceite:
-- O usuário deve ser capaz de inserir seu nome de usuário e senha corretamente.
-- O sistema deve validar as credenciais e conceder acesso ao usuário.
-- O sistema deve exibir uma mensagem de erro caso as credenciais fornecidas sejam inválidas.
-- O sistema deve direcionar o usuário para a página inicial após o login bem-sucedido.
+US01: As a customer, I want to be able to log in to my account securely using my username and password, so that I can access my banking services.
+- Acceptance Criteria:
+  - The login page must have fields for username and password.
+  - The login process must authenticate the user's credentials and grant access to the account.
+  - Error messages must be displayed if the login fails.
+  - The login process must be secure, with measures in place to prevent unauthorized access.
 
-US02 - Como usuário, eu quero visualizar meu saldo bancário para acompanhar minha situação financeira.
-Descrição: O usuário deverá ser capaz de visualizar seu saldo bancário atual após fazer login no sistema.
-Critérios de Aceite:
-- O sistema deve exibir o saldo bancário do usuário de forma clara e destacada na tela inicial.
-- O saldo exibido deve ser atualizado em tempo real.
-- O sistema deve indicar a data e hora da última atualização do saldo.
-- O sistema deve fornecer opções para o usuário visualizar o extrato de movimentações bancárias.
+US02: As a customer, I want to be able to withdraw funds from my account using the ATM services, so that I can access my money whenever I need it.
+- Acceptance Criteria:
+  - The ATM services section must allow customers to withdraw funds from their accounts.
+  - The withdrawal process must deduct the correct amount from the customer's account balance.
+  - The ATM services must be available 24/7 for customer convenience.
+  - The ATM services must provide clear instructions and feedback to the customer during the withdrawal process.
 
-US03 - Como usuário, eu quero realizar transferências bancárias para outras contas.
-Descrição: O usuário deve ser capaz de realizar transferências de dinheiro entre suas próprias contas ou para outras contas bancárias.
-Critérios de Aceite:
-- O sistema deve fornecer um formulário para o usuário informar os dados da transferência, como conta de origem, conta de destino e valor.
-- O sistema deve validar os dados da transferência, como saldo suficiente na conta de origem, existência da conta de destino e formato correto das informações.
-- O sistema deve processar a transferência em tempo real e atualizar os saldos das contas envolvidas.
-- O sistema deve exibir uma confirmação da transferência realizada com sucesso.
-- O sistema deve manter um histórico de todas as transferências realizadas pelo usuário.
+US03: As a customer, I want to be able to transfer funds between my accounts using the online services, so that I can manage my finances efficiently.
+- Acceptance Criteria:
+  - The online services section must allow customers to transfer funds between their accounts.
+  - The transfer process must update the balances of the source and destination accounts correctly.
+  - The online services must provide a history of all account transactions, including fund transfers.
+  - The online services must be secure and easy to use, with clear instructions and feedback provided to the customer.
 
-US04 - Como usuário, eu quero solicitar empréstimos para atender minhas necessidades financeiras.
-Descrição: O usuário deve ser capaz de solicitar empréstimos bancários através da aplicação.
-Critérios de Aceite:
-- O sistema deve fornecer um formulário para o usuário informar os detalhes da solicitação de empréstimo, como valor, prazo de pagamento e finalidade.
-- O sistema deve validar os dados da solicitação, como valor máximo permitido, prazo máximo e elegibilidade do usuário.
-- O sistema deve exibir uma estimativa das parcelas e taxas do empréstimo solicitado.
-- O sistema deve permitir que o usuário envie a solicitação de empréstimo.
-- O sistema deve fornecer um acompanhamento do status da solicitação de empréstimo.
-- O sistema deve permitir que o usuário consulte o histórico de suas solicitações de empréstimo.
+US04: As a customer, I want to be able to view my account balances using the online services, so that I can stay informed about my financial status.
+- Acceptance Criteria:
+  - The online services section must display the current balances of the customer's accounts.
+  - The account balance information must be up-to-date and accurate.
+  - The account balance information must be easily accessible and intuitive for the customer to understand.
+  - The online services must provide clear instructions and guidance on how to view account balances.
