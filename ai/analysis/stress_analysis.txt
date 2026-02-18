@@ -1,36 +1,33 @@
-Relatório técnico do teste de estresse do PokéAPI
+Relatório Técnico de Teste de Estresse da API PokéAPI
 
-Resumo do cenário de teste:
-O cenário de teste consiste em realizar requisições GET para o endpoint "/pokemon/ditto" da API PokéAPI. O teste foi realizado com 20 threads concorrentes, simulando múltiplos usuários acessando a API simultaneamente.
+Resumo do Cenário de Teste:
+O teste de estresse foi realizado para avaliar o desempenho da API PokéAPI ao realizar requisições GET para obter informações sobre o Pokémon "ditto". O teste foi executado com 20 threads concorrentes, simulando um cenário de carga moderada.
 
-Volume total de requisições:
-O teste gerou um total de 20 requisições.
+Volume Total de Requisições:
+O teste gerou um total de 20 requisições GET para a API PokéAPI.
 
-Throughput estimado:
-O throughput estimado, com base nos dados obtidos, é de aproximadamente 0,5 requisições por segundo.
+Throughput Estimado:
+Com base nos resultados, o throughput estimado é de aproximadamente 0,6 requisições por segundo.
 
 Latência:
-- p50 (mediana): 36 ms
-- p90: 41 ms
-- p95: 44 ms
-- p99: 807 ms
+- Latência p50 (mediana): 71ms
+- Latência p90: 160ms
+- Latência p95: 162ms
+- Latência p99: 957ms
 
-Taxa de erros:
-Não houve nenhuma requisição com erro, a taxa de sucesso foi de 100%.
+Taxa de Erros:
+Não foram registradas falhas nas requisições durante o teste, ou seja, a taxa de erros é de 0%.
 
-Principais gargalos identificados:
-Baseado nos dados coletados, não foram identificados gargalos significativos de desempenho na aplicação testada. As latências observadas estão dentro de parâmetros aceitáveis para a maioria das requisições.
+Principais Gargalos Identificados:
+- A latência p99 de 957ms é significativamente mais alta que as outras métricas de latência, indicando que algumas requisições tiveram um desempenho consideravelmente pior que a maioria.
+- Embora o throughput estimado seja moderado, a alta latência p99 sugere que o sistema pode ter dificuldades em lidar com picos de carga.
 
-No entanto, uma observação importante é a presença de uma latência muito alta (807 ms) na primeira requisição do teste, possivelmente indicando alguma forma de inicialização ou aquecimento da aplicação.
+Impacto Potencial em Ambiente de Produção:
+Caso o sistema em produção apresente um comportamento semelhante ao observado no teste, os usuários poderão experimentar ocasionalmente respostas lentas ou indisponibilidade da API, especialmente durante períodos de pico de demanda. Isso pode afetar a experiência do usuário e a confiabilidade do sistema.
 
-Impacto potencial em ambiente de produção:
-Considerando o cenário de teste realizado, é possível inferir que a aplicação PokéAPI estaria apta a suportar um volume moderado de tráfego em um ambiente de produção, sem apresentar problemas de desempenho significativos para a maioria dos usuários.
-
-No entanto, é importante considerar que o teste realizado é bastante simples e focado em um único endpoint. Em um ambiente de produção real, com uma carga de trabalho mais diversificada e complexa, podem surgir outros gargalos e desafios de desempenho que não foram identificados neste teste.
-
-Recomendações técnicas:
-1. Investigar a causa da latência elevada na primeira requisição do teste, possivelmente relacionada a algum tipo de inicialização ou aquecimento da aplicação.
-2. Realizar testes adicionais com cenários mais complexos e diversificados, abrangendo diferentes endpoints e operações da API, para obter uma visão mais ampla do desempenho da aplicação.
-3. Monitorar constantemente o desempenho da aplicação em produção, identificando e tratando proativamente qualquer gargalo ou degradação de performance que possa surgir.
-4. Considerar a implementação de técnicas de cache, otimização de consultas e outras estratégias de melhoria de desempenho, conforme necessário, para garantir a escalabilidade e a satisfação dos usuários.
-5. Estabelecer métricas de desempenho claras e objetivas, como tempos de resposta, taxa de erros e throughput, para acompanhar a saúde da aplicação e orientar futuras ações de melhoria.
+Recomendações Técnicas:
+1. Investigar as causas da alta latência p99, identificando possíveis gargalos no sistema (por exemplo, problemas de rede, lentidão no banco de dados, entre outros) e implementar melhorias para reduzir esse valor.
+2. Implementar técnicas de monitoramento e alertas para identificar rapidamente picos de carga e possíveis degradações de desempenho em produção.
+3. Considerar a implementação de soluções de cache, filas de mensagens ou outras estratégias para lidar com picos de carga e suavizar a demanda sobre a API.
+4. Realizar testes de estresse adicionais com cargas mais altas e diferentes cenários para avaliar a escalabilidade do sistema e identificar outros possíveis pontos de melhoria.
+5. Documentar os resultados deste teste de estresse e compartilhar com a equipe de desenvolvimento e operações, de modo a facilitar a priorização de melhorias e o acompanhamento do desempenho em produção.
