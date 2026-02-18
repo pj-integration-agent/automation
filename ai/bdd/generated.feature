@@ -1,132 +1,125 @@
-Título da User Story: Realizar login no sistema
+Título da User Story: US01 - Login Seguro
 
 cenario_bdd:
-  nome: Realizar login com credenciais válidas
+  nome: Realizar login com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Login do usuário
+    Feature: Realizar login no sistema
     Scenario: Realizar login com credenciais válidas
-      Given que o usuário está na tela de login
-      When o usuário insere o nome de usuário "joaosilva" e a senha "123456"
-      Then o sistema deve conceder acesso ao usuário
-      And redirecionar o usuário para a página inicial
+      Given que o cliente acessa a página de login
+      When o cliente preenche o username "johndoe" e a senha "password123"
+      And clica no botão de login
+      Then o sistema autentica as credenciais
+      And concede acesso ao sistema
+      And exibe a página inicial do sistema
 
 cenario_bdd:
-  nome: Realizar login com credenciais inválidas
+  nome: Falha no login por credenciais inválidas
   tipo: negativo
   gherkin: |
-    Feature: Login do usuário
+    Feature: Realizar login no sistema
     Scenario: Realizar login com credenciais inválidas
-      Given que o usuário está na tela de login
-      When o usuário insere o nome de usuário "joaosilva" e a senha "abcdef"
-      Then o sistema deve exibir uma mensagem de erro informando que as credenciais são inválidas
-      And não conceder acesso ao usuário
+      Given que o cliente acessa a página de login
+      When o cliente preenche o username "invaliduser" e a senha "invalidpass"
+      And clica no botão de login
+      Then o sistema não autentica as credenciais
+      And exibe uma mensagem de erro informando que as credenciais são inválidas
 
 cenario_bdd:
-  nome: Realizar login com campos em branco
+  nome: Falha no login por campos vazios
   tipo: negativo
   gherkin: |
-    Feature: Login do usuário
-    Scenario: Realizar login com campos em branco
-      Given que o usuário está na tela de login
-      When o usuário não preenche o nome de usuário e a senha
-      Then o sistema deve exibir uma mensagem de erro informando que os campos são obrigatórios
-      And não conceder acesso ao usuário
+    Feature: Realizar login no sistema
+    Scenario: Realizar login com campos vazios
+      Given que o cliente acessa a página de login
+      When o cliente não preenche o username e a senha
+      And clica no botão de login
+      Then o sistema não autentica as credenciais
+      And exibe uma mensagem de erro informando que os campos de username e senha são obrigatórios
 
-Título da User Story: Visualizar saldo bancário
+Título da User Story: US02 - Sacar Dinheiro no ATM
 
 cenario_bdd:
-  nome: Visualizar saldo bancário após login
+  nome: Sacar dinheiro com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Visualização de saldo bancário
-    Scenario: Visualizar saldo bancário após login
-      Given que o usuário fez login no sistema
-      When o usuário acessa a página inicial
-      Then o sistema deve exibir o saldo bancário do usuário de forma clara e destacada
-      And informar a data e hora da última atualização do saldo
+    Feature: Sacar dinheiro no ATM
+    Scenario: Sacar dinheiro com saldo suficiente
+      Given que o cliente acessa o serviço de ATM
+      And o cliente possui saldo de R$ 1.000,00 em sua conta
+      When o cliente seleciona a opção de saque
+      And informa o valor de R$ 200,00 para saque
+      Then o sistema valida o saldo
+      And realiza o saque da conta
+      And atualiza o saldo da conta para R$ 800,00
+      And exibe uma mensagem de sucesso informando o valor sacado
 
 cenario_bdd:
-  nome: Visualizar extrato de movimentações
-  tipo: positivo
-  gherkin: |
-    Feature: Visualização de saldo bancário
-    Scenario: Visualizar extrato de movimentações
-      Given que o usuário está na página inicial
-      When o usuário acessa a opção de visualizar extrato
-      Then o sistema deve exibir o histórico de movimentações bancárias do usuário
-
-Título da User Story: Realizar transferência bancária
-
-cenario_bdd:
-  nome: Realizar transferência com sucesso
-  tipo: positivo
-  gherkin: |
-    Feature: Transferência bancária
-    Scenario: Realizar transferência com sucesso
-      Given que o usuário está logado no sistema
-      When o usuário preenche os dados da transferência:
-        | Conta de Origem | 12345-6 |
-        | Conta de Destino | 98765-0 |
-        | Valor           | 500.00  |
-      And o usuário confirma a transferência
-      Then o sistema deve processar a transferência em tempo real
-      And atualizar os saldos das contas envolvidas
-      And exibir uma confirmação da transferência realizada com sucesso
-
-cenario_bdd:
-  nome: Realizar transferência com saldo insuficiente
+  nome: Falha no saque por saldo insuficiente
   tipo: negativo
   gherkin: |
-    Feature: Transferência bancária
-    Scenario: Realizar transferência com saldo insuficiente
-      Given que o usuário está logado no sistema
-      When o usuário preenche os dados da transferência:
-        | Conta de Origem | 12345-6 |
-        | Conta de Destino | 98765-0 |
-        | Valor           | 10000.00 |
-      And o usuário confirma a transferência
-      Then o sistema deve exibir uma mensagem de erro informando que não há saldo suficiente na conta de origem
-      And não processar a transferência
+    Feature: Sacar dinheiro no ATM
+    Scenario: Sacar dinheiro com saldo insuficiente
+      Given que o cliente acessa o serviço de ATM
+      And o cliente possui saldo de R$ 50,00 em sua conta
+      When o cliente seleciona a opção de saque
+      And informa o valor de R$ 100,00 para saque
+      Then o sistema valida o saldo
+      And exibe uma mensagem de erro informando que o saldo é insuficiente para o saque
 
 cenario_bdd:
-  nome: Realizar transferência com conta de destino inválida
+  nome: Falha no saque por valor inválido
   tipo: negativo
   gherkin: |
-    Feature: Transferência bancária
-    Scenario: Realizar transferência com conta de destino inválida
-      Given que o usuário está logado no sistema
-      When o usuário preenche os dados da transferência:
-        | Conta de Origem | 12345-6 |
-        | Conta de Destino | 98765-x |
-        | Valor           | 500.00  |
-      And o usuário confirma a transferência
-      Then o sistema deve exibir uma mensagem de erro informando que a conta de destino é inválida
-      And não processar a transferência
+    Feature: Sacar dinheiro no ATM
+    Scenario: Sacar dinheiro com valor inválido
+      Given que o cliente acessa o serviço de ATM
+      And o cliente possui saldo de R$ 1.000,00 em sua conta
+      When o cliente seleciona a opção de saque
+      And informa o valor de R$ -50,00 para saque
+      Then o sistema valida o valor
+      And exibe uma mensagem de erro informando que o valor de saque é inválido
 
-Título da User Story: Solicitar empréstimo
+Título da User Story: US03 - Transferir Dinheiro
 
 cenario_bdd:
-  nome: Solicitar empréstimo com sucesso
+  nome: Transferir dinheiro com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Solicitação de empréstimo
-    Scenario: Solicitar empréstimo com sucesso
-      Given que o usuário está logado no sistema
-      When o usuário preenche os dados da solicitação de empréstimo:
-        | Valor       | 10000.00 |
-        | Prazo       | 24 meses |
-        | Finalidade  | Compra de carro |
-      And o usuário envia a solicitação
-      Then o sistema deve validar os dados da solicitação
-      And exibir uma estimativa das parcelas e taxas do empréstimo
-      And permitir que o usuário acompanhe o status da solicitação
+    Feature: Transferir dinheiro entre contas
+    Scenario: Transferir dinheiro com saldo suficiente
+      Given que o cliente acessa o serviço de transferência
+      And o cliente possui saldo de R$ 1.000,00 na conta origem
+      When o cliente seleciona a conta destino
+      And informa o valor de R$ 200,00 para transferência
+      Then o sistema valida o saldo da conta origem
+      And realiza a transferência
+      And atualiza o saldo da conta origem para R$ 800,00
+      And atualiza o saldo da conta destino para R$ 200,00
+      And exibe uma mensagem de sucesso informando a transferência
 
 cenario_bdd:
-  nome: Solicitar empréstimo com valor acima do limite
+  nome: Falha na transferência por saldo insuficiente
   tipo: negativo
   gherkin: |
-    Feature: Solicitação de empréstimo
-    Scenario: Solicitar empréstimo com valor acima do limite
-      Given que o usuário está logado no sistema
-      When o usuário preenche os dados da solicitação de
+    Feature: Transferir dinheiro entre contas
+    Scenario: Transferir dinheiro com saldo insuficiente
+      Given que o cliente acessa o serviço de transferência
+      And o cliente possui saldo de R$ 50,00 na conta origem
+      When o cliente seleciona a conta destino
+      And informa o valor de R$ 100,00 para transferência
+      Then o sistema valida o saldo da conta origem
+      And exibe uma mensagem de erro informando que o saldo é insuficiente para a transferência
+
+cenario_bdd:
+  nome: Falha na transferência por valor inválido
+  tipo: negativo
+  gherkin: |
+    Feature: Transferir dinheiro entre contas
+    Scenario: Transferir dinheiro com valor inválido
+      Given que o cliente acessa o serviço de transferência
+      And o cliente possui saldo de R$ 1.000,00 na conta origem
+      When o cliente seleciona a conta destino
+      And informa o valor de R$ -50,00 para transferência
+      Then o sistema valida o valor da transferência
+      And exibe uma mensagem de erro informando que o valor da transferência é
