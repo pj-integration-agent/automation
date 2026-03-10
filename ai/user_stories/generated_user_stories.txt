@@ -1,29 +1,33 @@
-Based on the information provided in the image, here are some User Stories for the ParaBank website:
+Com base na imagem da página inicial do site do ParaBank, segue abaixo as User Stories completas:
 
-US01: As a customer, I want to be able to log in to my account securely using my username and password, so that I can access my banking services.
-- Acceptance Criteria:
-  - The login page must have fields for username and password.
-  - The login process must authenticate the user's credentials and grant access to the account.
-  - Error messages must be displayed if the login fails.
-  - The login process must be secure, with measures in place to prevent unauthorized access.
+US01: Como um cliente do ParaBank, eu quero realizar saque de fundos para ter acesso ao meu dinheiro quando necessário.
+Descrição: O cliente deve ser capaz de sacar fundos da sua conta bancária através do caixa eletrônico (ATM) do ParaBank.
+Critérios de Aceitação:
+- O cliente deve fornecer suas credenciais válidas (usuário e senha) para autenticação.
+- O cliente deve ser capaz de selecionar a opção de saque e digitar o valor desejado.
+- O caixa eletrônico deve dispensar o valor solicitado com sucesso.
+- O saldo da conta do cliente deve ser atualizado corretamente após o saque.
 
-US02: As a customer, I want to be able to withdraw funds from my account using the ATM services, so that I can access my money whenever I need it.
-- Acceptance Criteria:
-  - The ATM services section must allow customers to withdraw funds from their accounts.
-  - The withdrawal process must deduct the correct amount from the customer's account balance.
-  - The ATM services must be available 24/7 for customer convenience.
-  - The ATM services must provide clear instructions and feedback to the customer during the withdrawal process.
+US02: Como um cliente do ParaBank, eu quero transferir fundos entre minhas contas para gerenciar melhor meus recursos financeiros.
+Descrição: O cliente deve ser capaz de transferir fundos entre suas próprias contas bancárias no ParaBank, tanto através do caixa eletrônico quanto pelos serviços online.
+Critérios de Aceitação:
+- O cliente deve fornecer suas credenciais válidas (usuário e senha) para autenticação.
+- O cliente deve ser capaz de selecionar a opção de transferência de fundos e escolher a conta de origem e destino.
+- O cliente deve poder digitar o valor a ser transferido.
+- A transferência deve ser processada com sucesso, atualizando os saldos das contas corretamente.
+- O histórico da transferência deve ser exibido na conta do cliente.
 
-US03: As a customer, I want to be able to transfer funds between my accounts using the online services, so that I can manage my finances efficiently.
-- Acceptance Criteria:
-  - The online services section must allow customers to transfer funds between their accounts.
-  - The transfer process must update the balances of the source and destination accounts correctly.
-  - The online services must provide a history of all account transactions, including fund transfers.
-  - The online services must be secure and easy to use, with clear instructions and feedback provided to the customer.
+US03: Como um cliente do ParaBank, eu quero consultar os saldos das minhas contas para ter visibilidade da minha situação financeira.
+Descrição: O cliente deve poder consultar os saldos de suas contas bancárias, tanto através do caixa eletrônico quanto pelos serviços online do ParaBank.
+Critérios de Aceitação:
+- O cliente deve fornecer suas credenciais válidas (usuário e senha) para autenticação.
+- O cliente deve ser capaz de selecionar a opção de consulta de saldo e visualizar o saldo atual de cada uma de suas contas.
+- As informações de saldo devem estar atualizadas e corresponder ao saldo real da conta.
 
-US04: As a customer, I want to be able to view my account balances using the online services, so that I can stay informed about my financial status.
-- Acceptance Criteria:
-  - The online services section must display the current balances of the customer's accounts.
-  - The account balance information must be up-to-date and accurate.
-  - The account balance information must be easily accessible and intuitive for the customer to understand.
-  - The online services must provide clear instructions and guidance on how to view account balances.
+US04: Como um cliente do ParaBank, eu quero fazer depósitos em dinheiro para adicionar fundos à minha conta.
+Descrição: O cliente deve poder realizar depósitos em dinheiro através dos caixas eletrônicos (ATMs) do ParaBank.
+Critérios de Aceitação:
+- O cliente deve fornecer suas credenciais válidas (usuário e senha) para autenticação.
+- O cliente deve ser capaz de selecionar a opção de depósito e inserir o valor em dinheiro.
+- O caixa eletrônico deve aceitar e processar o depósito com sucesso.
+- O saldo da conta do cliente deve ser atualizado corretamente após o depósito.
