@@ -1,33 +1,32 @@
-Relatório Técnico de Teste de Estresse da API PokéAPI
+Relatório Técnico de Stress Test em Apache JMeter
 
 Resumo do Cenário de Teste:
-O teste de estresse foi realizado para avaliar o desempenho da API PokéAPI ao realizar requisições GET para obter informações sobre o Pokémon "ditto". O teste foi executado com 20 threads concorrentes, simulando um cenário de carga moderada.
+O cenário de teste consistiu em uma série de requisições HTTP GET à API PokéAPI, buscando informações sobre o Pokémon "ditto". O teste foi executado durante 20 minutos, com uma rampa-up de 2 usuários por minuto, atingindo um pico de 20 usuários simultâneos.
 
 Volume Total de Requisições:
-O teste gerou um total de 20 requisições GET para a API PokéAPI.
+O teste gerou um total de 20 requisições HTTP GET à API PokéAPI.
 
 Throughput Estimado:
-Com base nos resultados, o throughput estimado é de aproximadamente 0,6 requisições por segundo.
+Considerando o tempo total do teste (20 minutos) e o número total de requisições (20), o throughput estimado é de 1 requisição por minuto.
 
 Latência:
-- Latência p50 (mediana): 71ms
-- Latência p90: 160ms
-- Latência p95: 162ms
-- Latência p99: 957ms
+- Latência p50: 23 ms
+- Latência p90: 28 ms
+- Latência p95: 29 ms
+- Latência p99: 862 ms
 
 Taxa de Erros:
-Não foram registradas falhas nas requisições durante o teste, ou seja, a taxa de erros é de 0%.
+Não houve nenhuma requisição com erro durante o teste, portanto a taxa de erros é 0%.
 
 Principais Gargalos Identificados:
-- A latência p99 de 957ms é significativamente mais alta que as outras métricas de latência, indicando que algumas requisições tiveram um desempenho consideravelmente pior que a maioria.
-- Embora o throughput estimado seja moderado, a alta latência p99 sugere que o sistema pode ter dificuldades em lidar com picos de carga.
+O principal gargalo identificado é a elevada latência observada na p99, que atingiu 862 ms. Essa latência elevada pode ser um indicativo de problemas de rede, lentidão no processamento da API ou limitações de recursos (CPU, memória, etc.) no ambiente de teste.
 
 Impacto Potencial em Ambiente de Produção:
-Caso o sistema em produção apresente um comportamento semelhante ao observado no teste, os usuários poderão experimentar ocasionalmente respostas lentas ou indisponibilidade da API, especialmente durante períodos de pico de demanda. Isso pode afetar a experiência do usuário e a confiabilidade do sistema.
+Caso esse comportamento seja replicado no ambiente de produção, os usuários poderão experimentar uma experiência de uso bastante degradada, com longos tempos de resposta e possíveis timeouts. Isso pode resultar em insatisfação dos usuários, bem como impactar negativamente em métricas de negócio, como conversão e retenção.
 
 Recomendações Técnicas:
-1. Investigar as causas da alta latência p99, identificando possíveis gargalos no sistema (por exemplo, problemas de rede, lentidão no banco de dados, entre outros) e implementar melhorias para reduzir esse valor.
-2. Implementar técnicas de monitoramento e alertas para identificar rapidamente picos de carga e possíveis degradações de desempenho em produção.
-3. Considerar a implementação de soluções de cache, filas de mensagens ou outras estratégias para lidar com picos de carga e suavizar a demanda sobre a API.
-4. Realizar testes de estresse adicionais com cargas mais altas e diferentes cenários para avaliar a escalabilidade do sistema e identificar outros possíveis pontos de melhoria.
-5. Documentar os resultados deste teste de estresse e compartilhar com a equipe de desenvolvimento e operações, de modo a facilitar a priorização de melhorias e o acompanhamento do desempenho em produção.
+1. Investigar a causa da latência elevada na p99, verificando possíveis gargalos de rede, processamento da API ou limitações de recursos no ambiente.
+2. Realizar testes adicionais, com cenários mais complexos e com maior volume de requisições, a fim de identificar outros possíveis pontos de falha.
+3. Implementar mecanismos de monitoramento e alertas para acompanhar o desempenho da aplicação em produção, permitindo uma rápida identificação e resolução de problemas.
+4. Considerar a adoção de técnicas de otimização de desempenho, como caching, paralelização de tarefas e escalabilidade horizontal, visando melhorar a resposta da aplicação em situações de alta carga.
+5. Realizar testes de carga periódicos, a fim de garantir que a aplicação mantenha um desempenho adequado à medida que novos recursos são adicionados ou a carga de usuários aumenta.
