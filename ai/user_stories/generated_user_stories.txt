@@ -1,0 +1,25 @@
+Com base na imagem da página web do ParaBank, aqui estão as User Stories completas:
+
+US01: Como cliente do ParaBank, eu quero acessar minhas informações de login para poder realizar transações online de forma segura.
+Descrição: O usuário deve ser capaz de fazer login no sistema do ParaBank inserindo seu nome de usuário e senha.
+Critérios de Aceitação:
+- O sistema deve exibir uma tela de login com campos para inserir o nome de usuário e senha.
+- O sistema deve autenticar as credenciais fornecidas e conceder acesso ao usuário, caso estejam corretas.
+- O sistema deve exibir uma mensagem de erro caso as credenciais sejam inválidas.
+
+US02: Como cliente do ParaBank, eu quero realizar saques em caixas eletrônicos para poder retirar dinheiro da minha conta.
+Descrição: O usuário deve ser capaz de sacar fundos de sua conta bancária usando os caixas eletrônicos do ParaBank.
+Critérios de Aceitação:
+- O sistema deve exibir as opções de serviços de caixa eletrônico, incluindo a opção de saque.
+- O usuário deve poder selecionar a opção de saque e inserir o valor a ser retirado.
+- O sistema deve validar se o usuário possui saldo suficiente na conta para realizar o saque.
+- O sistema deve processar o saque e atualizar o saldo da conta do usuário.
+
+US03: Como cliente do ParaBank, eu quero realizar transferências de fundos entre minhas contas para poder gerenciar meus recursos financeiros.
+Descrição: O usuário deve poder transferir fundos entre suas diferentes contas bancárias do ParaBank.
+Critérios de Aceitação:
+- O sistema deve exibir as opções de serviços online, incluindo a opção de transferência de fundos.
+- O usuário deve poder selecionar a opção de transferência e escolher a conta de origem e destino.
+- O usuário deve poder inserir o valor a ser transferido.
+- O sistema deve validar se o usuário possui saldo suficiente na conta de origem para realizar a transferência.
+- O sistema deve processar a transferência e atualizar os saldos das contas envolvidas.
