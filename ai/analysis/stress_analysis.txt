@@ -1,0 +1,32 @@
+Relatório Técnico - Teste de Estresse com Apache JMeter
+
+Resumo do Cenário de Teste:
+O teste de estresse realizado avaliou a resposta da API da PokeAPI ao receber requisições GET para obter informações sobre o Pokémon "ditto". O teste foi executado utilizando o Apache JMeter, com 20 threads simultâneas realizando as requisições.
+
+Volume Total de Requisições:
+O teste gerou um total de 20 requisições GET para a URL https://pokeapi.co/api/v2/pokemon/ditto.
+
+Throughput Estimado:
+Com base nos resultados obtidos, o throughput estimado é de aproximadamente 1,25 requisições por segundo.
+
+Latência:
+- p50 (mediana): 22 ms
+- p90: 25 ms
+- p95: 26 ms
+- p99: 646 ms
+
+Taxa de Erros:
+Não houve nenhuma falha nas requisições. Todas as 20 requisições foram bem-sucedidas, com código de resposta 200 OK.
+
+Principais Gargalos Identificados:
+Não foram identificados gargalos significativos durante o teste. As respostas da API foram consistentes e rápidas, com a maioria das requisições respondidas em menos de 25 ms.
+
+Impacto Potencial em Ambiente de Produção:
+Com base nos resultados obtidos, a API da PokeAPI parece ser capaz de suportar uma carga de trabalho significativa sem apresentar problemas de desempenho. O tempo de resposta mediano de 22 ms indica que a API é responsiva e pode atender a um grande número de requisições simultâneas sem impacto significativo no desempenho.
+
+Recomendações Técnicas:
+1. Monitorar de perto a API da PokeAPI em produção, especialmente durante períodos de pico de tráfego, para garantir que o desempenho permaneça dentro dos padrões aceitáveis.
+2. Considerar a implementação de mecanismos de cache e otimização de consultas para minimizar a carga no servidor, especialmente para consultas recorrentes.
+3. Implementar testes de estresse regulares, utilizando o Apache JMeter ou outras ferramentas, para identificar possíveis regressões de desempenho e proativamente resolver problemas.
+4. Estabelecer limites de aceitação claros para latência, throughput e taxa de erros, e definir planos de ação para caso esses limites sejam excedidos.
+5. Manter a equipe de desenvolvimento e operações (DevOps) ciente dos resultados dos testes de estresse, para que possam planejar e dimensionar adequadamente a infraestrutura de produção.
