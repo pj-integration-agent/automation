@@ -1,25 +1,30 @@
-Com base na imagem da página web do ParaBank, aqui estão as User Stories completas:
+Com base na imagem da página web do ParaBank, podemos gerar as seguintes User Stories:
 
-US01: Como cliente do ParaBank, eu quero acessar minhas informações de login para poder realizar transações online de forma segura.
-Descrição: O usuário deve ser capaz de fazer login no sistema do ParaBank inserindo seu nome de usuário e senha.
-Critérios de Aceitação:
-- O sistema deve exibir uma tela de login com campos para inserir o nome de usuário e senha.
-- O sistema deve autenticar as credenciais fornecidas e conceder acesso ao usuário, caso estejam corretas.
-- O sistema deve exibir uma mensagem de erro caso as credenciais sejam inválidas.
+US01: Como cliente, eu quero poder fazer login na minha conta para acessar meus serviços bancários online.
+- Descrição: A página web deve apresentar um formulário de login para que os clientes possam inserir seu nome de usuário e senha e acessar sua conta.
+- Critérios de Aceitação:
+  - O campo de nome de usuário deve aceitar apenas entradas válidas.
+  - O campo de senha deve aceitar apenas entradas válidas e estar mascarado.
+  - Ao clicar no botão "LOG IN", o sistema deve autenticar as credenciais e conceder acesso à conta do cliente.
+  - Caso as credenciais sejam inválidas, o sistema deve exibir uma mensagem de erro amigável.
 
-US02: Como cliente do ParaBank, eu quero realizar saques em caixas eletrônicos para poder retirar dinheiro da minha conta.
-Descrição: O usuário deve ser capaz de sacar fundos de sua conta bancária usando os caixas eletrônicos do ParaBank.
-Critérios de Aceitação:
-- O sistema deve exibir as opções de serviços de caixa eletrônico, incluindo a opção de saque.
-- O usuário deve poder selecionar a opção de saque e inserir o valor a ser retirado.
-- O sistema deve validar se o usuário possui saldo suficiente na conta para realizar o saque.
-- O sistema deve processar o saque e atualizar o saldo da conta do usuário.
+US02: Como cliente, eu quero ter acesso a serviços bancários básicos através de minha conta online para realizar transações financeiras.
+- Descrição: A página web deve apresentar uma seção de "Serviços Online" com as principais funcionalidades bancárias, como saque, transferência de fundos, consulta de saldo e histórico de conta.
+- Critérios de Aceitação:
+  - A seção de "Serviços Online" deve listar as opções de "Bill Pay", "Account History", "Transfer Funds" e outras funcionalidades relevantes.
+  - Ao clicar em cada opção, o sistema deve direcionar o cliente para a tela correspondente e permitir a realização da transação.
+  - O sistema deve validar as informações inseridas pelo cliente e exibir mensagens de confirmação ou erro, conforme apropriado.
 
-US03: Como cliente do ParaBank, eu quero realizar transferências de fundos entre minhas contas para poder gerenciar meus recursos financeiros.
-Descrição: O usuário deve poder transferir fundos entre suas diferentes contas bancárias do ParaBank.
-Critérios de Aceitação:
-- O sistema deve exibir as opções de serviços online, incluindo a opção de transferência de fundos.
-- O usuário deve poder selecionar a opção de transferência e escolher a conta de origem e destino.
-- O usuário deve poder inserir o valor a ser transferido.
-- O sistema deve validar se o usuário possui saldo suficiente na conta de origem para realizar a transferência.
-- O sistema deve processar a transferência e atualizar os saldos das contas envolvidas.
+US03: Como cliente, eu quero ter acesso a serviços bancários básicos através de caixas eletrônicos (ATM) para realizar transações financeiras presencialmente.
+- Descrição: A página web deve apresentar uma seção de "Serviços ATM" com as principais funcionalidades bancárias disponíveis nos caixas eletrônicos, como saque, transferência de fundos, consulta de saldo e depósitos.
+- Critérios de Aceitação:
+  - A seção de "Serviços ATM" deve listar as opções de "Withdraw Funds", "Transfer Funds", "Check Balances" e "Make Deposits".
+  - Ao clicar em cada opção, o sistema deve fornecer instruções claras sobre como realizar a transação nos caixas eletrônicos.
+  - O sistema deve validar as informações inseridas pelo cliente e exibir mensagens de confirmação ou erro, conforme apropriado.
+
+US04: Como cliente, eu quero ter acesso a notícias e atualizações sobre a instituição bancária para ficar informado sobre mudanças e novidades.
+- Descrição: A página web deve apresentar uma seção de "Últimas Notícias" com informações relevantes sobre a ParaBank, como reaberturas de agências, novos serviços online e outras atualizações importantes.
+- Critérios de Aceitação:
+  - A seção de "Últimas Notícias" deve exibir informações atualizadas e relevantes para os clientes.
+  - Ao clicar na opção "READ MORE", o sistema deve direcionar o cliente para uma página com mais detalhes sobre a notícia.
+  - O sistema deve manter a seção de notícias atualizada com as informações mais recentes.
