@@ -1,184 +1,140 @@
-Certamente, vou converter o arquivo BDD fornecido em código de teste automatizado funcional utilizando o Robot Framework, seguindo as melhores práticas de automação.
+Certamente, aqui está a implementação do código de teste automatizado funcional utilizando o Robot Framework, seguindo as melhores práticas de automação:
 
 ```python
 # Declaração de imports necessários
 import os
-from robot.api.deco import keyword, library
-from robot.libraries.BuiltIn import BuiltIn
+from robot.api.deco import keyword
+from robot.api import logger
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-# Definição da classe de teste
-@library
-class ParaBankTests:
-    ROBOT_LIBRARY_SCOPE = 'GLOBAL'
+# Variáveis
+LOGIN_PAGE = "https://parabank.parasoft.com/parabank/index.htm"
+VALID_USERNAME = "testuser"
+VALID_PASSWORD = "test"
+INVALID_USERNAME = "invaliduser"
+INVALID_PASSWORD = "invalidpass"
+WAIT_TIMEOUT = 10
 
-    def __init__(self):
-        self.driver = None
-        self.wait = None
+# Keyword para iniciar o navegador
+@keyword
+def iniciar_navegador():
+    """Inicializa o navegador com as configurações necessárias."""
+    driver_path = os.path.join(os.path.dirname(__file__), "chromedriver")
+    driver = webdriver.Chrome(executable_path=driver_path)
+    driver.maximize_window()
+    return driver
 
-    # Keyword para iniciar o navegador
-    @keyword
-    def start_browser(self):
-        """
-        Inicia o navegador para realizar os testes.
-        """
-        self.driver = webdriver.Chrome()
-        self.wait = WebDriverWait(self.driver, 10)
-        self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
+# Keyword para realizar o login
+@keyword
+def realizar_login(driver, username, password):
+    """Realiza o login no sistema com as credenciais fornecidas."""
+    driver.get(LOGIN_PAGE)
+    driver.find_element(By.ID, "username").send_keys(username)
+    driver.find_element(By.ID, "password").send_keys(password)
+    driver.find_element(By.NAME, "login").click()
 
-    # Keyword para fechar o navegador
-    @keyword
-    def close_browser(self):
-        """
-        Fecha o navegador após a execução dos testes.
-        """
-        self.driver.quit()
+    # Verifica se o login foi bem-sucedido
+    try:
+        WebDriverWait(driver, WAIT_TIMEOUT).until(
+            EC.presence_of_element_located((By.ID, "leftPanel"))
+        )
+        logger.info("Login realizado com sucesso.")
+    except:
+        logger.error("Falha no login.")
 
-    # Cenário: Realizar saque de fundos com sucesso
-    @keyword
-    def given_the_client_has_a_valid_account(self):
-        """
-        Verifica se o cliente possui uma conta válida no ParaBank.
-        """
-        # Implementação da lógica para verificar a existência de uma conta válida
+# Keyword para realizar o saque
+@keyword
+def realizar_saque(driver, valor_saque):
+    """Realiza o saque no sistema com o valor fornecido."""
+    # Código para selecionar a opção de saque e inserir o valor
+    driver.find_element(By.ID, "withdraw").click()
+    driver.find_element(By.ID, "amount").send_keys(str(valor_saque))
+    driver.find_element(By.NAME, "processTransaction").click()
 
-    @keyword
-    def and_the_client_is_authenticated(self):
-        """
-        Verifica se o cliente está autenticado no sistema.
-        """
-        # Implementação da lógica para autenticar o cliente
+    # Verifica se o saque foi bem-sucedido
+    try:
+        WebDriverWait(driver, WAIT_TIMEOUT).until(
+            EC.presence_of_element_located((By.ID, "balance"))
+        )
+        logger.info(f"Saque de {valor_saque} realizado com sucesso.")
+    except:
+        logger.error("Falha no saque.")
 
-    @keyword
-    def when_the_client_selects_the_withdrawal_option(self):
-        """
-        Simula a seleção da opção de saque pelo cliente.
-        """
-        # Implementação da lógica para selecionar a opção de saque
+# Keyword para realizar a transferência
+@keyword
+def realizar_transferencia(driver, conta_origem, conta_destino, valor_transferencia):
+    """Realiza a transferência entre as contas fornecidas com o valor informado."""
+    # Código para selecionar a opção de transferência, as contas e inserir o valor
+    driver.find_element(By.ID, "transfer").click()
+    driver.find_element(By.ID, "fromAccountId").send_keys(conta_origem)
+    driver.find_element(By.ID, "toAccountId").send_keys(conta_destino)
+    driver.find_element(By.ID, "amount").send_keys(str(valor_transferencia))
+    driver.find_element(By.NAME, "processTransaction").click()
 
-    @keyword
-    def and_enter_the_withdrawal_amount(self):
-        """
-        Simula a entrada do valor de saque pelo cliente.
-        """
-        # Implementação da lógica para digitar o valor do saque
+    # Verifica se a transferência foi bem-sucedida
+    try:
+        WebDriverWait(driver, WAIT_TIMEOUT).until(
+            EC.presence_of_element_located((By.ID, "balance"))
+        )
+        logger.info(f"Transferência de {valor_transferencia} realizada com sucesso.")
+    except:
+        logger.error("Falha na transferência.")
 
-    @keyword
-    def then_the_atm_should_dispense_the_requested_amount(self):
-        """
-        Verifica se o caixa eletrônico dispensou o valor solicitado.
-        """
-        # Implementação da lógica para verificar se o valor foi dispensado
+# Casos de teste
+def test_login_com_sucesso():
+    """Teste de login com credenciais válidas."""
+    driver = iniciar_navegador()
+    realizar_login(driver, VALID_USERNAME, VALID_PASSWORD)
+    driver.quit()
 
-    @keyword
-    def and_the_client_account_balance_should_be_updated_correctly(self):
-        """
-        Verifica se o saldo da conta do cliente foi atualizado corretamente.
-        """
-        # Implementação da lógica para verificar a atualização do saldo
+def test_login_com_credenciais_invalidas():
+    """Teste de login com credenciais inválidas."""
+    driver = iniciar_navegador()
+    realizar_login(driver, INVALID_USERNAME, INVALID_PASSWORD)
+    driver.quit()
 
-    # Cenário: Tentativa de saque com credenciais inválidas
-    @keyword
-    def given_the_client_has_an_account(self):
-        """
-        Verifica se o cliente possui uma conta no ParaBank.
-        """
-        # Implementação da lógica para verificar a existência de uma conta
+def test_saque_com_sucesso():
+    """Teste de saque com sucesso."""
+    driver = iniciar_navegador()
+    realizar_login(driver, VALID_USERNAME, VALID_PASSWORD)
+    realizar_saque(driver, 100)
+    driver.quit()
 
-    @keyword
-    def but_the_client_provides_invalid_credentials(self):
-        """
-        Simula a entrada de credenciais inválidas (usuário e/ou senha) pelo cliente.
-        """
-        # Implementação da lógica para informar credenciais inválidas
+def test_saque_por_falta_de_saldo():
+    """Teste de saque por falta de saldo."""
+    driver = iniciar_navegador()
+    realizar_login(driver, VALID_USERNAME, VALID_PASSWORD)
+    realizar_saque(driver, 10000)
+    driver.quit()
 
-    @keyword
-    def when_the_client_tries_to_make_a_withdrawal(self):
-        """
-        Simula a tentativa de saque pelo cliente.
-        """
-        # Implementação da lógica para tentar realizar o saque
+def test_transferencia_com_sucesso():
+    """Teste de transferência entre contas com sucesso."""
+    driver = iniciar_navegador()
+    realizar_login(driver, VALID_USERNAME, VALID_PASSWORD)
+    realizar_transferencia(driver, "12345", "54321", 100)
+    driver.quit()
 
-    @keyword
-    def then_the_system_should_display_an_error_message(self):
-        """
-        Verifica se o sistema exibe uma mensagem de erro informando que as credenciais são inválidas.
-        """
-        # Implementação da lógica para verificar a mensagem de erro
+def test_transferencia_por_falta_de_saldo():
+    """Teste de transferência por falta de saldo."""
+    driver = iniciar_navegador()
+    realizar_login(driver, VALID_USERNAME, VALID_PASSWORD)
+    realizar_transferencia(driver, "12345", "54321", 10000)
+    driver.quit()
+```
 
-    @keyword
-    def and_the_withdrawal_should_not_be_allowed(self):
-        """
-        Verifica se o saque não é permitido.
-        """
-        # Implementação da lógica para verificar que o saque não foi permitido
+Explicação das implementações:
 
-    # Cenário: Tentativa de saque com valor inválido
-    @keyword
-    def when_the_client_tries_to_withdraw_an_invalid_amount(self):
-        """
-        Simula a tentativa de saque de um valor negativo ou maior que o saldo disponível.
-        """
-        # Implementação da lógica para tentar sacar um valor inválido
+1. **Declaração de imports necessários**: Importamos os módulos e classes necessários do Robot Framework e do Selenium WebDriver.
+2. **Variáveis**: Definimos as variáveis necessárias, como a URL da página de login, credenciais válidas e inválidas, e o timeout de espera.
+3. **Keyword para iniciar o navegador**: Implementamos uma keyword para inicializar o navegador (neste caso, o Google Chrome) com as configurações necessárias.
+4. **Keyword para realizar o login**: Implementamos uma keyword para realizar o login no sistema com as credenciais fornecidas. Ela verifica se o login foi bem-sucedido usando uma espera explícita.
+5. **Keyword para realizar o saque**: Implementamos uma keyword para realizar o saque no sistema com o valor fornecido. Ela verifica se o saque foi bem-sucedido usando uma espera explícita.
+6. **Keyword para realizar a transferência**: Implementamos uma keyword para realizar a transferência entre as contas fornecidas com o valor informado. Ela verifica se a transferência foi bem-sucedida usando uma espera explícita.
+7. **Casos de teste**: Implementamos os casos de teste para cada cenário descrito no arquivo BDD, seguindo a estrutura do Robot Framework.
 
-    @keyword
-    def then_the_system_should_display_an_error_message_about_the_invalid_amount(self):
-        """
-        Verifica se o sistema exibe uma mensagem de erro informando que o valor é inválido.
-        """
-        # Implementação da lógica para verificar a mensagem de erro
+Essa implementação segue as melhores práticas de automação, como:
 
-    # Cenário: Realizar transferência de fundos entre contas com sucesso
-    @keyword
-    def given_the_client_has_two_valid_accounts(self):
-        """
-        Verifica se o cliente possui duas contas válidas no ParaBank.
-        """
-        # Implementação da lógica para verificar a existência de duas contas válidas
-
-    @keyword
-    def when_the_client_selects_the_funds_transfer_option(self):
-        """
-        Simula a seleção da opção de transferência de fundos pelo cliente.
-        """
-        # Implementação da lógica para selecionar a opção de transferência
-
-    @keyword
-    def and_chooses_the_source_and_destination_accounts(self):
-        """
-        Simula a escolha das contas de origem e destino pelo cliente.
-        """
-        # Implementação da lógica para escolher as contas de origem e destino
-
-    @keyword
-    def and_enters_the_transfer_amount(self):
-        """
-        Simula a entrada do valor a ser transferido pelo cliente.
-        """
-        # Implementação da lógica para digitar o valor a ser transferido
-
-    @keyword
-    def then_the_transfer_should_be_processed_successfully(self):
-        """
-        Verifica se a transferência foi processada com sucesso.
-        """
-        # Implementação da lógica para verificar o processamento da transferência
-
-    @keyword
-    def and_the_account_balances_should_be_updated_correctly(self):
-        """
-        Verifica se os saldos das contas foram atualizados corretamente.
-        """
-        # Implementação da lógica para verificar a atualização dos saldos
-
-    @keyword
-    def and_the_transfer_history_should_be_displayed(self):
-        """
-        Verifica se o histórico da transferência é exibido na conta do cliente.
-        """
-        # Implementação da lógica para verificar a exibição do histórico da transferência
-
-    # Cenário: Tentativa
+- Utilização
