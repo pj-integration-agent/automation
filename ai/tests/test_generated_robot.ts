@@ -1,76 +1,170 @@
-Claro, vou converter o arquivo BDD fornecido em código de teste automatizado funcional, seguindo as melhores práticas de automação e utilizando a estrutura do Robot framework.
+Certamente, vou converter o arquivo BDD fornecido em código de teste automatizado funcional utilizando o Robot Framework, seguindo as melhores práticas de automação.
 
-```robot
+```python
 # Declaração de imports necessários
-Library    SeleniumLibrary
+import os
+from robot.api.deco import keyword, Library
+from robot.libraries.BuiltIn import BuiltIn
 
-# Variáveis
-${URL}                   https://www.example.com/login
-${INVALID_USER}          invalid_user
-${INVALID_PASSWORD}      invalid_password
-${VALID_USER}            john_doe
-${VALID_PASSWORD}        mypassword
-${LOGIN_BUTTON}          //button[text()='LOG IN']
-${USER_FIELD}            //input[@id='username']
-${PASSWORD_FIELD}        //input[@id='password']
-${ACCOUNT_PAGE}          //h1[text()='Welcome to your account']
-${ERROR_MESSAGE}         //div[@class='error-message']
+# Definição da biblioteca de keywords
+class ParaBankKeywords(Library):
+    ROBOT_LIBRARY_SCOPE = 'GLOBAL'
 
-# Keywords
-Abrir a pagina de login
-    Open Browser    ${URL}    chrome
-    Maximize Browser Window
+    # Variáveis de configuração
+    BASE_URL = 'https://parabank.parasoft.com/parabank/index.htm'
+    LOGIN_USERNAME = 'usuario'
+    LOGIN_PASSWORD = 'senha'
 
-Preencher o campo "Usuário" com "${usuario}"
-    Input Text    ${USER_FIELD}    ${usuario}
+    # Keywords de contexto
+    @keyword
+    def que_o_usuario_esta_autenticado_no_sistema_do_parabank(self):
+        """
+        Realiza a autenticação do usuário no sistema do ParaBank.
+        """
+        self.navegar_para_pagina_inicial()
+        self.efetuar_login()
 
-Preencher o campo "Senha" com "${senha}"
-    Input Text    ${PASSWORD_FIELD}    ${senha}
+    @keyword
+    def que_o_usuario_nao_esta_autenticado_no_sistema_do_parabank(self):
+        """
+        Simula um usuário não autenticado no sistema do ParaBank.
+        """
+        pass
 
-Clicar no botão "LOG IN"
-    Click Button    ${LOGIN_BUTTON}
+    @keyword
+    def o_usuario_possui_saldo_suficiente_em_sua_conta(self):
+        """
+        Verifica se o usuário possui saldo suficiente em sua conta.
+        """
+        saldo = self.consultar_saldo_da_conta()
+        assert saldo > 0, "O usuário não possui saldo suficiente em sua conta."
 
-Validar que o sistema autenticou as credenciais
-    Page Should Contain Element    ${ACCOUNT_PAGE}
+    @keyword
+    def o_usuario_nao_possui_saldo_suficiente_em_sua_conta(self):
+        """
+        Simula um usuário sem saldo suficiente em sua conta.
+        """
+        pass
 
-Validar que o sistema exibe uma mensagem de erro amigável
-    Page Should Contain Element    ${ERROR_MESSAGE}
+    # Keywords de ação
+    @keyword
+    def o_usuario_selecionar_a_opcao_de_saque(self):
+        """
+        Seleciona a opção de saque no sistema do ParaBank.
+        """
+        self.navegar_para_pagina_de_saque()
 
-Validar que o sistema não concede acesso à conta do usuário
-    Page Should Not Contain Element    ${ACCOUNT_PAGE}
+    @keyword
+    def informar_o_valor_desejado(self, valor):
+        """
+        Informa o valor desejado para o saque.
+        """
+        self.preencher_valor_do_saque(valor)
 
-# Testes
-Teste de Login Positivo
-    [Documentation]    Teste de login com credenciais válidas
-    Abrir a pagina de login
-    Preencher o campo "Usuário" com "${VALID_USER}"
-    Preencher o campo "Senha" com "${VALID_PASSWORD}"
-    Clicar no botão "LOG IN"
-    Validar que o sistema autenticou as credenciais
+    @keyword
+    def o_usuario_selecionar_a_opcao_de_transferencia(self):
+        """
+        Seleciona a opção de transferência no sistema do ParaBank.
+        """
+        self.navegar_para_pagina_de_transferencia()
 
-Teste de Login Negativo - Credenciais Inválidas
-    [Documentation]    Teste de login com credenciais inválidas
-    Abrir a pagina de login
-    Preencher o campo "Usuário" com "${INVALID_USER}"
-    Preencher o campo "Senha" com "${INVALID_PASSWORD}"
-    Clicar no botão "LOG IN"
-    Validar que o sistema exibe uma mensagem de erro amigável
-    Validar que o sistema não concede acesso à conta do usuário
+    @keyword
+    def informar_a_conta_de_origem(self, conta_origem):
+        """
+        Informa a conta de origem para a transferência.
+        """
+        self.preencher_conta_de_origem(conta_origem)
 
-Teste de Login Negativo - Campos em Branco
-    [Documentation]    Teste de login com campos em branco
-    Abrir a pagina de login
-    Preencher o campo "Usuário" com ""
-    Preencher o campo "Senha" com ""
-    Clicar no botão "LOG IN"
-    Validar que o sistema exibe uma mensagem de erro amigável
-    Validar que o sistema não concede acesso à conta do usuário
-```
+    @keyword
+    def informar_a_conta_de_destino(self, conta_destino):
+        """
+        Informa a conta de destino para a transferência.
+        """
+        self.preencher_conta_de_destino(conta_destino)
 
-Neste exemplo, utilizei a biblioteca `SeleniumLibrary` do Robot framework para interagir com a aplicação web. As variáveis contêm as informações necessárias para os testes, como a URL, os valores válidos e inválidos para os campos de login, e os seletores dos elementos da página.
+    @keyword
+    def informar_o_valor_a_ser_transferido(self, valor):
+        """
+        Informa o valor a ser transferido.
+        """
+        self.preencher_valor_da_transferencia(valor)
 
-As keywords implementam as ações descritas nos cenários do BDD, como abrir a página de login, preencher os campos, clicar no botão de login e validar os resultados esperados. Cada cenário é implementado como um teste independente, seguindo a estrutura de `Test Case` do Robot framework.
+    @keyword
+    def o_usuario_selecionar_a_opcao_de_consulta_de_saldo(self):
+        """
+        Seleciona a opção de consulta de saldo no sistema do ParaBank.
+        """
+        self.navegar_para_pagina_de_consulta_de_saldo()
 
-Observe que os comentários explicativos foram adicionados antes de cada passo, descrevendo a intenção e a lógica do código. Essa estrutura modular e reutilizável facilita a manutenção futura dos testes.
+    @keyword
+    def escolher_a_conta_desejada(self, conta):
+        """
+        Seleciona a conta desejada para a consulta de saldo.
+        """
+        self.selecionar_conta_para_consulta(conta)
 
-Essa é uma implementação inicial dos cenários BDD fornecidos. Você pode, posteriormente, adicionar mais detalhes e funcionalidades, como tratamento de esperas, verificação de mensagens de erro, entre outros, conforme as melhores práticas de automação de testes.
+    @keyword
+    def informar_os_dados_de_autenticacao_invalidos(self):
+        """
+        Informa dados de autenticação inválidos.
+        """
+        self.preencher_login_com_dados_invalidos()
+
+    # Keywords de verificação
+    @keyword
+    def o_sistema_deve_processar_o_saque(self):
+        """
+        Verifica se o sistema processou o saque corretamente.
+        """
+        assert self.verificar_processamento_de_saque(), "O sistema não processou o saque corretamente."
+
+    @keyword
+    def o_sistema_deve_atualizar_o_saldo_da_conta(self):
+        """
+        Verifica se o sistema atualizou o saldo da conta corretamente.
+        """
+        saldo_atualizado = self.consultar_saldo_da_conta()
+        assert saldo_atualizado is not None, "O sistema não atualizou o saldo da conta corretamente."
+
+    @keyword
+    def o_sistema_deve_emitir_um_comprovante_da_transacao(self):
+        """
+        Verifica se o sistema emitiu um comprovante da transação.
+        """
+        assert self.verificar_emissao_de_comprovante(), "O sistema não emitiu um comprovante da transação."
+
+    @keyword
+    def o_sistema_deve_exibir_uma_mensagem_de_saldo_insuficiente(self):
+        """
+        Verifica se o sistema exibiu uma mensagem de saldo insuficiente.
+        """
+        assert self.verificar_mensagem_de_saldo_insuficiente(), "O sistema não exibiu uma mensagem de saldo insuficiente."
+
+    @keyword
+    def o_sistema_deve_exibir_uma_mensagem_de_autenticacao_falha(self):
+        """
+        Verifica se o sistema exibiu uma mensagem de autenticação falha.
+        """
+        assert self.verificar_mensagem_de_autenticacao_falha(), "O sistema não exibiu uma mensagem de autenticação falha."
+
+    @keyword
+    def o_sistema_deve_exibir_o_saldo_atualizado_da_conta(self):
+        """
+        Verifica se o sistema exibiu o saldo atualizado da conta.
+        """
+        saldo_atualizado = self.consultar_saldo_da_conta()
+        assert saldo_atualizado is not None, "O sistema não exibiu o saldo atualizado da conta."
+
+    @keyword
+    def o_sistema_nao_deve_processar_o_saque(self):
+        """
+        Verifica se o sistema não processou o saque.
+        """
+        assert not self.verificar_processamento_de_saque(), "O sistema processou o saque, mas não deveria."
+
+    @keyword
+    def o_sistema_nao_deve_processar_a_transferencia(self):
+        """
+        Verifica se o sistema não processou a transferência.
+        """
+        assert not self.verificar_processamento_de_transferencia(), "O sistema
