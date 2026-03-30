@@ -1,114 +1,110 @@
-Título da User Story: US01 - Login na conta
+Título da User Story: US01 - Saque de Fundos
 
 cenario_bdd:
-  nome: Usuário realiza login com sucesso
+  nome: Realizar saque de fundos com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Login na conta
-    Scenario: Usuário realiza login com sucesso
-      Given que o usuário esteja na página de login
-      When o usuário preencher o campo "Usuário" com "john_doe"
-      And o usuário preencher o campo "Senha" com "mypassword"
-      And o usuário clicar no botão "LOG IN"
-      Then o sistema deve autenticar as credenciais
-      And conceder acesso à conta do usuário
+    Feature: Saque de Fundos
+    Scenario: Realizar saque de fundos com sucesso
+      Given que o usuário está autenticado no sistema do ParaBank
+      And o usuário possui saldo suficiente em sua conta
+      When o usuário selecionar a opção de saque
+      And informar o valor desejado
+      Then o sistema deve processar o saque
+      And atualizar o saldo da conta
+      And emitir um comprovante da transação
 
 cenario_bdd:
-  nome: Usuário preenche campos de login com informações inválidas
+  nome: Saque com saldo insuficiente
   tipo: negativo
   gherkin: |
-    Feature: Login na conta
-    Scenario: Usuário preenche campos de login com informações inválidas
-      Given que o usuário esteja na página de login
-      When o usuário preencher o campo "Usuário" com uma entrada inválida
-      And o usuário preencher o campo "Senha" com uma entrada inválida
-      And o usuário clicar no botão "LOG IN"
-      Then o sistema deve exibir uma mensagem de erro amigável
-      And não conceder acesso à conta do usuário
+    Feature: Saque de Fundos
+    Scenario: Saque com saldo insuficiente
+      Given que o usuário está autenticado no sistema do ParaBank
+      And o usuário não possui saldo suficiente em sua conta
+      When o usuário selecionar a opção de saque
+      And informar o valor desejado
+      Then o sistema deve exibir uma mensagem de saldo insuficiente
+      And não deve processar o saque
 
 cenario_bdd:
-  nome: Usuário deixa campos de login em branco
+  nome: Saque com dados de autenticação inválidos
   tipo: negativo
   gherkin: |
-    Feature: Login na conta
-    Scenario: Usuário deixa campos de login em branco
-      Given que o usuário esteja na página de login
-      When o usuário não preencher o campo "Usuário"
-      And o usuário não preencher o campo "Senha"
-      And o usuário clicar no botão "LOG IN"
-      Then o sistema deve exibir uma mensagem de erro amigável
-      And não conceder acesso à conta do usuário
+    Feature: Saque de Fundos
+    Scenario: Saque com dados de autenticação inválidos
+      Given que o usuário não está autenticado no sistema do ParaBank
+      When o usuário selecionar a opção de saque
+      And informar os dados de autenticação inválidos
+      Then o sistema deve exibir uma mensagem de autenticação falha
+      And não deve processar o saque
 
-Título da User Story: US02 - Serviços bancários online
+Título da User Story: US02 - Transferência de Fundos
 
 cenario_bdd:
-  nome: Usuário acessa serviços bancários online
+  nome: Realizar transferência de fundos com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Serviços bancários online
-    Scenario: Usuário acessa serviços bancários online
-      Given que o usuário esteja logado em sua conta
-      When o usuário clicar na seção "Serviços Online"
-      Then o sistema deve exibir as opções de "Bill Pay", "Account History", "Transfer Funds" e outras funcionalidades relevantes
-      And o usuário deve poder realizar transações financeiras através dessas opções
+    Feature: Transferência de Fundos
+    Scenario: Realizar transferência de fundos com sucesso
+      Given que o usuário está autenticado no sistema do ParaBank
+      And o usuário possui saldo suficiente na conta de origem
+      When o usuário selecionar a opção de transferência
+      And informar a conta de origem
+      And informar a conta de destino
+      And informar o valor a ser transferido
+      Then o sistema deve processar a transferência
+      And atualizar os saldos das contas envolvidas
+      And emitir um comprovante da transação
 
 cenario_bdd:
-  nome: Usuário insere informações inválidas durante uma transação
+  nome: Transferência com saldo insuficiente
   tipo: negativo
   gherkin: |
-    Feature: Serviços bancários online
-    Scenario: Usuário insere informações inválidas durante uma transação
-      Given que o usuário esteja logado em sua conta
-      When o usuário clicar na opção "Transfer Funds"
-      And o usuário preencher os campos com informações inválidas
-      And o usuário clicar no botão de confirmação
-      Then o sistema deve exibir uma mensagem de erro
-      And não deve realizar a transação
+    Feature: Transferência de Fundos
+    Scenario: Transferência com saldo insuficiente
+      Given que o usuário está autenticado no sistema do ParaBank
+      And o usuário não possui saldo suficiente na conta de origem
+      When o usuário selecionar a opção de transferência
+      And informar a conta de origem
+      And informar a conta de destino
+      And informar o valor a ser transferido
+      Then o sistema deve exibir uma mensagem de saldo insuficiente
+      And não deve processar a transferência
 
 cenario_bdd:
-  nome: Usuário não possui saldo suficiente para realizar uma transação
+  nome: Transferência com dados de autenticação inválidos
   tipo: negativo
   gherkin: |
-    Feature: Serviços bancários online
-    Scenario: Usuário não possui saldo suficiente para realizar uma transação
-      Given que o usuário esteja logado em sua conta
-      When o usuário clicar na opção "Withdraw Funds"
-      And o usuário tentar sacar um valor maior do que seu saldo
-      And o usuário clicar no botão de confirmação
-      Then o sistema deve exibir uma mensagem de erro informando saldo insuficiente
-      And não deve realizar a transação
+    Feature: Transferência de Fundos
+    Scenario: Transferência com dados de autenticação inválidos
+      Given que o usuário não está autenticado no sistema do ParaBank
+      When o usuário selecionar a opção de transferência
+      And informar os dados de autenticação inválidos
+      Then o sistema deve exibir uma mensagem de autenticação falha
+      And não deve processar a transferência
 
-Título da User Story: US03 - Serviços bancários em caixas eletrônicos (ATM)
+Título da User Story: US03 - Consulta de Saldo
 
 cenario_bdd:
-  nome: Usuário acessa serviços bancários em caixas eletrônicos
+  nome: Consultar saldo de conta com sucesso
   tipo: positivo
   gherkin: |
-    Feature: Serviços bancários em caixas eletrônicos (ATM)
-    Scenario: Usuário acessa serviços bancários em caixas eletrônicos
-      Given que o usuário esteja na seção "Serviços ATM"
-      When o usuário clicar nas opções de "Withdraw Funds", "Transfer Funds", "Check Balances" ou "Make Deposits"
-      Then o sistema deve fornecer instruções claras sobre como realizar a transação no caixa eletrônico
+    Feature: Consulta de Saldo
+    Scenario: Consultar saldo de conta com sucesso
+      Given que o usuário está autenticado no sistema do ParaBank
+      When o usuário selecionar a opção de consulta de saldo
+      And escolher a conta desejada
+      Then o sistema deve exibir o saldo atualizado da conta
 
 cenario_bdd:
-  nome: Usuário insere informações inválidas durante uma transação em caixa eletrônico
+  nome: Consulta de saldo com dados de autenticação inválidos
   tipo: negativo
   gherkin: |
-    Feature: Serviços bancários em caixas eletrônicos (ATM)
-    Scenario: Usuário insere informações inválidas durante uma transação em caixa eletrônico
-      Given que o usuário esteja na seção "Serviços ATM"
-      When o usuário clicar na opção "Withdraw Funds"
-      And o usuário inserir informações inválidas no caixa eletrônico
-      Then o sistema deve exibir uma mensagem de erro
-      And não deve realizar a transação
-
-cenario_bdd:
-  nome: Usuário não possui saldo suficiente para realizar uma transação em caixa eletrônico
-  tipo: negativo
-  gherkin: |
-    Feature: Serviços bancários em caixas eletrônicos (ATM)
-    Scenario: Usuário não possui saldo suficiente para realizar uma transação em caixa eletrônico
-      Given que o usuário esteja na seção "Serviços ATM"
-      When o usuário clicar na opção "Withdraw Funds"
-      And o usuário tentar sacar um valor maior do que seu saldo
-      Then o sistema
+    Feature: Consulta de Saldo
+    Scenario: Consulta de saldo com dados de autenticação inválidos
+      Given que o usuário não está autenticado no sistema do ParaBank
+      When o usuário selecionar a opção de consulta de saldo
+      And informar os dados de autenticação inválidos
+      Then o sistema deve exibir uma mensagem de autenticação falha
+      And não deve exibir o saldo da conta
