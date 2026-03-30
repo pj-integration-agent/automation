@@ -1,32 +1,32 @@
-Relatório Técnico - Teste de Estresse com Apache JMeter
+Relatório Técnico - Teste de Stress em PokéAPI
 
 Resumo do Cenário de Teste:
-O teste de estresse realizado avaliou a resposta da API da PokeAPI ao receber requisições GET para obter informações sobre o Pokémon "ditto". O teste foi executado utilizando o Apache JMeter, com 20 threads simultâneas realizando as requisições.
+O teste de stress realizado analisou o comportamento da API PokéAPI sob uma carga de trabalho intensiva, simulando múltiplas requisições GET concorrentes para obter informações sobre o Pokémon "ditto".
 
 Volume Total de Requisições:
 O teste gerou um total de 20 requisições GET para a URL https://pokeapi.co/api/v2/pokemon/ditto.
 
 Throughput Estimado:
-Com base nos resultados obtidos, o throughput estimado é de aproximadamente 1,25 requisições por segundo.
+Com base nos resultados observados, o throughput estimado para este cenário é de aproximadamente 1 requisição por segundo.
 
-Latência:
-- p50 (mediana): 22 ms
-- p90: 25 ms
-- p95: 26 ms
-- p99: 646 ms
+Latência p50, p90, p95 e p99:
+- Latência p50 (mediana): 28ms
+- Latência p90: 38ms
+- Latência p95: 41ms
+- Latência p99: 47ms
 
 Taxa de Erros:
-Não houve nenhuma falha nas requisições. Todas as 20 requisições foram bem-sucedidas, com código de resposta 200 OK.
+Não foi observada nenhuma falha nas requisições. Todas as 20 requisições retornaram o código de status HTTP 200 (OK).
 
 Principais Gargalos Identificados:
-Não foram identificados gargalos significativos durante o teste. As respostas da API foram consistentes e rápidas, com a maioria das requisições respondidas em menos de 25 ms.
+Não foram identificados gargalos significativos neste cenário de teste. As respostas da API foram entregues de forma rápida e consistente.
 
 Impacto Potencial em Ambiente de Produção:
-Com base nos resultados obtidos, a API da PokeAPI parece ser capaz de suportar uma carga de trabalho significativa sem apresentar problemas de desempenho. O tempo de resposta mediano de 22 ms indica que a API é responsiva e pode atender a um grande número de requisições simultâneas sem impacto significativo no desempenho.
+Considerando o baixo tempo de resposta e a inexistência de erros, o impacto da carga de trabalho exercida neste teste de stress seria minimizado em um ambiente de produção. A API demonstrou capacidade de atender à demanda simulada sem apresentar problemas.
 
 Recomendações Técnicas:
-1. Monitorar de perto a API da PokeAPI em produção, especialmente durante períodos de pico de tráfego, para garantir que o desempenho permaneça dentro dos padrões aceitáveis.
-2. Considerar a implementação de mecanismos de cache e otimização de consultas para minimizar a carga no servidor, especialmente para consultas recorrentes.
-3. Implementar testes de estresse regulares, utilizando o Apache JMeter ou outras ferramentas, para identificar possíveis regressões de desempenho e proativamente resolver problemas.
-4. Estabelecer limites de aceitação claros para latência, throughput e taxa de erros, e definir planos de ação para caso esses limites sejam excedidos.
-5. Manter a equipe de desenvolvimento e operações (DevOps) ciente dos resultados dos testes de estresse, para que possam planejar e dimensionar adequadamente a infraestrutura de produção.
+1. Monitorar constantemente a API em produção para identificar possíveis mudanças no desempenho e na estabilidade.
+2. Realizar testes de stress adicionais, variando o número de requisições concorrentes e o tipo de dados solicitados, a fim de avaliar a escalabilidade da solução.
+3. Implementar um sistema de cache eficiente para reduzir a carga no back-end e melhorar a experiência do usuário.
+4. Garantir que os processos de implantação e atualização da API sejam bem planejados e executados, evitando interrupções no serviço.
+5. Manter o acompanhamento dos logs de acesso e erros da API, a fim de identificar e resolver possíveis problemas de maneira ágil.
